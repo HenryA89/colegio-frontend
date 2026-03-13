@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchCalificaciones } from "../../services/estudianteServices/calificacionesService";
 import { useAuth } from "../../hooks/UseAuth";
+import { GradesPDFGenerator } from "../../components/PDFGenerator";
 
 export default function Calificaciones() {
   const { usuario } = useAuth();
@@ -26,26 +27,51 @@ export default function Calificaciones() {
   const [filtro, setFiltro] = useState("");
   const materiasFiltradas = filtro
     ? materias.filter((mat) =>
-        mat.nombre.toLowerCase().includes(filtro.toLowerCase())
+        mat.nombre.toLowerCase().includes(filtro.toLowerCase()),
       )
     : materias;
+
+  // Función para generar PDF de calificaciones
+  const handleGeneratePDF = () => {
+    const gradesData = {
+      studentName: usuario?.nombre || "Estudiante",
+      course: "Curso Actual",
+      period: new Date().toLocaleDateString("es-ES", {
+        year: "numeric",
+        month: "long",
+      }),
+      grades: materiasFiltradas.map((mat) => ({
+        subject: mat.nombre,
+        grade: mat.promedio,
+        status: mat.promedio >= 70 ? "Aprobado" : "Reprobado",
+      })),
+    };
+
+    return gradesData;
+  };
 
   return (
     <div className="min-h-screen p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="max-w-6xl mx-auto">
         <div className="educational-card p-8 rounded-3xl shadow-2xl bounce-in">
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="p-4 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl text-white text-4xl">
-              📊
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="p-4 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl text-white text-4xl">
+                📊
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                  Mis Calificaciones
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Consulta tus notas y promedios por materia
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-                Mis Calificaciones
-              </h2>
-              <p className="text-sm text-gray-600">
-                Consulta tus notas y promedios por materia
-              </p>
-            </div>
+            <GradesPDFGenerator
+              gradesData={handleGeneratePDF()}
+              filename={`calificaciones-${usuario?.nombre || "estudiante"}-${new Date().toISOString().split("T")[0]}.pdf`}
+            />
           </div>
           <div className="mb-6">
             <input
@@ -102,10 +128,10 @@ export default function Calificaciones() {
                               mat.promedio >= 90
                                 ? "text-green-600"
                                 : mat.promedio >= 80
-                                ? "text-blue-600"
-                                : mat.promedio >= 70
-                                ? "text-yellow-600"
-                                : "text-red-600"
+                                  ? "text-blue-600"
+                                  : mat.promedio >= 70
+                                    ? "text-yellow-600"
+                                    : "text-red-600"
                             }`}
                           >
                             {mat.promedio}
