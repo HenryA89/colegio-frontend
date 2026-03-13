@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* Variables CSS personalizadas para la aplicación educativa */
 :root {
   --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
@@ -9,12 +10,3 @@
   --ai-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
   --quiz-gradient: linear-gradient(135deg, #4facfe 0%, #43e97b 100%);
 }
-
-body {
-  @apply bg-gray-50 text-zinc-800;
-}
-
-@import "./components/styles/animation.css";
-@import "./components/styles/base.css";
-@import "./components/styles/components.css";
-@import "./components/styles/global.css";
