@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import { pdfService } from '../services/pdfService';
+import React, { useState } from "react";
+import { pdfService } from "../services/pdfService";
 
 /**
  * Componente para generar PDFs con diferentes opciones
  * Proporciona una interfaz unificada para generar documentos PDF
  */
-export default function PDFGenerator({ 
-  type = 'element', 
-  data = {}, 
-  elementId = null, 
-  filename = 'documento.pdf',
+export default function PDFGenerator({
+  type = "element",
+  data = {},
+  elementId = null,
+  filename = "documento.pdf",
   onGenerate = null,
-  className = '',
-  children 
+  className = "",
+  children,
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -25,28 +25,46 @@ export default function PDFGenerator({
       let result;
 
       switch (type) {
-        case 'grades':
+        case "grades":
           result = pdfService.generateGradesPDF(data, filename);
           break;
-          
-        case 'certificate':
+
+        case "certificate":
           result = pdfService.generateCertificatePDF(data, filename);
           break;
-          
-        case 'attendance':
+
+        case "attendance":
           result = pdfService.generateAttendancePDF(data, filename);
           break;
-          
-        case 'custom':
-          result = await pdfService.generateCustomPDF(data.htmlContent, filename, data.options);
+
+        case "custom":
+          result = await pdfService.generateCustomPDF(
+            data.htmlContent,
+            filename,
+            data.options,
+          );
           break;
-          
-        case 'element':
+
+        case "table":
+          result = pdfService.generateTablePDF(
+            data.tableData,
+            filename,
+            data.options,
+          );
+          break;
+
+        case "element":
         default:
           if (!elementId) {
-            throw new Error('Se requiere elementId para generar PDF desde elemento');
+            throw new Error(
+              "Se requiere elementId para generar PDF desde elemento",
+            );
           }
-          result = await pdfService.generatePDFFromElement(elementId, filename, data.options);
+          result = await pdfService.generatePDFFromElement(
+            elementId,
+            filename,
+            data.options,
+          );
           break;
       }
 
@@ -55,13 +73,13 @@ export default function PDFGenerator({
           onGenerate(result);
         }
         // Mostrar notificación de éxito
-        showNotification('PDF generado exitosamente', 'success');
+        showNotification("PDF generado exitosamente", "success");
       } else {
-        throw new Error(result.error || 'Error al generar PDF');
+        throw new Error(result.error || "Error al generar PDF");
       }
     } catch (err) {
       setError(err.message);
-      showNotification('Error al generar PDF: ' + err.message, 'error');
+      showNotification("Error al generar PDF: " + err.message, "error");
       if (onGenerate) {
         onGenerate({ success: false, error: err.message });
       }
@@ -70,19 +88,21 @@ export default function PDFGenerator({
     }
   };
 
-  const showNotification = (message, type = 'info') => {
+  const showNotification = (message, type = "info") => {
     // Crear notificación simple (puedes reemplazar con tu sistema de notificaciones)
-    const notification = document.createElement('div');
+    const notification = document.createElement("div");
     notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
-      type === 'success' ? 'bg-green-500 text-white' : 
-      type === 'error' ? 'bg-red-500 text-white' : 
-      'bg-blue-500 text-white'
+      type === "success"
+        ? "bg-green-500 text-white"
+        : type === "error"
+          ? "bg-red-500 text-white"
+          : "bg-blue-500 text-white"
     }`;
     notification.textContent = message;
-    notification.style.zIndex = '9999';
-    
+    notification.style.zIndex = "9999";
+
     document.body.appendChild(notification);
-    
+
     // Remover notificación después de 3 segundos
     setTimeout(() => {
       if (document.body.contains(notification)) {
@@ -100,9 +120,10 @@ export default function PDFGenerator({
           disabled={isLoading}
           className={`
             flex items-center gap-2 px-4 py-2 
-            ${isLoading 
-              ? 'bg-gray-400 cursor-not-allowed' 
-              : 'bg-blue-600 hover:bg-blue-700 text-white'
+            ${
+              isLoading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 text-white"
             } 
             rounded-lg font-medium transition-colors duration-200 
             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
@@ -111,18 +132,18 @@ export default function PDFGenerator({
           {isLoading ? (
             <>
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                <circle 
-                  className="opacity-25" 
-                  cx="12" 
-                  cy="12" 
-                  r="10" 
-                  stroke="currentColor" 
-                  strokeWidth="4" 
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
                   fill="none"
                 />
-                <path 
-                  className="opacity-75" 
-                  fill="currentColor" 
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
                   d="M4 12a8 8 0 018-8 8 8 0 018 8z"
                 />
               </svg>
@@ -139,28 +160,29 @@ export default function PDFGenerator({
           disabled={isLoading}
           className={`
             flex items-center gap-2 px-4 py-2 
-            ${isLoading 
-              ? 'bg-gray-400 cursor-not-allowed' 
-              : 'bg-blue-600 hover:bg-blue-700 text-white'
+            ${
+              isLoading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 text-white"
             } 
             rounded-lg font-medium transition-colors duration-200 
             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
           `}
         >
-          <svg 
-            className="w-4 h-4" 
-            fill="none" 
-            stroke="currentColor" 
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M12 10v6m0 0l-3 3m3-3l3 3m2 8H7a2 2 0 01-2-2v-5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 10v6m0 0l-3 3m3-3l3 3m2 8H7a2 2 0 01-2-2v-5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          {isLoading ? 'Generando...' : 'Generar PDF'}
+          {isLoading ? "Generando..." : "Generar PDF"}
         </button>
       )}
 
@@ -176,7 +198,10 @@ export default function PDFGenerator({
 /**
  * Componente específico para generar PDF de calificaciones
  */
-export function GradesPDFGenerator({ gradesData, filename = 'calificaciones.pdf' }) {
+export function GradesPDFGenerator({
+  gradesData,
+  filename = "calificaciones.pdf",
+}) {
   return (
     <PDFGenerator
       type="grades"
@@ -184,8 +209,18 @@ export function GradesPDFGenerator({ gradesData, filename = 'calificaciones.pdf'
       filename={filename}
       className="w-full"
     >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
       </svg>
       Descargar Reporte de Calificaciones
     </PDFGenerator>
@@ -195,7 +230,10 @@ export function GradesPDFGenerator({ gradesData, filename = 'calificaciones.pdf'
 /**
  * Componente específico para generar certificados
  */
-export function CertificatePDFGenerator({ certificateData, filename = 'certificado.pdf' }) {
+export function CertificatePDFGenerator({
+  certificateData,
+  filename = "certificado.pdf",
+}) {
   return (
     <PDFGenerator
       type="certificate"
@@ -203,8 +241,18 @@ export function CertificatePDFGenerator({ certificateData, filename = 'certifica
       filename={filename}
       className="w-full"
     >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2l-4-4m2 4l4-4m-6 8h6a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12l2 2 4-4m6 2l-4-4m2 4l4-4m-6 8h6a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+        />
       </svg>
       Generar Certificado
     </PDFGenerator>
@@ -214,7 +262,10 @@ export function CertificatePDFGenerator({ certificateData, filename = 'certifica
 /**
  * Componente específico para generar reportes de asistencia
  */
-export function AttendancePDFGenerator({ attendanceData, filename = 'asistencia.pdf' }) {
+export function AttendancePDFGenerator({
+  attendanceData,
+  filename = "asistencia.pdf",
+}) {
   return (
     <PDFGenerator
       type="attendance"
@@ -222,8 +273,18 @@ export function AttendancePDFGenerator({ attendanceData, filename = 'asistencia.
       filename={filename}
       className="w-full"
     >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
       </svg>
       Descargar Reporte de Asistencia
     </PDFGenerator>
@@ -231,9 +292,47 @@ export function AttendancePDFGenerator({ attendanceData, filename = 'asistencia.
 }
 
 /**
+ * Componente específico para generar tablas personalizadas
+ */
+export function TablePDFGenerator({
+  tableData,
+  filename = "tabla.pdf",
+  options = {},
+  className = "",
+}) {
+  return (
+    <PDFGenerator
+      type="table"
+      data={{ tableData, options }}
+      filename={filename}
+      className={className}
+    >
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+        />
+      </svg>
+      Generar Tabla PDF
+    </PDFGenerator>
+  );
+}
+
+/**
  * Componente para generar PDF desde elemento HTML
  */
-export function ElementPDFGenerator({ elementId, filename = 'documento.pdf', className = '' }) {
+export function ElementPDFGenerator({
+  elementId,
+  filename = "documento.pdf",
+  className = "",
+}) {
   return (
     <PDFGenerator
       type="element"
@@ -241,8 +340,18 @@ export function ElementPDFGenerator({ elementId, filename = 'documento.pdf', cla
       filename={filename}
       className={className}
     >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3 3m3-3l3 3m2 8H7a2 2 0 01-2-2v-5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 10v6m0 0l-3 3m3-3l3 3m2 8H7a2 2 0 01-2-2v-5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
       </svg>
       Exportar a PDF
     </PDFGenerator>
