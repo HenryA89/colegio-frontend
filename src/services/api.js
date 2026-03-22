@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:3000/api/v1";
+const API_BASE_URL = "https://colegio-backend-ia.onrender.com/";
 
 // ✅ Creación de la instancia de Axios con encabezados por defecto
 const api = axios.create({
@@ -20,7 +20,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // ✅ Interceptor de respuesta: captura errores del backend (Rails)
@@ -35,7 +35,7 @@ api.interceptors.response.use(
       console.error("Error en configuración de la petición:", error.message);
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
