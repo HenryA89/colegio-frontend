@@ -4,11 +4,13 @@ import api from "./api"; // asegúrate de tener setAuthToken en api.js
 export const loginUsuario = async (correo, password, rol) => {
   try {
     // Envío de credenciales al backend
-    const res = await api.post("/login", { correo, password, rol });
+    const res = await api.post(
+      "https://colegio-backend-ia.onrender.com/login",
+      { correo, password, rol },
+    );
 
     // Extraemos el token y el usuario de la respuesta
     const { token, usuario } = res.data;
-
     // ✅ Guardamos en localStorage
     if (token) {
       localStorage.setItem("token", token);
@@ -29,7 +31,7 @@ export const registrarUsuario = async (
   correo,
   password,
   password_confirmation,
-  rol
+  rol,
 ) => {
   try {
     const res = await api.post("/registro", {
@@ -43,7 +45,7 @@ export const registrarUsuario = async (
   } catch (error) {
     console.error(
       "❌ Error en registro:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     return null;
   }

@@ -18,8 +18,6 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    navigate("/Dashboard", { replace: true });
-
     try {
       // Envía credenciales al servicio de autenticación
       const user = await login(correo, password, rol);
@@ -28,12 +26,15 @@ export default function Login() {
       if (!user || !user.token) {
         throw new Error("Credenciales incorrectas o usuario no autorizado");
       }
+
+      // ✅ Navegación exitosa solo después de login correcto
+      navigate("/Dashboard", { replace: true });
     } catch (err) {
       console.error("Error al iniciar sesión:", err);
       setError(
         err.response?.data?.message ||
           err.message ||
-          "Error al iniciar sesión, verifica tus credenciales"
+          "Error al iniciar sesión, verifica tus credenciales",
       );
     }
   };
