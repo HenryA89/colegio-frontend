@@ -1,6 +1,9 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://colegio-backend-ia.onrender.com/";
+// Usar variable de entorno o URL por defecto
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://colegio-backend-ia.onrender.com/";
 
 // ✅ Creación de la instancia de Axios con encabezados por defecto
 const api = axios.create({

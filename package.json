@@ -6,8 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:prod": "npm run build && npm run optimize",
+    "optimize": "find dist -name '*.js' -exec gzip -k {} \\; && find dist -name '*.css' -exec gzip -k {} \\;",
+    "preview": "vite preview",
+    "preview:prod": "npm run build:prod && vite preview --port 4173",
+    "deploy": "./deploy-production.sh",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "axios": "^1.11.0",
