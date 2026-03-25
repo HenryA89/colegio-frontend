@@ -5,7 +5,7 @@ export const loginUsuario = async (correo, password, rol) => {
   try {
     // Envío de credenciales al backend
     const res = await api.post(
-      "https://colegio-backend-ia.onrender.com/login",
+      "https://colegio-backend-ia.onrender.com/api/v1/login",
       { correo, password, rol },
     );
 
