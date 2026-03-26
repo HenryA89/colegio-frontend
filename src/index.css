@@ -29,7 +29,10 @@ html {
 }
 
 * {
-  @apply transition-colors duration-200 ease-in-out;
+  transition:
+    color 0.2s ease-in-out,
+    background-color 0.2s ease-in-out,
+    border-color 0.2s ease-in-out;
 }
 
 /* === VARIABLES CSS PERSONALIZADAS === */
@@ -45,42 +48,144 @@ html {
 
 /* === TARJETAS TEMÁTICAS === */
 .educational-card {
-  @apply bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-transparent transition-all duration-300 transform hover:border-blue-300 hover:shadow-xl hover:scale-105;
+  transition: all 0.3s ease;
+  transform: translateZ(0);
+  border: 2px solid transparent;
+  background: linear-gradient(to bottom right, #eff6ff, #faf5ff);
+  border-radius: 1rem;
+}
+
+.educational-card:hover {
+  border-color: #93c5fd;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transform: scale(1.05);
 }
 
 .game-card {
-  @apply bg-gradient-to-br from-pink-100 to-purple-100 border-2 border-pink-200 transition-all duration-300 transform hover:border-pink-400 hover:shadow-2xl hover:scale-105 hover:rotate-1;
+  transition: all 0.3s ease;
+  transform: translateZ(0);
+  border: 2px solid #fce7f3;
+  background: linear-gradient(to bottom right, #fce7f3, #f3e8ff);
+  border-radius: 1rem;
+}
+
+.game-card:hover {
+  border-color: #f9a8d4;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  transform: scale(1.05) rotate(1deg);
 }
 
 .ai-card {
-  @apply bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-200 transition-all duration-300 transform hover:border-indigo-400 hover:shadow-2xl hover:scale-105;
+  transition: all 0.3s ease;
+  transform: translateZ(0);
+  border: 2px solid #e0e7ff;
+  background: linear-gradient(to bottom right, #e0e7ff, #f3e8ff);
+  border-radius: 1rem;
+}
+
+.ai-card:hover {
+  border-color: #a5b4fc;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  transform: scale(1.05);
 }
 
 .quiz-card {
-  @apply bg-gradient-to-br from-green-100 to-blue-100 border-2 border-green-200 transition-all duration-300 transform hover:border-green-400 hover:shadow-2xl hover:scale-105;
+  transition: all 0.3s ease;
+  transform: translateZ(0);
+  border: 2px solid #dcfce7;
+  background: linear-gradient(to bottom right, #dcfce7, #dbeafe);
+  border-radius: 1rem;
+}
+
+.quiz-card:hover {
+  border-color: #86efac;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  transform: scale(1.05);
 }
 
 /* === BOTONES === */
 .btn-primary {
-  @apply px-6 py-3 font-bold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg transition-all duration-300 transform hover:from-blue-600 hover:to-purple-700 hover:scale-105 hover:shadow-xl;
+  padding: 0.75rem 1.5rem;
+  font-weight: 700;
+  color: white;
+  transition: all 0.3s ease;
+  transform: translateZ(0);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(to right, #3b82f6, #9333ea);
+  border-radius: 0.75rem;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(to right, #2563eb, #7c3aed);
+  transform: scale(1.05);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .btn-game {
-  @apply px-6 py-3 font-bold text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl shadow-lg transition-all duration-300 transform hover:from-pink-600 hover:to-purple-700 hover:scale-110 hover:shadow-2xl;
+  padding: 0.75rem 1.5rem;
+  font-weight: 700;
+  color: white;
+  transition: all 0.3s ease;
+  transform: translateZ(0);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(to right, #ec4899, #9333ea);
+  border-radius: 0.75rem;
+}
+
+.btn-game:hover {
+  background: linear-gradient(to right, #db2777, #7c3aed);
+  transform: scale(1.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
 /* === BADGES === */
 .score-badge {
-  @apply px-4 py-2 font-bold text-white bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110;
+  padding: 0.5rem 1rem;
+  font-weight: 700;
+  color: white;
+  transition: all 0.3s ease;
+  transform: translateZ(0);
+  border-radius: 9999px;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(to right, #facc15, #f97316);
+}
+
+.score-badge:hover {
+  transform: scale(1.1);
 }
 
 /* === MODALES === */
 .modal-overlay {
-  @apply flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50 backdrop-blur-sm;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
 }
 
 .modal-content {
-  @apply p-6 mx-4 w-full max-w-md bg-white rounded-2xl shadow-2xl transition-all duration-300 transform;
+  width: 100%;
+  max-width: 28rem;
+  padding: 1.5rem;
+  margin: 0 1rem;
+  transition: all 0.3s ease;
+  transform: translateZ(0);
+  background: white;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border-radius: 1rem;
 }
 
 /* === ANIMACIONES === */
@@ -165,8 +270,10 @@ html {
 .rainbow-text {
   background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
   background-size: 400% 400%;
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  color: transparent;
   animation: rainbow 3s ease infinite;
 }
 
@@ -176,6 +283,13 @@ html {
   .game-card,
   .ai-card,
   .quiz-card {
-    @apply transform-none hover:scale-102;
+    transform: none;
+  }
+
+  .educational-card:hover,
+  .game-card:hover,
+  .ai-card:hover,
+  .quiz-card:hover {
+    transform: scale(1.02);
   }
 }
