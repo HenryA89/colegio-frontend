@@ -1,7 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/UseAuth";
-import ApiConnectionTest from "../components/ApiConnectionTest";
 
 // Componentes separados por rol
 function ProfesorDashboard() {
@@ -228,11 +227,6 @@ export default function Dashboard() {
         {!usuario.rol && (
           <p className="text-gray-500">No hay rol definido (modo invitado).</p>
         )}
-
-        {/* Componente de prueba de conexión API */}
-        <div className="mt-8 slide-up">
-          <ApiConnectionTest />
-        </div>
       </div>
     </div>
   );
