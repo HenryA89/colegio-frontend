@@ -198,7 +198,11 @@ export default function Clases() {
       )}
 
       {/* 🔹 Modal para crear clase */}
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Crear Nueva Clase"
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Crear Nueva Clase</DialogTitle>

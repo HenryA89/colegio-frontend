@@ -87,7 +87,11 @@ export default function EvaluacionesClase() {
       )}
 
       {/* 🔹 Modal crear evaluación */}
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Crear Nueva Evaluación"
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Crear Nueva Evaluación</DialogTitle>
