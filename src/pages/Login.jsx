@@ -103,14 +103,6 @@ export default function Login() {
             Regístrate aquí
           </a>
         </p>
-        <p className="mt-4 text-xs text-center text-indigo-200">
-          <a
-            href="/diagnostico"
-            className="underline text-indigo-300 underline-offset-2 hover:text-indigo-100"
-          >
-            🔍 Diagnóstico de conexión
-          </a>
-        </p>
       </div>
     </div>
   );
