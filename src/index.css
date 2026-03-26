@@ -1,6 +1,38 @@
 @import "tailwindcss";
 
-/* Variables CSS personalizadas para la aplicación educativa */
+/* === CONFIGURACIÓN TAILWIND V4 === */
+@theme {
+  /* Colores personalizados */
+  --color-primary-50: #eff6ff;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+
+  --color-success-50: #f0fdf4;
+  --color-success-500: #22c55e;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-500: #f59e0b;
+
+  --color-error-50: #fef2f2;
+  --color-error-500: #ef4444;
+
+  /* Familia de fuentes */
+  --font-family-sans: "Inter", system-ui, sans-serif;
+
+  /* Sombras personalizadas */
+  --shadow-educational: 0 8px 32px rgba(31, 38, 135, 0.15);
+}
+
+/* === ESTILOS BASE === */
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  @apply transition-colors duration-200 ease-in-out;
+}
+
+/* === VARIABLES CSS PERSONALIZADAS === */
 :root {
   --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
@@ -9,4 +41,141 @@
   --game-gradient: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
   --ai-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
   --quiz-gradient: linear-gradient(135deg, #4facfe 0%, #43e97b 100%);
+}
+
+/* === TARJETAS TEMÁTICAS === */
+.educational-card {
+  @apply bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-transparent transition-all duration-300 transform hover:border-blue-300 hover:shadow-xl hover:scale-105;
+}
+
+.game-card {
+  @apply bg-gradient-to-br from-pink-100 to-purple-100 border-2 border-pink-200 transition-all duration-300 transform hover:border-pink-400 hover:shadow-2xl hover:scale-105 hover:rotate-1;
+}
+
+.ai-card {
+  @apply bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-200 transition-all duration-300 transform hover:border-indigo-400 hover:shadow-2xl hover:scale-105;
+}
+
+.quiz-card {
+  @apply bg-gradient-to-br from-green-100 to-blue-100 border-2 border-green-200 transition-all duration-300 transform hover:border-green-400 hover:shadow-2xl hover:scale-105;
+}
+
+/* === BOTONES === */
+.btn-primary {
+  @apply px-6 py-3 font-bold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg transition-all duration-300 transform hover:from-blue-600 hover:to-purple-700 hover:scale-105 hover:shadow-xl;
+}
+
+.btn-game {
+  @apply px-6 py-3 font-bold text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl shadow-lg transition-all duration-300 transform hover:from-pink-600 hover:to-purple-700 hover:scale-110 hover:shadow-2xl;
+}
+
+/* === BADGES === */
+.score-badge {
+  @apply px-4 py-2 font-bold text-white bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110;
+}
+
+/* === MODALES === */
+.modal-overlay {
+  @apply flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50 backdrop-blur-sm;
+}
+
+.modal-content {
+  @apply p-6 mx-4 w-full max-w-md bg-white rounded-2xl shadow-2xl transition-all duration-300 transform;
+}
+
+/* === ANIMACIONES === */
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(102, 126, 234, 0.8),
+      0 0 30px rgba(102, 126, 234, 0.6);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes rainbow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bounce-in {
+  animation: bounce-in 0.6s ease-out;
+}
+
+.slide-up {
+  animation: slide-up 0.5s ease-out;
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.rainbow-text {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow 3s ease infinite;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .educational-card,
+  .game-card,
+  .ai-card,
+  .quiz-card {
+    @apply transform-none hover:scale-102;
+  }
 }
