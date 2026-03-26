@@ -4,10 +4,7 @@ import api from "./api"; // asegúrate de tener setAuthToken en api.js
 export const loginUsuario = async (correo, password, rol) => {
   try {
     // Envío de credenciales al backend
-    const res = await api.post(
-      "https://colegio-backend-ia.onrender.com/api/v1/login",
-      { correo, password, rol },
-    );
+    const res = await api.post("api/v1/login", { correo, password, rol });
 
     // Extraemos el token y el usuario de la respuesta
     const { token, usuario } = res.data;
@@ -34,7 +31,7 @@ export const registrarUsuario = async (
   rol,
 ) => {
   try {
-    const res = await api.post("/registro", {
+    const res = await api.post("api/v1/registro", {
       nombre,
       correo,
       password,

@@ -2,6 +2,7 @@ import Dashboard from "../pages/Dashboard";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Profile from "../pages/Profile";
+import DatabaseDiagnostics from "../pages/DatabaseDiagnostics";
 import Quiz from "../pages/estudiante/Quiz";
 import Evaluaciones from "../pages/estudiante/Evaluaciones";
 import Calificaciones from "../pages/estudiante/Calificaciones";
@@ -44,6 +45,15 @@ export const routes = [
     element: (
       <AuthLayout>
         <Register />
+      </AuthLayout>
+    ),
+    isPrivate: false,
+  },
+  {
+    path: "/diagnostico",
+    element: (
+      <AuthLayout>
+        <DatabaseDiagnostics />
       </AuthLayout>
     ),
     isPrivate: false,
