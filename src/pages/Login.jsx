@@ -28,7 +28,7 @@ export default function Login() {
       }
 
       // ✅ Navegación exitosa solo después de login correcto
-      navigate("/Dashboard", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error("Error al iniciar sesión:", err);
       setError(

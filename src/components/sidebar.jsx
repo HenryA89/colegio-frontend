@@ -34,11 +34,11 @@ const icons = {
 };
 
 export default function Sidebar({ onClose }) {
-  const { user, logout } = useAuth();
+  const { usuario, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
-  if (!user) return null; // Si no hay usuario, no mostrar nada
+  if (!usuario) return null; // Si no hay usuario, no mostrar nada
 
   // Menús según rol
   const menuItems =
@@ -65,7 +65,7 @@ export default function Sidebar({ onClose }) {
         { to: "/materias", label: "Materias", icon: "GraduationCap" },
         { to: "/reportes", label: "Reportes", icon: "BarChart2" },
       ],
-    }[user.rol] || [];
+    }[usuario.rol] || [];
 
   const handleLogout = () => {
     logout();

@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function AccessDenied() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen text-gray-800 bg-gray-100">
@@ -9,12 +11,12 @@ export default function AccessDenied() {
           No tienes permisos para acceder a esta página. Si crees que esto es un
           error, contacta al administrador.
         </p>
-        <a
-          href="/dashboard"
+        <Link
+          to="/dashboard"
           className="px-6 py-3 text-white transition bg-blue-600 rounded-lg shadow hover:bg-blue-700"
         >
           Volver al Dashboard
-        </a>
+        </Link>
       </div>
     </div>
   );

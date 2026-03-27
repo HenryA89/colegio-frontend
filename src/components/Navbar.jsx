@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Menu, X, ArrowLeft } from "lucide-react";
 
 export default function Navbar({ toggleSidebar }) {
-  const { user, logout } = useAuth();
+  const { usuario, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -31,7 +31,7 @@ export default function Navbar({ toggleSidebar }) {
   }, [location]);
 
   // Si no hay usuario logueado, no mostramos Navbar
-  if (!user) return null;
+  if (!usuario) return null;
 
   const handleLogout = () => {
     logout();
@@ -75,7 +75,7 @@ export default function Navbar({ toggleSidebar }) {
             {/* Menú desktop */}
             <div className="hidden lg:block">
               <div className="flex items-center ml-4 space-x-4">
-                {user.rol === "profesor" && (
+                {usuario.rol === "profesor" && (
                   <>
                     <NavLink to="/clases" icon="📘" text="Clases" />
                     <NavLink to="/evaluaciones" icon="📝" text="Evaluaciones" />
@@ -84,7 +84,7 @@ export default function Navbar({ toggleSidebar }) {
                   </>
                 )}
 
-                {user.rol === "estudiante" && (
+                {usuario.rol === "estudiante" && (
                   <>
                     <NavLink
                       to="/calificaciones"
@@ -96,7 +96,7 @@ export default function Navbar({ toggleSidebar }) {
                   </>
                 )}
 
-                {user.rol === "admin" && (
+                {usuario.rol === "admin" && (
                   <>
                     <NavLink to="/usuarios" icon="👥" text="Usuarios" />
                     <NavLink to="/materias" icon="📚" text="Materias" />
@@ -140,7 +140,7 @@ export default function Navbar({ toggleSidebar }) {
         {isMenuOpen && (
           <div className="bg-blue-700 lg:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              {user.rol === "profesor" && (
+              {usuario.rol === "profesor" && (
                 <>
                   <MobileNavLink
                     to="/clases"
@@ -169,7 +169,7 @@ export default function Navbar({ toggleSidebar }) {
                 </>
               )}
 
-              {user.rol === "estudiante" && (
+              {usuario.rol === "estudiante" && (
                 <>
                   <MobileNavLink
                     to="/calificaciones"
@@ -192,7 +192,7 @@ export default function Navbar({ toggleSidebar }) {
                 </>
               )}
 
-              {user.rol === "admin" && (
+              {usuario.rol === "admin" && (
                 <>
                   <MobileNavLink
                     to="/usuarios"
