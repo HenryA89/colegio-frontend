@@ -8,10 +8,10 @@ function ProfesorDashboard() {
     <div className="grid gap-6 md:grid-cols-2">
       <Link
         to="/profesor/Clases"
-        className="p-6 shadow-lg educational-card rounded-2xl group"
+        className="p-6 shadow-lg border-2 border-transparent bg-linear-to-br from-blue-50 to-purple-50 hover:border-blue-300 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl">
+          <div className="p-4 text-3xl text-white bg-linear-to-br from-blue-400 to-blue-600 rounded-xl">
             📘
           </div>
           <div>
@@ -26,10 +26,10 @@ function ProfesorDashboard() {
       </Link>
       <Link
         to="/profesor/Evaluaciones"
-        className="p-6 shadow-lg ai-card rounded-2xl group"
+        className="p-6 shadow-lg border-2 border-indigo-200 bg-linear-to-br from-indigo-100 to-purple-100 hover:border-indigo-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-gradient-to-br from-purple-400 to-indigo-600 rounded-xl">
+          <div className="p-4 text-3xl text-white bg-linear-to-br from-purple-400 to-indigo-600 rounded-xl">
             🤖
           </div>
           <div>
@@ -44,10 +44,10 @@ function ProfesorDashboard() {
       </Link>
       <Link
         to="/profesor/Actividades"
-        className="p-6 shadow-lg game-card rounded-2xl group"
+        className="p-6 shadow-lg border-2 border-pink-200 bg-linear-to-br from-pink-100 to-purple-100 hover:border-pink-400 hover:shadow-xl hover:scale-105 hover:rotate-1 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-gradient-to-br from-pink-400 to-purple-600 rounded-xl">
+          <div className="p-4 text-3xl text-white bg-linear-to-br from-pink-400 to-purple-600 rounded-xl">
             🎯
           </div>
           <div>
@@ -62,10 +62,10 @@ function ProfesorDashboard() {
       </Link>
       <Link
         to="/profesor/Asistencias"
-        className="p-6 shadow-lg quiz-card rounded-2xl group"
+        className="p-6 shadow-lg border-2 border-green-200 bg-linear-to-br from-green-100 to-blue-100 hover:border-green-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-gradient-to-br from-green-400 to-teal-600 rounded-xl">
+          <div className="p-4 text-3xl text-white bg-linear-to-br from-green-400 to-teal-600 rounded-xl">
             📋
           </div>
           <div>
@@ -87,10 +87,10 @@ function EstudianteDashboard() {
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       <Link
         to="/estudiante/Calificaciones"
-        className="p-6 shadow-lg educational-card rounded-2xl group"
+        className="p-6 shadow-lg border-2 border-transparent bg-linear-to-br from-blue-50 to-purple-50 hover:border-blue-300 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl">
+          <div className="p-4 text-3xl text-white bg-linear-to-br from-blue-400 to-indigo-600 rounded-xl">
             📊
           </div>
           <div>
@@ -105,10 +105,10 @@ function EstudianteDashboard() {
       </Link>
       <Link
         to="/estudiante/Actividades"
-        className="p-6 shadow-lg game-card rounded-2xl group"
+        className="p-6 shadow-lg border-2 border-pink-200 bg-linear-to-br from-pink-100 to-purple-100 hover:border-pink-400 hover:shadow-xl hover:scale-105 hover:rotate-1 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-gradient-to-br from-pink-400 to-purple-600 rounded-xl">
+          <div className="p-4 text-3xl text-white bg-linear-to-br from-pink-400 to-purple-600 rounded-xl">
             🎮
           </div>
           <div>
@@ -121,10 +121,10 @@ function EstudianteDashboard() {
       </Link>
       <Link
         to="/estudiante/Evaluaciones"
-        className="p-6 shadow-lg quiz-card rounded-2xl group"
+        className="p-6 shadow-lg border-2 border-green-200 bg-linear-to-br from-green-100 to-blue-100 hover:border-green-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-gradient-to-br from-green-400 to-teal-600 rounded-xl">
+          <div className="p-4 text-3xl text-white bg-linear-to-br from-green-400 to-teal-600 rounded-xl">
             🧠
           </div>
           <div>
@@ -144,10 +144,10 @@ function AdminDashboard() {
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       <Link
         to="/admin/Usuarios"
-        className="p-6 shadow-lg educational-card rounded-2xl group"
+        className="p-6 shadow-lg border-2 border-transparent bg-linear-to-br from-blue-50 to-purple-50 hover:border-blue-300 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl">
+          <div className="p-4 text-3xl text-white bg-linear-to-br from-blue-400 to-indigo-600 rounded-xl">
             👥
           </div>
           <div>
@@ -162,10 +162,10 @@ function AdminDashboard() {
       </Link>
       <Link
         to="/admin/Materias"
-        className="p-6 shadow-lg ai-card rounded-2xl group"
+        className="p-6 shadow-lg border-2 border-indigo-200 bg-linear-to-br from-indigo-100 to-purple-100 hover:border-indigo-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-gradient-to-br from-purple-400 to-pink-600 rounded-xl">
+          <div className="p-4 text-3xl text-white bg-linear-to-br from-purple-400 to-pink-600 rounded-xl">
             📚
           </div>
           <div>
@@ -180,10 +180,10 @@ function AdminDashboard() {
       </Link>
       <Link
         to="/admin/Reportes"
-        className="p-6 shadow-lg quiz-card rounded-2xl group"
+        className="p-6 shadow-lg border-2 border-green-200 bg-linear-to-br from-green-100 to-blue-100 hover:border-green-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-gradient-to-br from-green-400 to-teal-600 rounded-xl">
+          <div className="p-4 text-3xl text-white bg-linear-to-br from-green-400 to-teal-600 rounded-xl">
             📊
           </div>
           <div>
@@ -214,9 +214,9 @@ export default function Dashboard() {
     : "Invitado";
 
   return (
-    <div className="min-h-screen p-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen p-6 bg-linear-to-br from-blue-50 via-purple-50 to-pink-50">
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bounce-in">
+        <h2 className="mb-8 text-4xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-pink-600">
           🎓 Dashboard - {rolName}
         </h2>
 
