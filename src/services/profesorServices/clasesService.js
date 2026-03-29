@@ -2,7 +2,7 @@ import api from "../api";
 
 // Obtener todas las clases del profesor
 export const fetchClases = async (token) => {
-  const res = await api.get("/materias");
+  const res = await api.get("api/v1/materias");
   return res.data.materias || [];
 };
 
@@ -21,5 +21,5 @@ export const subirClase = async ({ pdf, texto }) => {
 
 // Crear nueva clase
 export const crearClase = async (form, token) => {
-  await api.post("/profesores/crear_clase", { ...form });
+  await api.post("api/v1/profesores/crear_clase", { ...form });
 };

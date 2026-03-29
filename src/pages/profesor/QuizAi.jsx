@@ -1,0 +1,925 @@
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  Brain,
+  FileText,
+  PlusCircle,
+  Edit,
+  Trash2,
+  Users,
+  TrendingUp,
+  Eye,
+  Clock,
+  Calendar,
+  Zap,
+  CheckCircle,
+  AlertCircle,
+  Download,
+  Settings,
+  Sparkles,
+} from "lucide-react";
+import { useAuth } from "../../hooks/UseAuth";
+import {
+  fetchMaterialReciente,
+  generarQuizConIA,
+  guardarQuizIA,
+  fetchQuizzesIA,
+  editarQuizIA,
+  eliminarQuizIA,
+  publicarQuizIA,
+  fetchResultadosQuizIA,
+  fetchEstadisticasQuizIA,
+} from "../../services/profesorServices/quizAiService";
+import { fetchClases } from "../../services/profesorServices/clasesService";
+
+export default function QuizAi() {
+  const { id } = useParams(); // id de la clase
+  const { usuario } = useAuth();
+  const navigate = useNavigate();
+
+  // Estados principales
+  const [clase, setClase] = useState(null);
+  const [materialReciente, setMaterialReciente] = useState(null);
+  const [quizzes, setQuizzes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingMaterial, setLoadingMaterial] = useState(false);
+  const [generandoQuiz, setGenerandoQuiz] = useState(false);
+  const [error, setError] = useState("");
+  const [mostrarModalGeneracion, setMostrarModalGeneracion] = useState(false);
+  const [mostrarModalQuiz, setMostrarModalQuiz] = useState(false);
+  const [quizSeleccionado, setQuizSeleccionado] = useState(null);
+  const [mostrarResultados, setMostrarResultados] = useState(false);
+  const [resultados, setResultados] = useState([]);
+  const [estadisticas, setEstadisticas] = useState({});
+
+  // Formulario de generación
+  const [opcionesGeneracion, setOpcionesGeneracion] = useState({
+    numeroPreguntas: 5,
+    dificultad: "media",
+    tipoPreguntas: "mixto", // opcion, verdadero_falso, multiple, mixto
+    temas: "",
+    tiempoPorPregunta: 60,
+    incluirRetroalimentacion: true,
+    idioma: "es",
+  });
+
+  // Formulario de quiz
+  const [quizForm, setQuizForm] = useState({
+    titulo: "",
+    descripcion: "",
+    instrucciones: "",
+    tiempoTotal: 30,
+    intentosMaximos: 3,
+    mostrarRetroalimentacion: true,
+    aleatorioOrden: true,
+  });
+
+  // Cargar información inicial
+  useEffect(() => {
+    const cargarInformacion = async () => {
+      setLoading(true);
+      try {
+        // Cargar información de la clase
+        const clasesData = await fetchClases();
+        const claseInfo = clasesData.find((c) => c.id === id);
+        setClase(claseInfo);
+
+        // Cargar material reciente
+        await cargarMaterialReciente();
+
+        // Cargar quizzes existentes
+        await cargarQuizzes();
+      } catch (error) {
+        setError("Error cargando información inicial");
+        console.error("Error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    cargarInformacion();
+  }, [id]);
+
+  // Cargar material reciente
+  const cargarMaterialReciente = async () => {
+    setLoadingMaterial(true);
+    try {
+      const materialData = await fetchMaterialReciente(id);
+      setMaterialReciente(materialData);
+    } catch (error) {
+      console.error("Error cargando material:", error);
+      setMaterialReciente(null);
+    } finally {
+      setLoadingMaterial(false);
+    }
+  };
+
+  // Cargar quizzes existentes
+  const cargarQuizzes = async () => {
+    try {
+      const quizzesData = await fetchQuizzesIA(id);
+      setQuizzes(quizzesData);
+    } catch (error) {
+      console.error("Error cargando quizzes:", error);
+    }
+  };
+
+  // Manejar cambios en formulario de generación
+  const handleOpcionesChange = (e) => {
+    setOpcionesGeneracion({
+      ...opcionesGeneracion,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  // Manejar cambios en formulario de quiz
+  const handleQuizFormChange = (e) => {
+    setQuizForm({
+      ...quizForm,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  // Generar quiz con IA
+  const generarQuiz = async () => {
+    setGenerandoQuiz(true);
+    setError("");
+    try {
+      const quizGenerado = await generarQuizConIA(id, opcionesGeneracion);
+
+      // Pre-llenar formulario con datos generados
+      setQuizForm({
+        titulo:
+          quizGenerado.titulo ||
+          `Quiz IA - ${new Date().toLocaleDateString("es-ES")}`,
+        descripcion:
+          quizGenerado.descripcion || "Quiz generado automáticamente con IA",
+        instrucciones:
+          quizGenerado.instrucciones || "Responde cada pregunta cuidadosamente",
+        tiempoTotal:
+          quizGenerado.tiempoTotal ||
+          (opcionesGeneracion.numeroPreguntas *
+            opcionesGeneracion.tiempoPorPregunta) /
+            60,
+        intentosMaximos: 3,
+        mostrarRetroalimentacion: opcionesGeneracion.incluirRetroalimentacion,
+        aleatorioOrden: true,
+      });
+
+      setQuizSeleccionado(quizGenerado);
+      setMostrarModalGeneracion(false);
+      setMostrarModalQuiz(true);
+    } catch (error) {
+      setError("Error generando quiz con IA");
+      console.error("Error:", error);
+    } finally {
+      setGenerandoQuiz(false);
+    }
+  };
+
+  // Guardar quiz
+  const guardarQuiz = async () => {
+    try {
+      const quizData = {
+        ...quizForm,
+        claseId: id,
+        preguntas: quizSeleccionado?.preguntas || [],
+        opcionesGeneracion: opcionesGeneracion,
+        materialBase: materialReciente,
+      };
+
+      await guardarQuizIA(quizData);
+      setMostrarModalQuiz(false);
+      setQuizSeleccionado(null);
+
+      // Recargar quizzes
+      await cargarQuizzes();
+    } catch (error) {
+      setError("Error guardando quiz");
+      console.error("Error:", error);
+    }
+  };
+
+  // Editar quiz existente
+  const editarQuiz = (quiz) => {
+    setQuizSeleccionado(quiz);
+    setQuizForm({
+      titulo: quiz.titulo,
+      descripcion: quiz.descripcion,
+      instrucciones: quiz.instrucciones,
+      tiempoTotal: quiz.tiempoTotal,
+      intentosMaximos: quiz.intentosMaximos,
+      mostrarRetroalimentacion: quiz.mostrarRetroalimentacion,
+      aleatorioOrden: quiz.aleatorioOrden,
+    });
+    setMostrarModalQuiz(true);
+  };
+
+  // Eliminar quiz
+  const eliminarQuiz = async (quizId) => {
+    if (window.confirm("¿Estás seguro de eliminar este quiz?")) {
+      try {
+        await eliminarQuizIA(quizId);
+        await cargarQuizzes();
+      } catch (error) {
+        setError("Error eliminando quiz");
+        console.error("Error:", error);
+      }
+    }
+  };
+
+  // Publicar quiz
+  const publicarQuiz = async (quizId) => {
+    try {
+      await publicarQuizIA(quizId);
+      await cargarQuizzes();
+    } catch (error) {
+      setError("Error publicando quiz");
+      console.error("Error:", error);
+    }
+  };
+
+  // Ver resultados de quiz
+  const verResultados = async (quiz) => {
+    try {
+      setLoading(true);
+      const [resultadosData, estadisticasData] = await Promise.all([
+        fetchResultadosQuizIA(quiz.id),
+        fetchEstadisticasQuizIA(quiz.id),
+      ]);
+
+      setResultados(resultadosData);
+      setEstadisticas(estadisticasData);
+      setQuizSeleccionado(quiz);
+      setMostrarResultados(true);
+    } catch (error) {
+      setError("Error cargando resultados");
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen p-6 bg-linear-to-br from-purple-50 via-pink-50 to-rose-50">
+      <div className="max-w-7xl mx-auto">
+        {/* Encabezado */}
+        <div className="text-center mb-8">
+          <div className="text-4xl mb-2 animate-bounce">🧠</div>
+          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-purple-600 to-pink-600">
+            Quiz Generado con IA
+          </h1>
+          <p className="text-gray-600">
+            Crea quizzes automáticos basados en el material de tu clase
+          </p>
+        </div>
+
+        {/* Información de la clase y material */}
+        <div className="mb-8 p-6 bg-white rounded-2xl border-2 border-purple-200 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-800">
+              📚 {clase?.materia || "Clase"} - Grupo {clase?.grupo || "N/A"}
+            </h2>
+            <button
+              onClick={() => setMostrarModalGeneracion(true)}
+              className="px-6 py-3 text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors flex items-center space-x-2"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Generar Quiz con IA</span>
+            </button>
+          </div>
+
+          {loadingMaterial ? (
+            <div className="text-center py-4">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+              <p className="mt-2 text-purple-600">
+                Analizando material reciente...
+              </p>
+            </div>
+          ) : materialReciente ? (
+            <div className="space-y-4">
+              <div className="p-4 bg-purple-50 rounded-xl">
+                <h3 className="font-semibold text-purple-700 mb-2">
+                  📄 Material Reciente Disponible
+                </h3>
+                <div className="text-sm text-gray-700">
+                  <p>
+                    <strong>Archivo:</strong> {materialReciente.nombreArchivo}
+                  </p>
+                  <p>
+                    <strong>Fecha:</strong>{" "}
+                    {new Date(materialReciente.fechaSubida).toLocaleDateString(
+                      "es-ES",
+                    )}
+                  </p>
+                  <p>
+                    <strong>Contenido:</strong>{" "}
+                    {materialReciente.resumen ||
+                      "Material procesado para generación de quiz"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-2">📂</div>
+              <p className="text-gray-600">
+                No hay material reciente disponible para generar quiz
+              </p>
+              <p className="text-sm text-gray-500">
+                Sube material a tu clase para habilitar esta función
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Lista de quizzes */}
+        <div className="p-8 bg-white rounded-3xl shadow-2xl border-2 border-transparent bg-linear-to-br from-purple-50 to-pink-50 hover:border-purple-300 hover:shadow-xl hover:scale-105 transition-all duration-300">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-purple-600 to-pink-600">
+              📝 Quizzes Generados
+            </h2>
+            <div className="text-sm text-gray-600">
+              Total: {quizzes.length} quizzes
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+              <p className="mt-2 text-purple-600">Cargando quizzes...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {quizzes.map((quiz) => (
+                <div
+                  key={quiz.id}
+                  className="p-6 bg-white rounded-2xl border-2 border-purple-100 hover:border-purple-300 hover:shadow-xl hover:scale-105 transition-all duration-300"
+                >
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-lg font-bold text-gray-800">
+                        {quiz.titulo}
+                      </h3>
+                      <span
+                        className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                          quiz.publicado
+                            ? "bg-green-100 text-green-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {quiz.publicado ? "Publicado" : "Borrador"}
+                      </span>
+                    </div>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <Brain className="w-4 h-4" />
+                        <span>{quiz.numeroPreguntas} preguntas</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        <span>{quiz.tiempoTotal} min</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>
+                          {new Date(quiz.fechaCreacion).toLocaleDateString(
+                            "es-ES",
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    {quiz.descripcion && (
+                      <p className="text-sm text-gray-700 line-clamp-3">
+                        {quiz.descripcion}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => verResultados(quiz)}
+                      className="px-3 py-2 text-purple-600 border-2 border-purple-200 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-all flex items-center justify-center gap-1"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span className="text-xs">Resultados</span>
+                    </button>
+                    <button
+                      onClick={() => editarQuiz(quiz)}
+                      className="px-3 py-2 text-blue-600 border-2 border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all flex items-center justify-center gap-1"
+                    >
+                      <Edit className="w-4 h-4" />
+                      <span className="text-xs">Editar</span>
+                    </button>
+                    {!quiz.publicado && (
+                      <button
+                        onClick={() => publicarQuiz(quiz.id)}
+                        className="px-3 py-2 text-green-600 border-2 border-green-200 rounded-lg hover:bg-green-50 hover:border-green-300 transition-all flex items-center justify-center gap-1"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span className="text-xs">Publicar</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => eliminarQuiz(quiz.id)}
+                      className="px-3 py-2 text-red-600 border-2 border-red-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-all flex items-center justify-center gap-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span className="text-xs">Eliminar</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {quizzes.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4 animate-bounce">🧠</div>
+              <p className="text-xl text-gray-600">
+                No hay quizzes generados aún
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                Usa el botón "Generar Quiz con IA" para crear tu primer quiz
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Modal de generación */}
+        {mostrarModalGeneracion && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gray-800">
+                  ⚡ Generar Quiz con IA
+                </h3>
+                <button
+                  onClick={() => setMostrarModalGeneracion(false)}
+                  className="text-gray-600 hover:text-gray-800"
+                >
+                  ❌
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Información del material */}
+                {materialReciente && (
+                  <div className="p-4 bg-purple-50 rounded-xl">
+                    <h4 className="font-semibold text-purple-700 mb-2">
+                      📄 Material Base
+                    </h4>
+                    <p className="text-sm text-gray-700">
+                      {materialReciente.nombreArchivo}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {materialReciente.resumen}
+                    </p>
+                  </div>
+                )}
+
+                {/* Opciones de generación */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block mb-2 font-medium text-gray-700">
+                      Número de Preguntas
+                    </label>
+                    <input
+                      type="number"
+                      name="numeroPreguntas"
+                      value={opcionesGeneracion.numeroPreguntas}
+                      onChange={handleOpcionesChange}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                      min="1"
+                      max="20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-medium text-gray-700">
+                      Dificultad
+                    </label>
+                    <select
+                      name="dificultad"
+                      value={opcionesGeneracion.dificultad}
+                      onChange={handleOpcionesChange}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                    >
+                      <option value="facil">Fácil</option>
+                      <option value="media">Media</option>
+                      <option value="dificil">Difícil</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-medium text-gray-700">
+                      Tipo de Preguntas
+                    </label>
+                    <select
+                      name="tipoPreguntas"
+                      value={opcionesGeneracion.tipoPreguntas}
+                      onChange={handleOpcionesChange}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                    >
+                      <option value="opcion">Opción Múltiple</option>
+                      <option value="verdadero_falso">Verdadero/Falso</option>
+                      <option value="multiple">Selección Múltiple</option>
+                      <option value="mixto">Mixto</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-medium text-gray-700">
+                      Tiempo por Pregunta (segundos)
+                    </label>
+                    <input
+                      type="number"
+                      name="tiempoPorPregunta"
+                      value={opcionesGeneracion.tiempoPorPregunta}
+                      onChange={handleOpcionesChange}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                      min="10"
+                      max="300"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block mb-2 font-medium text-gray-700">
+                    Temas Específicos (opcional)
+                  </label>
+                  <textarea
+                    name="temas"
+                    value={opcionesGeneracion.temas}
+                    onChange={handleOpcionesChange}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                    rows={3}
+                    placeholder="Ej: fracciones, ecuaciones lineales, teorema de Pitágoras..."
+                  />
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      name="incluirRetroalimentacion"
+                      checked={opcionesGeneracion.incluirRetroalimentacion}
+                      onChange={(e) =>
+                        setOpcionesGeneracion({
+                          ...opcionesGeneracion,
+                          incluirRetroalimentacion: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 text-purple-600"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Incluir retroalimentación automática
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setMostrarModalGeneracion(false)}
+                  className="flex-1 px-4 py-3 text-gray-600 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={generarQuiz}
+                  disabled={generandoQuiz || !materialReciente}
+                  className="flex-1 px-4 py-3 text-white bg-purple-600 rounded-xl hover:bg-purple-700 disabled:bg-purple-400 transition-colors flex items-center justify-center gap-2"
+                >
+                  {generandoQuiz ? (
+                    <>
+                      <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Generando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-4 h-4" />
+                      <span>Generar Quiz</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de quiz */}
+        {mostrarModalQuiz && quizSeleccionado && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-8 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gray-800">
+                  {editingQuiz ? "✏️ Editar Quiz" : "📝 Configurar Quiz"}
+                </h3>
+                <button
+                  onClick={() => setMostrarModalQuiz(false)}
+                  className="text-gray-600 hover:text-gray-800"
+                >
+                  ❌
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block mb-2 font-medium text-gray-700">
+                    Título del Quiz
+                  </label>
+                  <input
+                    type="text"
+                    name="titulo"
+                    value={quizForm.titulo}
+                    onChange={handleQuizFormChange}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                    placeholder="Título del quiz"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-2 font-medium text-gray-700">
+                    Descripción
+                  </label>
+                  <textarea
+                    name="descripcion"
+                    value={quizForm.descripcion}
+                    onChange={handleQuizFormChange}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                    rows={3}
+                    placeholder="Describe el contenido y objetivos del quiz"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-2 font-medium text-gray-700">
+                    Instrucciones
+                  </label>
+                  <textarea
+                    name="instrucciones"
+                    value={quizForm.instrucciones}
+                    onChange={handleQuizFormChange}
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                    rows={2}
+                    placeholder="Instrucciones para los estudiantes"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block mb-2 font-medium text-gray-700">
+                      Tiempo Total (minutos)
+                    </label>
+                    <input
+                      type="number"
+                      name="tiempoTotal"
+                      value={quizForm.tiempoTotal}
+                      onChange={handleQuizFormChange}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 font-medium text-gray-700">
+                      Intentos Máximos
+                    </label>
+                    <input
+                      type="number"
+                      name="intentosMaximos"
+                      value={quizForm.intentosMaximos}
+                      onChange={handleQuizFormChange}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                      min="1"
+                      max="5"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      name="mostrarRetroalimentacion"
+                      checked={quizForm.mostrarRetroalimentacion}
+                      onChange={(e) =>
+                        setQuizForm({
+                          ...quizForm,
+                          mostrarRetroalimentacion: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 text-purple-600"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Mostrar retroalimentación
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      name="aleatorioOrden"
+                      checked={quizForm.aleatorioOrden}
+                      onChange={(e) =>
+                        setQuizForm({
+                          ...quizForm,
+                          aleatorioOrden: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 text-purple-600"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Orden aleatorio de preguntas
+                    </span>
+                  </label>
+                </div>
+
+                {/* Vista previa de preguntas */}
+                {quizSeleccionado?.preguntas && (
+                  <div className="p-4 bg-purple-50 rounded-xl">
+                    <h4 className="font-semibold text-purple-700 mb-3">
+                      📋 Vista Previa de Preguntas (
+                      {quizSeleccionado.preguntas.length})
+                    </h4>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {quizSeleccionado.preguntas
+                        .slice(0, 3)
+                        .map((pregunta, idx) => (
+                          <div key={idx} className="text-sm text-gray-700">
+                            <span className="font-medium">{idx + 1}.</span>{" "}
+                            {pregunta.pregunta}
+                          </div>
+                        ))}
+                      {quizSeleccionado.preguntas.length > 3 && (
+                        <p className="text-sm text-purple-600">
+                          ... y {quizSeleccionado.preguntas.length - 3} más
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setMostrarModalQuiz(false)}
+                  className="flex-1 px-4 py-3 text-gray-600 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={guardarQuiz}
+                  className="flex-1 px-4 py-3 text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors"
+                >
+                  {editingQuiz ? "Actualizar" : "Guardar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de resultados */}
+        {mostrarResultados && quizSeleccionado && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gray-800">
+                  📊 Resultados del Quiz
+                </h3>
+                <button
+                  onClick={() => setMostrarResultados(false)}
+                  className="text-gray-600 hover:text-gray-800"
+                >
+                  ❌
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Información del quiz */}
+                <div className="p-6 bg-gray-50 rounded-xl">
+                  <h4 className="text-lg font-bold text-gray-800 mb-4">
+                    {quizSeleccionado.titulo}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-600">
+                        Preguntas:
+                      </span>
+                      <span className="ml-2">
+                        {quizSeleccionado.numeroPreguntas}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Tiempo:</span>
+                      <span className="ml-2">
+                        {quizSeleccionado.tiempoTotal} min
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Estadísticas */}
+                {Object.keys(estadisticas).length > 0 && (
+                  <div className="p-6 bg-purple-50 rounded-xl">
+                    <h4 className="text-lg font-bold text-gray-800 mb-4">
+                      📈 Estadísticas
+                    </h4>
+                    <div className="grid grid-cols-4 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-purple-600">
+                          {estadisticas.totalEstudiantes || 0}
+                        </div>
+                        <div className="text-sm text-gray-600">Estudiantes</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">
+                          {estadisticas.completados || 0}
+                        </div>
+                        <div className="text-sm text-gray-600">Completados</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {estadisticas.promedio || "N/A"}
+                        </div>
+                        <div className="text-sm text-gray-600">Promedio</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-orange-600">
+                          {estadisticas.tasaAprobacion || "N/A"}%
+                        </div>
+                        <div className="text-sm text-gray-600">Aprobación</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Resultados de estudiantes */}
+                {resultados.length > 0 && (
+                  <div className="p-6 bg-green-50 rounded-xl">
+                    <h4 className="text-lg font-bold text-gray-800 mb-4">
+                      👥 Resultados de Estudiantes
+                    </h4>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full">
+                        <thead className="bg-green-100">
+                          <tr>
+                            <th className="px-4 py-2 text-left text-green-700">
+                              Estudiante
+                            </th>
+                            <th className="px-4 py-2 text-left text-green-700">
+                              Puntaje
+                            </th>
+                            <th className="px-4 py-2 text-left text-green-700">
+                              Correctas
+                            </th>
+                            <th className="px-4 py-2 text-left text-green-700">
+                              Tiempo
+                            </th>
+                            <th className="px-4 py-2 text-left text-green-700">
+                              Estado
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {resultados.map((resultado, idx) => (
+                            <tr key={idx} className="border-b border-green-200">
+                              <td className="px-4 py-2">
+                                {resultado.estudiante}
+                              </td>
+                              <td className="px-4 py-2 font-bold">
+                                {resultado.puntaje}%
+                              </td>
+                              <td className="px-4 py-2">
+                                {resultado.correctas}/{resultado.total}
+                              </td>
+                              <td className="px-4 py-2">{resultado.tiempo}</td>
+                              <td className="px-4 py-2">
+                                <span
+                                  className={`px-2 py-1 text-xs rounded-full ${
+                                    resultado.estado === "aprobado"
+                                      ? "bg-green-100 text-green-700"
+                                      : "bg-red-100 text-red-700"
+                                  }`}
+                                >
+                                  {resultado.estado}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mensajes de estado */}
+        {error && (
+          <div className="p-4 mb-6 text-red-700 bg-red-100 border border-red-400 rounded-lg">
+            ❌ {error}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -3,7 +3,7 @@ import api from "../api";
 // Obtener estudiantes de una clase
 export const fetchEstudiantesClase = async (claseId, token) => {
   try {
-    const res = await api.get(`/profesor/clases/${claseId}/estudiantes`);
+    const res = await api.get(`api/v1/profesor/clases/${claseId}/estudiantes`);
     return res.data.estudiantes || [];
   } catch (error) {
     console.error("Error al obtener estudiantes de la clase:", error);
@@ -15,8 +15,8 @@ export const fetchEstudiantesClase = async (claseId, token) => {
 export const registrarAsistencia = async (claseId, asistenciaData, token) => {
   try {
     const res = await api.post(
-      `/profesor/clases/${claseId}/asistencia`,
-      asistenciaData
+      `api/v1/profesor/clases/${claseId}/asistencia`,
+      asistenciaData,
     );
     return res.data;
   } catch (error) {
@@ -29,7 +29,7 @@ export const registrarAsistencia = async (claseId, asistenciaData, token) => {
 export const fetchHistorialAsistencia = async (claseId, token) => {
   try {
     const res = await api.get(
-      `/profesor/clases/${claseId}/asistencia/historial`
+      `api/v1/profesor/clases/${claseId}/asistencia/historial`,
     );
     return res.data.historial || [];
   } catch (error) {
@@ -42,7 +42,7 @@ export const fetchHistorialAsistencia = async (claseId, token) => {
 export const fetchEstadisticasAsistencia = async (claseId, token) => {
   try {
     const res = await api.get(
-      `/profesor/clases/${claseId}/asistencia/estadisticas`
+      `api/v1/profesor/clases/${claseId}/asistencia/estadisticas`,
     );
     return res.data.estadisticas || {};
   } catch (error) {

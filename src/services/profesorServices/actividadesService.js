@@ -3,7 +3,7 @@ import api from "../api";
 // Obtener actividades del profesor
 export const fetchActividadesProfesor = async (token) => {
   try {
-    const res = await api.get("/profesor/actividades");
+    const res = await api.get("api/v1/profesor/actividades");
     return res.data.actividades || [];
   } catch (error) {
     console.error("Error al obtener actividades:", error);
@@ -14,7 +14,7 @@ export const fetchActividadesProfesor = async (token) => {
 // Crear actividad
 export const crearActividad = async (actividadData, token) => {
   try {
-    const res = await api.post("/profesor/actividades", actividadData);
+    const res = await api.post("api/v1/profesor/actividades", actividadData);
     return res.data;
   } catch (error) {
     console.error("Error al crear actividad:", error);
@@ -26,12 +26,12 @@ export const crearActividad = async (actividadData, token) => {
 export const actualizarActividad = async (
   actividadId,
   actividadData,
-  token
+  token,
 ) => {
   try {
     const res = await api.put(
-      `/profesor/actividades/${actividadId}`,
-      actividadData
+      `api/v1/profesor/actividades/${actividadId}`,
+      actividadData,
     );
     return res.data;
   } catch (error) {
@@ -43,7 +43,7 @@ export const actualizarActividad = async (
 // Eliminar actividad
 export const eliminarActividad = async (actividadId, token) => {
   try {
-    const res = await api.delete(`/profesor/actividades/${actividadId}`);
+    const res = await api.delete(`api/v1/profesor/actividades/${actividadId}`);
     return res.data;
   } catch (error) {
     console.error("Error al eliminar actividad:", error);
@@ -55,7 +55,7 @@ export const eliminarActividad = async (actividadId, token) => {
 export const fetchRespuestasActividad = async (actividadId, token) => {
   try {
     const res = await api.get(
-      `/profesor/actividades/${actividadId}/respuestas`
+      `api/v1/profesor/actividades/${actividadId}/respuestas`,
     );
     return res.data.respuestas || [];
   } catch (error) {

@@ -3,7 +3,7 @@ import api from "../api";
 // Obtener usuarios (admin)
 export const fetchUsuarios = async (token) => {
   try {
-    const res = await api.get("/admin/usuarios");
+    const res = await api.get("api/v1/admin/usuarios");
     return res.data.usuarios || [];
   } catch (error) {
     console.error("Error al obtener usuarios:", error);
@@ -14,7 +14,7 @@ export const fetchUsuarios = async (token) => {
 // Crear usuario (admin)
 export const crearUsuario = async (usuarioData, token) => {
   try {
-    const res = await api.post("/admin/usuarios", usuarioData);
+    const res = await api.post("api/v1/admin/usuarios", usuarioData);
     return res.data;
   } catch (error) {
     console.error("Error al crear usuario:", error);
@@ -25,7 +25,10 @@ export const crearUsuario = async (usuarioData, token) => {
 // Actualizar usuario (admin)
 export const actualizarUsuario = async (usuarioId, usuarioData, token) => {
   try {
-    const res = await api.put(`/admin/usuarios/${usuarioId}`, usuarioData);
+    const res = await api.put(
+      `api/v1/admin/usuarios/${usuarioId}`,
+      usuarioData,
+    );
     return res.data;
   } catch (error) {
     console.error("Error al actualizar usuario:", error);
@@ -36,7 +39,7 @@ export const actualizarUsuario = async (usuarioId, usuarioData, token) => {
 // Eliminar usuario (admin)
 export const eliminarUsuario = async (usuarioId, token) => {
   try {
-    const res = await api.delete(`/admin/usuarios/${usuarioId}`);
+    const res = await api.delete(`api/v1/admin/usuarios/${usuarioId}`);
     return res.data;
   } catch (error) {
     console.error("Error al eliminar usuario:", error);

@@ -3,7 +3,7 @@ import api from "../api";
 // Obtener materias (admin)
 export const fetchMaterias = async (token) => {
   try {
-    const res = await api.get("/admin/materias");
+    const res = await api.get("api/v1/admin/materias");
     return res.data.materias || [];
   } catch (error) {
     console.error("Error al obtener materias:", error);
@@ -14,7 +14,7 @@ export const fetchMaterias = async (token) => {
 // Crear materia (admin)
 export const crearMateria = async (materiaData, token) => {
   try {
-    const res = await api.post("/admin/materias", materiaData);
+    const res = await api.post("api/v1/admin/materias", materiaData);
     return res.data;
   } catch (error) {
     console.error("Error al crear materia:", error);
@@ -25,7 +25,10 @@ export const crearMateria = async (materiaData, token) => {
 // Actualizar materia (admin)
 export const actualizarMateria = async (materiaId, materiaData, token) => {
   try {
-    const res = await api.put(`/admin/materias/${materiaId}`, materiaData);
+    const res = await api.put(
+      `api/v1/admin/materias/${materiaId}`,
+      materiaData,
+    );
     return res.data;
   } catch (error) {
     console.error("Error al actualizar materia:", error);
@@ -36,7 +39,7 @@ export const actualizarMateria = async (materiaId, materiaData, token) => {
 // Eliminar materia (admin)
 export const eliminarMateria = async (materiaId, token) => {
   try {
-    const res = await api.delete(`/admin/materias/${materiaId}`);
+    const res = await api.delete(`api/v1/admin/materias/${materiaId}`);
     return res.data;
   } catch (error) {
     console.error("Error al eliminar materia:", error);

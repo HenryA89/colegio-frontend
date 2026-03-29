@@ -3,7 +3,7 @@ import api from "../api";
 // Obtener asistencia del estudiante
 export const fetchAsistencia = async (token) => {
   try {
-    const res = await api.get("/estudiante/asistencia");
+    const res = await api.get("api/v1/estudiante/asistencia");
     return res.data.asistencia || [];
   } catch (error) {
     console.error("Error al obtener asistencia:", error);
@@ -14,7 +14,7 @@ export const fetchAsistencia = async (token) => {
 // Obtener asistencia por clase
 export const fetchAsistenciaPorClase = async (claseId, token) => {
   try {
-    const res = await api.get(`/estudiante/asistencia/clase/${claseId}`);
+    const res = await api.get(`api/v1/estudiante/asistencia/clase/${claseId}`);
     return res.data.asistencia || [];
   } catch (error) {
     console.error("Error al obtener asistencia por clase:", error);
@@ -25,7 +25,7 @@ export const fetchAsistenciaPorClase = async (claseId, token) => {
 // Obtener porcentaje de asistencia
 export const fetchPorcentajeAsistencia = async (token) => {
   try {
-    const res = await api.get("/estudiante/asistencia/porcentaje");
+    const res = await api.get("api/v1/estudiante/asistencia/porcentaje");
     return res.data.porcentaje || 0;
   } catch (error) {
     console.error("Error al obtener porcentaje de asistencia:", error);

@@ -29,10 +29,6 @@ export default function PDFGenerator({
           result = pdfService.generateGradesPDF(data, filename);
           break;
 
-        case "certificate":
-          result = pdfService.generateCertificatePDF(data, filename);
-          break;
-
         case "attendance":
           result = pdfService.generateAttendancePDF(data, filename);
           break;
@@ -223,38 +219,6 @@ export function GradesPDFGenerator({
         />
       </svg>
       Descargar Reporte de Calificaciones
-    </PDFGenerator>
-  );
-}
-
-/**
- * Componente específico para generar certificados
- */
-export function CertificatePDFGenerator({
-  certificateData,
-  filename = "certificado.pdf",
-}) {
-  return (
-    <PDFGenerator
-      type="certificate"
-      data={certificateData}
-      filename={filename}
-      className="w-full"
-    >
-      <svg
-        className="w-4 h-4"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 12l2 2 4-4m6 2l-4-4m2 4l4-4m-6 8h6a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-        />
-      </svg>
-      Generar Certificado
     </PDFGenerator>
   );
 }

@@ -3,7 +3,7 @@ import api from "../api";
 // Obtener evaluaciones del estudiante
 export const fetchEvaluaciones = async (token) => {
   try {
-    const res = await api.get("/estudiante/evaluaciones");
+    const res = await api.get("api/v1/estudiante/evaluaciones");
     return res.data.evaluaciones || [];
   } catch (error) {
     console.error("Error al obtener evaluaciones:", error);
@@ -14,7 +14,9 @@ export const fetchEvaluaciones = async (token) => {
 // Obtener evaluaciones por clase
 export const fetchEvaluacionesPorClase = async (claseId, token) => {
   try {
-    const res = await api.get(`/estudiante/evaluaciones/clase/${claseId}`);
+    const res = await api.get(
+      `api/v1/estudiante/evaluaciones/clase/${claseId}`,
+    );
     return res.data.evaluaciones || [];
   } catch (error) {
     console.error("Error al obtener evaluaciones por clase:", error);
@@ -26,10 +28,10 @@ export const fetchEvaluacionesPorClase = async (claseId, token) => {
 export const responderEvaluacion = async (evaluacionId, respuestas, token) => {
   try {
     const res = await api.post(
-      `/estudiante/evaluaciones/${evaluacionId}/responder`,
+      `api/v1/estudiante/evaluaciones/${evaluacionId}/responder`,
       {
         respuestas,
-      }
+      },
     );
     return res.data;
   } catch (error) {

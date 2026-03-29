@@ -3,7 +3,7 @@ import api from "../api";
 // Obtener clases del estudiante
 export const fetchClasesEstudiante = async (token) => {
   try {
-    const res = await api.get("/estudiantes/clases");
+    const res = await api.get("api/v1/estudiante/clases");
     return res.data.clases || [];
   } catch (error) {
     console.error("Error al obtener clases:", error);
@@ -14,7 +14,7 @@ export const fetchClasesEstudiante = async (token) => {
 // Obtener detalles de una clase específica
 export const fetchDetalleClase = async (claseId, token) => {
   try {
-    const res = await api.get(`/estudiante/clases/${claseId}`);
+    const res = await api.get(`api/v1/estudiante/clases/${claseId}`);
     return res.data.clase || null;
   } catch (error) {
     console.error("Error al obtener detalle de clase:", error);
@@ -25,7 +25,7 @@ export const fetchDetalleClase = async (claseId, token) => {
 // Inscribirse a una clase
 export const inscribirseAClase = async (claseId, token) => {
   try {
-    const res = await api.post(`/estudiante/clases/${claseId}/inscribir`);
+    const res = await api.post(`api/v1/estudiante/clases/${claseId}/inscribir`);
     return res.data;
   } catch (error) {
     console.error("Error al inscribirse a la clase:", error);
