@@ -7,8 +7,10 @@ import {
 } from "../../services/adminServices/usuariosService";
 import Button from "../../components/iu/Button";
 import Input from "../../components/iu/Input";
+import { useAuth } from "../../hooks/UseAuth";
 
 export default function Usuarios() {
+  const { usuario } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -24,10 +26,13 @@ export default function Usuarios() {
   const cargarUsuarios = async () => {
     setLoading(true);
     setError("");
+    console.log("Token en localStorage:", localStorage.getItem("token"));
+    console.log("Usuario actual:", usuario);
     try {
       const usuariosData = await fetchUsuarios(localStorage.getItem("token"));
       setUsuarios(usuariosData);
     } catch (err) {
+      console.error("Error al cargar usuarios:", err);
       setError("No se pudieron cargar los usuarios.");
     } finally {
       setLoading(false);
