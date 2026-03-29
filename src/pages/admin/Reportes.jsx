@@ -27,7 +27,7 @@ export default function Reportes() {
     setLoading(true);
     setError("");
     try {
-      const reportesData = await fetchReportes();
+      const reportesData = await fetchReportes(localStorage.getItem("token"));
       setReportes(reportesData);
     } catch (err) {
       setError("No se pudieron cargar los reportes.");

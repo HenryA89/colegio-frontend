@@ -30,7 +30,7 @@ export default function Materias() {
     setLoading(true);
     setError("");
     try {
-      const materiasData = await fetchMaterias();
+      const materiasData = await fetchMaterias(localStorage.getItem("token"));
       setMaterias(materiasData);
     } catch (err) {
       setError("No se pudieron cargar las materias.");
@@ -42,7 +42,7 @@ export default function Materias() {
   // Obtener profesores para asignación
   const loadProfesores = async () => {
     try {
-      const usuarios = await fetchUsuarios();
+      const usuarios = await fetchUsuarios(localStorage.getItem("token"));
       const soloProfesores = usuarios.filter(
         (usuario) => usuario.rol === "profesor",
       );

@@ -25,7 +25,7 @@ export default function Usuarios() {
     setLoading(true);
     setError("");
     try {
-      const usuariosData = await fetchUsuarios();
+      const usuariosData = await fetchUsuarios(localStorage.getItem("token"));
       setUsuarios(usuariosData);
     } catch (err) {
       setError("No se pudieron cargar los usuarios.");
@@ -44,9 +44,9 @@ export default function Usuarios() {
     setError("");
     try {
       if (editId) {
-        await actualizarUsuario(editId, form);
+        await actualizarUsuario(editId, form, localStorage.getItem("token"));
       } else {
-        await crearUsuario(form);
+        await crearUsuario(form, localStorage.getItem("token"));
       }
       setForm({ nombre: "", email: "", rol: "estudiante", password: "" });
       setEditId(null);
@@ -71,7 +71,7 @@ export default function Usuarios() {
   const handleDelete = async (id) => {
     if (!window.confirm("¿Seguro que deseas eliminar este usuario?")) return;
     try {
-      await eliminarUsuario(id);
+      await eliminarUsuario(id, localStorage.getItem("token"));
       cargarUsuarios();
     } catch (err) {
       setError("Error al eliminar el usuario.");
