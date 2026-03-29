@@ -143,7 +143,7 @@ function AdminDashboard() {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       <Link
-        to="/admin/Usuarios"
+        to="/admin/usuarios"
         className="p-6 shadow-lg border-2 border-transparent bg-linear-to-br from-blue-50 to-purple-50 hover:border-blue-300 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
