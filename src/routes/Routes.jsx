@@ -14,7 +14,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import AuthLayout from "../layouts/AuthLayout";
 import ActividadesEstudiante from "../pages/estudiante/Actividades";
 import AsistenciaEstudiante from "../pages/estudiante/Asistencia";
-import EvaluacionesProfesor from "../pages/profesor/Evaluaciones";
+import EvaluacionesProfesor from "../pages/profesor/EvaluacionesClase";
 import Usuarios from "../pages/admin/Usuarios";
 import Materias from "../pages/admin/Materias";
 import Reportes from "../pages/admin/Reportes";
