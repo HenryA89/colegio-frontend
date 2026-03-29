@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import api from "../../services/api";
+import {
+  fetchUsuarios,
+  crearUsuario,
+  actualizarUsuario,
+  eliminarUsuario,
+} from "../../services/adminServices/usuariosService";
 import Button from "../../components/iu/Button";
 import Input from "../../components/iu/Input";
 
@@ -16,20 +21,21 @@ export default function Usuarios() {
   const [editId, setEditId] = useState(null);
 
   // Obtener todos los usuarios
-  const fetchUsuarios = async () => {
+  const cargarUsuarios = async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await api.get("/usuarios");
-      setUsuarios(res.data.usuarios || []);
+      const usuariosData = await fetchUsuarios();
+      setUsuarios(usuariosData);
     } catch (err) {
       setError("No se pudieron cargar los usuarios.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
-    fetchUsuarios();
+    cargarUsuarios();
   }, []);
 
   // Crear o actualizar usuario
@@ -38,13 +44,13 @@ export default function Usuarios() {
     setError("");
     try {
       if (editId) {
-        await api.put(`/usuarios/${editId}`, form);
+        await actualizarUsuario(editId, form);
       } else {
-        await api.post("/usuarios", form);
+        await crearUsuario(form);
       }
       setForm({ nombre: "", email: "", rol: "estudiante", password: "" });
       setEditId(null);
-      fetchUsuarios();
+      cargarUsuarios();
     } catch (err) {
       setError("Error al guardar el usuario.");
     }
@@ -65,8 +71,8 @@ export default function Usuarios() {
   const handleDelete = async (id) => {
     if (!window.confirm("¿Seguro que deseas eliminar este usuario?")) return;
     try {
-      await api.delete(`/usuarios/${id}`);
-      fetchUsuarios();
+      await eliminarUsuario(id);
+      cargarUsuarios();
     } catch (err) {
       setError("Error al eliminar el usuario.");
     }
