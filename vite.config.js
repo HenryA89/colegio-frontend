@@ -5,6 +5,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   build: {
+    chunkSizeWarningLimit: 1000, // en KB
     rollupOptions: {
       onwarn(warning, warn) {
         // Silenciar warnings específicos de dependencias externas
