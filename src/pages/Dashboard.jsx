@@ -25,7 +25,7 @@ function ProfesorDashboard() {
         </div>
       </Link>
       <Link
-        to="/profesor/Evaluaciones"
+        to="/profesor/EvaluacionesClase"
         className="p-6 shadow-lg border-2 border-indigo-200 bg-linear-to-br from-indigo-100 to-purple-100 hover:border-indigo-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">

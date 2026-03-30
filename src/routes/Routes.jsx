@@ -185,10 +185,10 @@ export const routes = [
     roles: ["profesor"],
   },
   {
-    path: "/profesor/Evaluaciones",
+    path: "/profesor/EvaluacionesClase",
     element: (
       <DashboardLayout>
-        <EvaluacionesProfesor />
+        <EvaluacionesClase />
       </DashboardLayout>
     ),
     isPrivate: true,
