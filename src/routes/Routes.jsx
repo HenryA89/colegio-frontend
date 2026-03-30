@@ -2,22 +2,32 @@ import Dashboard from "../pages/Dashboard";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Profile from "../pages/Profile";
-import Quiz from "../pages/estudiante/Quiz";
-import Evaluaciones from "../pages/estudiante/Evaluaciones";
-import Calificaciones from "../pages/estudiante/Calificaciones";
-import Clases from "../pages/profesor/Clases";
-import EstudiantesClases from "../pages/profesor/EstudiantesClases";
-import EvaluacionesClase from "../pages/profesor/EvaluacionesClase";
-import Actividades from "../pages/profesor/Actividades";
-import Asistencias from "../pages/profesor/Asistencias";
+import { lazy } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import AuthLayout from "../layouts/AuthLayout";
-import ActividadesEstudiante from "../pages/estudiante/Actividades";
-import AsistenciaEstudiante from "../pages/estudiante/Asistencia";
-import EvaluacionesProfesor from "../pages/profesor/EvaluacionesClase";
-import Usuarios from "../pages/admin/Usuarios";
-import Materias from "../pages/admin/Materias";
-import Reportes from "../pages/admin/Reportes";
+
+// Lazy loading para componentes pesados
+const Quiz = lazy(() => import("../pages/estudiante/Quiz"));
+const Evaluaciones = lazy(() => import("../pages/estudiante/Evaluaciones"));
+const Calificaciones = lazy(() => import("../pages/estudiante/Calificaciones"));
+const Clases = lazy(() => import("../pages/profesor/Clases"));
+const EstudiantesClases = lazy(
+  () => import("../pages/profesor/EstudiantesClases"),
+);
+const EvaluacionesClase = lazy(
+  () => import("../pages/profesor/EvaluacionesClase"),
+);
+const Actividades = lazy(() => import("../pages/profesor/Actividades"));
+const Asistencias = lazy(() => import("../pages/profesor/Asistencias"));
+const ActividadesEstudiante = lazy(
+  () => import("../pages/estudiante/Actividades"),
+);
+const AsistenciaEstudiante = lazy(
+  () => import("../pages/estudiante/Asistencia"),
+);
+const Usuarios = lazy(() => import("../pages/admin/Usuarios"));
+const Materias = lazy(() => import("../pages/admin/Materias"));
+const Reportes = lazy(() => import("../pages/admin/Reportes"));
 
 export const routes = [
   // 🔓 Públicas
@@ -185,7 +195,7 @@ export const routes = [
     roles: ["profesor"],
   },
 
-  // 🛠️ Admin
+  // Admin
   {
     path: "/admin/Materias",
     element: (
@@ -197,7 +207,7 @@ export const routes = [
     roles: ["admin"],
   },
   {
-    path: "/admin/Usuarios",
+    path: "/admin/usuarios",
     element: (
       <DashboardLayout>
         <Usuarios />

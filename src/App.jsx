@@ -11,6 +11,8 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 import Navbar from "./components/Navbar";
+import { Suspense } from "react";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 // Componente para manejar el layout
 const LayoutWrapper = ({ children }) => {
@@ -41,7 +43,9 @@ export default function App() {
                   path={path}
                   element={
                     <PrivateRoute roles={roles}>
-                      <LayoutWrapper>{element}</LayoutWrapper>
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <LayoutWrapper>{element}</LayoutWrapper>
+                      </Suspense>
                     </PrivateRoute>
                   }
                 />
@@ -51,7 +55,11 @@ export default function App() {
               <Route
                 key={path}
                 path={path}
-                element={<LayoutWrapper>{element}</LayoutWrapper>}
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <LayoutWrapper>{element}</LayoutWrapper>
+                  </Suspense>
+                }
               />
             );
           })}
