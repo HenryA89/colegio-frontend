@@ -45,25 +45,57 @@ export default function Sidebar({ onClose }) {
     {
       estudiante: [
         { to: "/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
-        { to: "/calificaciones", label: "Calificaciones", icon: "BarChart2" },
-        { to: "/actividades", label: "Actividades", icon: "Activity" },
-        { to: "/evaluaciones", label: "Evaluaciones", icon: "FileText" },
-        { to: "/quiz", label: "Quiz", icon: "BookOpen" },
-        { to: "/asistencia", label: "Asistencia", icon: "ClipboardList" },
+        {
+          to: "/estudiante/actividades",
+          label: "Actividades",
+          icon: "Activity",
+        },
+        {
+          to: "/estudiante/asistencia",
+          label: "Asistencia",
+          icon: "ClipboardList",
+        },
+        {
+          to: "/estudiante/Evaluaciones",
+          label: "Evaluaciones",
+          icon: "FileText",
+        },
+        { to: "/estudiante/quiz", label: "Quiz", icon: "BookOpen" },
+        {
+          to: "/estudiante/Calificaciones",
+          label: "Calificaciones",
+          icon: "BarChart2",
+        },
       ],
       profesor: [
         { to: "/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
-        { to: "/clases", label: "Clases", icon: "BookOpen" },
-        { to: "/evaluaciones", label: "Evaluaciones", icon: "FileText" },
-        { to: "/actividades", label: "Actividades", icon: "ListChecks" },
-        { to: "/estudiantesclases", label: "Estudiantes", icon: "Users" },
-        { to: "/asistencias", label: "Asistencias", icon: "CheckSquare" },
+        { to: "/profesor/Clases", label: "Clases", icon: "BookOpen" },
+        {
+          to: "/profesor/EvaluacionesClase",
+          label: "Evaluaciones",
+          icon: "FileText",
+        },
+        {
+          to: "/profesor/Actividades",
+          label: "Actividades",
+          icon: "ListChecks",
+        },
+        {
+          to: "/profesor/EstudiantesClases",
+          label: "Estudiantes",
+          icon: "Users",
+        },
+        {
+          to: "/profesor/Asistencias",
+          label: "Asistencias",
+          icon: "CheckSquare",
+        },
       ],
       admin: [
         { to: "/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
-        { to: "/usuarios", label: "Usuarios", icon: "Users" },
-        { to: "/materias", label: "Materias", icon: "GraduationCap" },
-        { to: "/reportes", label: "Reportes", icon: "BarChart2" },
+        { to: "/admin/usuarios", label: "Usuarios", icon: "Users" },
+        { to: "/admin/Materias", label: "Materias", icon: "GraduationCap" },
+        { to: "/admin/Reportes", label: "Reportes", icon: "BarChart2" },
       ],
     }[usuario.rol] || [];
 
