@@ -71,7 +71,7 @@ export const routes = [
     roles: ["estudiante", "profesor", "admin"],
   },
   {
-    path: "/profile",
+    path: "/perfil",
     element: (
       <DashboardLayout>
         <Profile />
