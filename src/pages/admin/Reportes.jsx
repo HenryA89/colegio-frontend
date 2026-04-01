@@ -155,12 +155,19 @@ export default function Reportes() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-white rounded-lg shadow-md">
       <div className="mb-6">
         <h2 className="text-2xl font-bold">📑 Reportes y Estadísticas</h2>
         <p className="text-gray-600">
           Genera y consulta reportes generales del colegio.
         </p>
+      </div>
+
+      {/* Debug info */}
+      <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
+        <div>Estado de carga: {loading ? "Cargando..." : "Completado"}</div>
+        <div>Cantidad de reportes: {reportes?.length || 0}</div>
+        {error && <div className="text-red-600">Error: {error}</div>}
       </div>
 
       {error && (

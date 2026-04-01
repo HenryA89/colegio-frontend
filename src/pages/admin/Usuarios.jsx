@@ -88,10 +88,17 @@ export default function Usuarios() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-white rounded-lg shadow-md">
       <h2 className="mb-4 text-2xl font-bold text-blue-700">
         👥 Gestión de Usuarios
       </h2>
+
+      {/* Debug info */}
+      <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
+        <div>Estado de carga: {loading ? "Cargando..." : "Completado"}</div>
+        <div>Cantidad de usuarios: {usuarios?.length || 0}</div>
+        {error && <div className="text-red-600">Error: {error}</div>}
+      </div>
       <form
         onSubmit={handleSubmit}
         className="p-4 mb-8 space-y-4 bg-white rounded shadow"

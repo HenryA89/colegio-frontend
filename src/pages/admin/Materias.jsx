@@ -165,7 +165,7 @@ export default function Materias() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-white rounded-lg shadow-md">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold">📚 Gestión de Materias</h2>
@@ -179,6 +179,14 @@ export default function Materias() {
         >
           + Nueva Materia
         </button>
+      </div>
+
+      {/* Debug info */}
+      <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
+        <div>Estado de carga: {loading ? "Cargando..." : "Completado"}</div>
+        <div>Cantidad de materias: {materias?.length || 0}</div>
+        <div>Cantidad de profesores: {profesores?.length || 0}</div>
+        {error && <div className="text-red-600">Error: {error}</div>}
       </div>
 
       {error && (
