@@ -88,7 +88,17 @@ export default function Usuarios() {
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md">
+    <div
+      className="p-6 bg-white rounded-lg shadow-md"
+      style={{
+        backgroundColor: "#ffffff",
+        padding: "24px",
+        borderRadius: "8px",
+        boxShadow:
+          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+        minHeight: "400px",
+      }}
+    >
       <h2 className="mb-4 text-2xl font-bold text-blue-700">
         👥 Gestión de Usuarios
       </h2>

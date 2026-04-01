@@ -155,7 +155,17 @@ export default function Reportes() {
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md">
+    <div
+      className="p-6 bg-white rounded-lg shadow-md"
+      style={{
+        backgroundColor: "#ffffff",
+        padding: "24px",
+        borderRadius: "8px",
+        boxShadow:
+          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+        minHeight: "400px",
+      }}
+    >
       <div className="mb-6">
         <h2 className="text-2xl font-bold">📑 Reportes y Estadísticas</h2>
         <p className="text-gray-600">
