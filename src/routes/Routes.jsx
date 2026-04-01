@@ -1,7 +1,7 @@
 import Dashboard from "../pages/Dashboard";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
-import Profile from "../pages/Profile";
+import Perfil from "../pages/Perfil";
 import { lazy } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import AuthLayout from "../layouts/AuthLayout";
@@ -74,7 +74,7 @@ export const routes = [
     path: "/perfil",
     element: (
       <DashboardLayout>
-        <Profile />
+        <Perfil />
       </DashboardLayout>
     ),
     isPrivate: true,
