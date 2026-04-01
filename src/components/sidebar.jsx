@@ -125,7 +125,7 @@ export default function Sidebar({ onClose }) {
           const isActive =
             location.pathname === item.to ||
             (item.to !== "/" && location.pathname.startsWith(item.to));
-          const Icon = icons[item.icon] || icons.User; // Usar ícono por defecto si no se encuentra
+          const Icon = icons[item.icon] || User; // Usar ícono por defecto si no se encuentra
 
           return (
             <Link
@@ -152,7 +152,7 @@ export default function Sidebar({ onClose }) {
           onClick={onClose}
           className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
         >
-          <icons.User className="w-5 h-5 mr-3" />
+          <User className="w-5 h-5 mr-3" />
           <span>Mi Perfil</span>
         </Link>
         <button
