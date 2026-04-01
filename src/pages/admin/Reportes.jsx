@@ -26,14 +26,21 @@ export default function Reportes() {
   const loadReportes = async () => {
     setLoading(true);
     setError("");
+    console.log("Iniciando carga de reportes...");
     try {
-      const reportesData = await fetchReportes(localStorage.getItem("token"));
-      setReportes(reportesData);
+      const token = localStorage.getItem("token");
+      console.log("Token disponible:", !!token);
+      const reportesData = await fetchReportes(token);
+      console.log("Respuesta del backend:", reportesData);
+      setReportes(reportesData || []);
     } catch (err) {
-      setError("No se pudieron cargar los reportes.");
-      console.error("Error al cargar reportes:", err);
+      console.error("Error detallado al cargar reportes:", err);
+      setError(
+        `Error: ${err.message || "No se pudieron cargar los reportes."}`,
+      );
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {

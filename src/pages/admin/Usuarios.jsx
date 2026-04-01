@@ -26,14 +26,18 @@ export default function Usuarios() {
   const cargarUsuarios = async () => {
     setLoading(true);
     setError("");
-    console.log("Token en localStorage:", localStorage.getItem("token"));
-    console.log("Usuario actual:", usuario);
+    console.log("Iniciando carga de usuarios...");
     try {
-      const usuariosData = await fetchUsuarios(localStorage.getItem("token"));
-      setUsuarios(usuariosData);
+      const token = localStorage.getItem("token");
+      console.log("Token disponible:", !!token);
+      const usuariosData = await fetchUsuarios(token);
+      console.log("Respuesta del backend:", usuariosData);
+      setUsuarios(usuariosData || []);
     } catch (err) {
-      console.error("Error al cargar usuarios:", err);
-      setError("No se pudieron cargar los usuarios.");
+      console.error("Error detallado al cargar usuarios:", err);
+      setError(
+        `Error: ${err.message || "No se pudieron cargar los usuarios."}`,
+      );
     } finally {
       setLoading(false);
     }

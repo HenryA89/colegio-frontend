@@ -29,14 +29,21 @@ export default function Materias() {
   const loadMaterias = async () => {
     setLoading(true);
     setError("");
+    console.log("Cargando materias...");
     try {
-      const materiasData = await fetchMaterias(localStorage.getItem("token"));
-      setMaterias(materiasData);
+      const token = localStorage.getItem("token");
+      console.log("Token disponible:", !!token);
+      const materiasData = await fetchMaterias(token);
+      console.log("Respuesta del backend:", materiasData);
+      setMaterias(materiasData || []);
     } catch (err) {
-      setError("No se pudieron cargar las materias.");
-      console.error("Error al cargar materias:", err);
+      console.error("Error detallado al cargar materias:", err);
+      setError(
+        `Error: ${err.message || "No se pudieron cargar las materias."}`,
+      );
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   // Obtener profesores para asignación
