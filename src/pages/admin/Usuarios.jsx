@@ -147,7 +147,20 @@ export default function Usuarios() {
             <option value="profesor">Profesor</option>
             <option value="admin">Administrador</option>
           </select>
-          <Button type="submit">{editId ? "Actualizar" : "Crear"}</Button>
+          <button
+            type="submit"
+            className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            style={{
+              backgroundColor: "#2563eb",
+              color: "#ffffff",
+              padding: "8px 16px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            {editId ? "Actualizar" : "Crear"}
+          </button>
         </div>
         {error && (
           <div className="p-2 text-red-600 bg-red-100 rounded">{error}</div>
@@ -178,20 +191,36 @@ export default function Usuarios() {
                 <td className="px-4 py-2">{usuario.email}</td>
                 <td className="px-4 py-2 capitalize">{usuario.rol}</td>
                 <td className="flex gap-2 px-4 py-2">
-                  <Button
+                  <button
                     type="button"
                     onClick={() => handleEdit(usuario)}
-                    className="px-3 py-1 text-white bg-yellow-400 rounded hover:bg-yellow-500"
+                    className="px-3 py-1 text-white bg-yellow-400 rounded hover:bg-yellow-500 transition-colors"
+                    style={{
+                      backgroundColor: "#facc15",
+                      color: "#ffffff",
+                      padding: "4px 12px",
+                      borderRadius: "4px",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
                   >
                     Editar
-                  </Button>
-                  <Button
+                  </button>
+                  <button
                     type="button"
                     onClick={() => handleDelete(usuario.id)}
-                    className="px-3 py-1 text-white bg-red-600 rounded hover:bg-red-700"
+                    className="px-3 py-1 text-white bg-red-600 rounded hover:bg-red-700 transition-colors"
+                    style={{
+                      backgroundColor: "#dc2626",
+                      color: "#ffffff",
+                      padding: "4px 12px",
+                      borderRadius: "4px",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
                   >
                     Eliminar
-                  </Button>
+                  </button>
                 </td>
               </tr>
             ))}
