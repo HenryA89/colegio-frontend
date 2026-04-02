@@ -84,51 +84,31 @@ export const routes = [
   // 🎓 Estudiantes
   {
     path: "/estudiante/actividades",
-    element: (
-      <DashboardLayout>
-        <ActividadesEstudiante />
-      </DashboardLayout>
-    ),
+    element: <ActividadesEstudiante />,
     isPrivate: true,
     roles: ["estudiante"],
   },
   {
     path: "/estudiante/asistencia",
-    element: (
-      <DashboardLayout>
-        <AsistenciaEstudiante />
-      </DashboardLayout>
-    ),
+    element: <AsistenciaEstudiante />,
     isPrivate: true,
     roles: ["estudiante"],
   },
   {
     path: "/estudiante/Evaluaciones",
-    element: (
-      <DashboardLayout>
-        <Evaluaciones />
-      </DashboardLayout>
-    ),
+    element: <Evaluaciones />,
     isPrivate: true,
     roles: ["estudiante"],
   },
   {
     path: "/estudiante/quiz",
-    element: (
-      <DashboardLayout>
-        <Quiz />
-      </DashboardLayout>
-    ),
+    element: <Quiz />,
     isPrivate: true,
     roles: ["estudiante"],
   },
   {
     path: "/estudiante/Calificaciones",
-    element: (
-      <DashboardLayout>
-        <Calificaciones />
-      </DashboardLayout>
-    ),
+    element: <Calificaciones />,
     isPrivate: true,
     roles: ["estudiante"],
   },
@@ -136,61 +116,31 @@ export const routes = [
   // 👨‍🏫 Profesores
   {
     path: "/profesor/Clases",
-    element: (
-      <DashboardLayout>
-        <Clases />
-      </DashboardLayout>
-    ),
+    element: <Clases />,
     isPrivate: true,
     roles: ["profesor"],
   },
   {
     path: "/profesor/EvaluacionesClase",
-    element: (
-      <DashboardLayout>
-        <EvaluacionesClase />
-      </DashboardLayout>
-    ),
+    element: <EvaluacionesClase />,
     isPrivate: true,
     roles: ["profesor"],
   },
   {
     path: "/profesor/EstudiantesClases",
-    element: (
-      <DashboardLayout>
-        <EstudiantesClases />
-      </DashboardLayout>
-    ),
+    element: <EstudiantesClases />,
     isPrivate: true,
     roles: ["profesor"],
   },
   {
     path: "/profesor/Actividades",
-    element: (
-      <DashboardLayout>
-        <Actividades />
-      </DashboardLayout>
-    ),
+    element: <Actividades />,
     isPrivate: true,
     roles: ["profesor"],
   },
   {
     path: "/profesor/Asistencias",
-    element: (
-      <DashboardLayout>
-        <Asistencias />
-      </DashboardLayout>
-    ),
-    isPrivate: true,
-    roles: ["profesor"],
-  },
-  {
-    path: "/profesor/EvaluacionesClase",
-    element: (
-      <DashboardLayout>
-        <EvaluacionesClase />
-      </DashboardLayout>
-    ),
+    element: <Asistencias />,
     isPrivate: true,
     roles: ["profesor"],
   },
@@ -198,31 +148,19 @@ export const routes = [
   // Admin
   {
     path: "/admin/Materias",
-    element: (
-      <DashboardLayout>
-        <Materias />
-      </DashboardLayout>
-    ),
+    element: <Materias />,
     isPrivate: true,
     roles: ["admin"],
   },
   {
     path: "/admin/usuarios",
-    element: (
-      <DashboardLayout>
-        <Usuarios />
-      </DashboardLayout>
-    ),
+    element: <Usuarios />,
     isPrivate: true,
     roles: ["admin"],
   },
   {
     path: "/admin/Reportes",
-    element: (
-      <DashboardLayout>
-        <Reportes />
-      </DashboardLayout>
-    ),
+    element: <Reportes />,
     isPrivate: true,
     roles: ["admin"],
   },
