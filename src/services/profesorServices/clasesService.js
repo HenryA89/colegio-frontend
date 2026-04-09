@@ -8,15 +8,22 @@ export const fetchClases = async (token) => {
 
 // Subir material de clase (PDF o texto)
 export const subirClase = async ({ pdf, texto }) => {
-  const formData = new FormData();
-  if (pdf) formData.append("pdf", pdf);
-  if (texto) formData.append("texto", texto);
-  const response = await fetch("/api/v1/clases", {
-    method: "POST",
-    body: formData,
-  });
-  if (!response.ok) throw new Error("No se pudo subir la clase");
-  return response;
+  try {
+    const formData = new FormData();
+    if (pdf) formData.append("pdf", pdf);
+    if (texto) formData.append("texto", texto);
+
+    const response = await api.post("api/v1/clases", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error al subir clase:", error);
+    throw new Error("No se pudo subir la clase");
+  }
 };
 
 // Crear nueva clase
