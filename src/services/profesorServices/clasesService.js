@@ -11,7 +11,7 @@ export const subirClase = async ({ pdf, texto }) => {
   const formData = new FormData();
   if (pdf) formData.append("pdf", pdf);
   if (texto) formData.append("texto", texto);
-  const response = await fetch("http://localhost:3000/api/v1/clases", {
+  const response = await fetch("/api/v1/clases", {
     method: "POST",
     body: formData,
   });
