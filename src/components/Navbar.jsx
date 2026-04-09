@@ -77,24 +77,24 @@ export default function Navbar({ toggleSidebar }) {
               <div className="flex items-center ml-4 space-x-4">
                 {usuario.rol === "profesor" && (
                   <>
-                    <NavLink to="/profesor/Clases" icon="📘" text="Clases" />
+                    <NavLink to="/profesor/clases" icon="📘" text="Clases" />
                     <NavLink
-                      to="/profesor/EvaluacionesClase"
+                      to="/profesor/evaluaciones-clase"
                       icon="📝"
                       text="Evaluaciones"
                     />
                     <NavLink
-                      to="/profesor/EstudiantesClases"
+                      to="/profesor/estudiantes-clases"
                       icon="📝"
                       text="Estudiantes"
                     />
                     <NavLink
-                      to="/profesor/Actividades"
+                      to="/profesor/actividades"
                       icon="🎯"
                       text="Actividades"
                     />
                     <NavLink
-                      to="/profesor/Asistencias"
+                      to="/profesor/asistencias"
                       icon="📋"
                       text="Asistencia"
                     />
@@ -104,7 +104,7 @@ export default function Navbar({ toggleSidebar }) {
                 {usuario.rol === "estudiante" && (
                   <>
                     <NavLink
-                      to="/estudiante/Calificaciones"
+                      to="/estudiante/calificaciones"
                       icon="📊"
                       text="Calificaciones"
                     />
@@ -114,7 +114,7 @@ export default function Navbar({ toggleSidebar }) {
                       text="Actividades"
                     />
                     <NavLink
-                      to="/estudiante/Evaluaciones"
+                      to="/estudiante/evaluaciones"
                       icon="📝"
                       text="Evaluaciones"
                     />
@@ -124,8 +124,8 @@ export default function Navbar({ toggleSidebar }) {
                 {usuario.rol === "admin" && (
                   <>
                     <NavLink to="/admin/usuarios" icon="👥" text="Usuarios" />
-                    <NavLink to="/admin/Materias" icon="📚" text="Materias" />
-                    <NavLink to="/admin/Reportes" icon="📑" text="Reportes" />
+                    <NavLink to="/admin/materias" icon="📚" text="Materias" />
+                    <NavLink to="/admin/reportes" icon="📑" text="Reportes" />
                   </>
                 )}
               </div>
@@ -168,25 +168,25 @@ export default function Navbar({ toggleSidebar }) {
               {usuario.rol === "profesor" && (
                 <>
                   <MobileNavLink
-                    to="/profesor/Clases"
+                    to="/profesor/clases"
                     icon="📘"
                     text="Clases"
                     onClick={() => setIsMenuOpen(false)}
                   />
                   <MobileNavLink
-                    to="/profesor/EvaluacionesClase"
+                    to="/profesor/evaluaciones-clase"
                     icon="📝"
                     text="Evaluaciones"
                     onClick={() => setIsMenuOpen(false)}
                   />
                   <MobileNavLink
-                    to="/profesor/Actividades"
+                    to="/profesor/actividades"
                     icon="🎯"
                     text="Actividades"
                     onClick={() => setIsMenuOpen(false)}
                   />
                   <MobileNavLink
-                    to="/profesor/Asistencias"
+                    to="/profesor/asistencias"
                     icon="📋"
                     text="Asistencia"
                     onClick={() => setIsMenuOpen(false)}
@@ -197,7 +197,7 @@ export default function Navbar({ toggleSidebar }) {
               {usuario.rol === "estudiante" && (
                 <>
                   <MobileNavLink
-                    to="/estudiante/Calificaciones"
+                    to="/estudiante/calificaciones"
                     icon="📊"
                     text="Calificaciones"
                     onClick={() => setIsMenuOpen(false)}
@@ -209,7 +209,7 @@ export default function Navbar({ toggleSidebar }) {
                     onClick={() => setIsMenuOpen(false)}
                   />
                   <MobileNavLink
-                    to="/estudiante/Evaluaciones"
+                    to="/estudiante/evaluaciones"
                     icon="📝"
                     text="Evaluaciones"
                     onClick={() => setIsMenuOpen(false)}
@@ -226,13 +226,13 @@ export default function Navbar({ toggleSidebar }) {
                     onClick={() => setIsMenuOpen(false)}
                   />
                   <MobileNavLink
-                    to="/admin/Materias"
+                    to="/admin/materias"
                     icon="📚"
                     text="Materias"
                     onClick={() => setIsMenuOpen(false)}
                   />
                   <MobileNavLink
-                    to="/admin/Reportes"
+                    to="/admin/reportes"
                     icon="📑"
                     text="Reportes"
                     onClick={() => setIsMenuOpen(false)}

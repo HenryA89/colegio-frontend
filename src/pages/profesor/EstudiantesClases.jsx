@@ -40,8 +40,19 @@ export default function EstudiantesClases() {
     identificacion: "",
   });
 
+  useEffect(() => {
+    if (!id) {
+      navigate("/profesor/clases", { replace: true });
+    }
+  }, [id, navigate]);
+
   // Cargar resultados académicos
   useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
     const cargarResultados = async () => {
       setLoading(true);
       setError("");
@@ -67,6 +78,11 @@ export default function EstudiantesClases() {
 
   // Cargar estudiantes de la clase
   useEffect(() => {
+    if (!id) {
+      setLoadingEstudiantes(false);
+      return;
+    }
+
     const cargarEstudiantes = async () => {
       setLoadingEstudiantes(true);
       try {

@@ -7,6 +7,8 @@ import Button from "../components/iu/Button";
 export default function Register() {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [rol, setRol] = useState("estudiante");
   const [error, setError] = useState("");
   const { register } = useAuth();
@@ -16,9 +18,20 @@ export default function Register() {
     e.preventDefault();
     setError("");
 
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
     try {
       // Usar el contexto de autenticación para registrar
-      const user = await register(nombre, email, password, rol);
+      const user = await register(
+        nombre,
+        email,
+        password,
+        confirmPassword,
+        rol,
+      );
 
       if (!user || !user.token) {
         throw new Error("Error en el registro");
@@ -26,11 +39,11 @@ export default function Register() {
 
       // Redirigir según rol
       if (rol === "admin") {
-        navigate("/admin/Usuarios");
+        navigate("/admin/usuarios");
       } else if (rol === "profesor") {
-        navigate("/profesor/Clases");
+        navigate("/profesor/clases");
       } else {
-        navigate("/estudiante/Calificaciones");
+        navigate("/estudiante/calificaciones");
       }
     } catch (err) {
       setError(err.message);

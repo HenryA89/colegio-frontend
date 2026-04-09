@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { replace, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/UseAuth";
 import Button from "../components/iu/Button";
 import Input from "../components/iu/Input";
@@ -96,12 +96,12 @@ export default function Login() {
 
         <p className="mt-6 text-sm text-center text-indigo-100">
           ¿No tienes cuenta?{" "}
-          <a
-            href="/register"
+          <Link
+            to="/register"
             className="underline text-fuchsia-300 underline-offset-2 hover:text-fuchsia-100"
           >
             Regístrate aquí
-          </a>
+          </Link>
         </p>
       </div>
     </div>

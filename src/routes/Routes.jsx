@@ -1,15 +1,21 @@
-import Dashboard from "../pages/Dashboard";
+import { lazy } from "react";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
+import Dashboard from "../pages/Dashboard";
 import Perfil from "../pages/Perfil";
-import { lazy } from "react";
-import DashboardLayout from "../layouts/DashboardLayout";
 import AuthLayout from "../layouts/AuthLayout";
 
-// Lazy loading para componentes pesados
+// Lazy loading para modulos privados
 const Quiz = lazy(() => import("../pages/estudiante/Quiz"));
 const Evaluaciones = lazy(() => import("../pages/estudiante/Evaluaciones"));
 const Calificaciones = lazy(() => import("../pages/estudiante/Calificaciones"));
+const ActividadesEstudiante = lazy(
+  () => import("../pages/estudiante/Actividades"),
+);
+const AsistenciaEstudiante = lazy(
+  () => import("../pages/estudiante/Asistencia"),
+);
+
 const Clases = lazy(() => import("../pages/profesor/Clases"));
 const EstudiantesClases = lazy(
   () => import("../pages/profesor/EstudiantesClases"),
@@ -19,18 +25,13 @@ const EvaluacionesClase = lazy(
 );
 const Actividades = lazy(() => import("../pages/profesor/Actividades"));
 const Asistencias = lazy(() => import("../pages/profesor/Asistencias"));
-const ActividadesEstudiante = lazy(
-  () => import("../pages/estudiante/Actividades"),
-);
-const AsistenciaEstudiante = lazy(
-  () => import("../pages/estudiante/Asistencia"),
-);
+
 const Usuarios = lazy(() => import("../pages/admin/Usuarios"));
 const Materias = lazy(() => import("../pages/admin/Materias"));
 const Reportes = lazy(() => import("../pages/admin/Reportes"));
 
 export const routes = [
-  // 🔓 Públicas
+  // Publicas
   {
     path: "/",
     element: (
@@ -59,7 +60,7 @@ export const routes = [
     isPrivate: false,
   },
 
-  // 🔐 Generales (logueados)
+  // Generales (logueados)
   {
     path: "/dashboard",
     element: <Dashboard />,
@@ -73,7 +74,7 @@ export const routes = [
     roles: ["estudiante", "profesor", "admin"],
   },
 
-  // 🎓 Estudiantes
+  // Estudiantes
   {
     path: "/estudiante/actividades",
     element: <ActividadesEstudiante />,
@@ -87,7 +88,13 @@ export const routes = [
     roles: ["estudiante"],
   },
   {
-    path: "/estudiante/Evaluaciones",
+    path: "/estudiante/evaluaciones",
+    element: <Evaluaciones />,
+    isPrivate: true,
+    roles: ["estudiante"],
+  },
+  {
+    path: "/estudiante/evaluaciones/:id",
     element: <Evaluaciones />,
     isPrivate: true,
     roles: ["estudiante"],
@@ -99,39 +106,51 @@ export const routes = [
     roles: ["estudiante"],
   },
   {
-    path: "/estudiante/Calificaciones",
+    path: "/estudiante/calificaciones",
     element: <Calificaciones />,
     isPrivate: true,
     roles: ["estudiante"],
   },
 
-  // 👨‍🏫 Profesores
+  // Profesores
   {
-    path: "/profesor/Clases",
+    path: "/profesor/clases",
     element: <Clases />,
     isPrivate: true,
     roles: ["profesor"],
   },
   {
-    path: "/profesor/EvaluacionesClase",
+    path: "/profesor/evaluaciones-clase",
     element: <EvaluacionesClase />,
     isPrivate: true,
     roles: ["profesor"],
   },
   {
-    path: "/profesor/EstudiantesClases",
+    path: "/profesor/evaluaciones-clase/:id",
+    element: <EvaluacionesClase />,
+    isPrivate: true,
+    roles: ["profesor"],
+  },
+  {
+    path: "/profesor/estudiantes-clases",
     element: <EstudiantesClases />,
     isPrivate: true,
     roles: ["profesor"],
   },
   {
-    path: "/profesor/Actividades",
+    path: "/profesor/estudiantes-clases/:id",
+    element: <EstudiantesClases />,
+    isPrivate: true,
+    roles: ["profesor"],
+  },
+  {
+    path: "/profesor/actividades",
     element: <Actividades />,
     isPrivate: true,
     roles: ["profesor"],
   },
   {
-    path: "/profesor/Asistencias",
+    path: "/profesor/asistencias",
     element: <Asistencias />,
     isPrivate: true,
     roles: ["profesor"],
@@ -139,7 +158,7 @@ export const routes = [
 
   // Admin
   {
-    path: "/admin/Materias",
+    path: "/admin/materias",
     element: <Materias />,
     isPrivate: true,
     roles: ["admin"],
@@ -151,7 +170,7 @@ export const routes = [
     roles: ["admin"],
   },
   {
-    path: "/admin/Reportes",
+    path: "/admin/reportes",
     element: <Reportes />,
     isPrivate: true,
     roles: ["admin"],

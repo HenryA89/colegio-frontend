@@ -56,37 +56,37 @@ export default function Sidebar({ onClose }) {
           icon: "ClipboardList",
         },
         {
-          to: "/estudiante/Evaluaciones",
+          to: "/estudiante/evaluaciones",
           label: "Evaluaciones",
           icon: "FileText",
         },
         { to: "/estudiante/quiz", label: "Quiz", icon: "BookOpen" },
         {
-          to: "/estudiante/Calificaciones",
+          to: "/estudiante/calificaciones",
           label: "Calificaciones",
           icon: "BarChart2",
         },
       ],
       profesor: [
         { to: "/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
-        { to: "/profesor/Clases", label: "Clases", icon: "BookOpen" },
+        { to: "/profesor/clases", label: "Clases", icon: "BookOpen" },
         {
-          to: "/profesor/EvaluacionesClase",
+          to: "/profesor/evaluaciones-clase",
           label: "Evaluaciones",
           icon: "FileText",
         },
         {
-          to: "/profesor/Actividades",
+          to: "/profesor/actividades",
           label: "Actividades",
           icon: "ListChecks",
         },
         {
-          to: "/profesor/EstudiantesClases",
+          to: "/profesor/estudiantes-clases",
           label: "Estudiantes",
           icon: "Users",
         },
         {
-          to: "/profesor/Asistencias",
+          to: "/profesor/asistencias",
           label: "Asistencias",
           icon: "CheckSquare",
         },
@@ -94,8 +94,8 @@ export default function Sidebar({ onClose }) {
       admin: [
         { to: "/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
         { to: "/admin/usuarios", label: "Usuarios", icon: "Users" },
-        { to: "/admin/Materias", label: "Materias", icon: "GraduationCap" },
-        { to: "/admin/Reportes", label: "Reportes", icon: "BarChart2" },
+        { to: "/admin/materias", label: "Materias", icon: "GraduationCap" },
+        { to: "/admin/reportes", label: "Reportes", icon: "BarChart2" },
       ],
     }[usuario.rol] || [];
 

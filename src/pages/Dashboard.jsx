@@ -7,7 +7,7 @@ function ProfesorDashboard() {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Link
-        to="/profesor/Clases"
+        to="/profesor/clases"
         className="p-6 shadow-lg border-2 border-transparent bg-linear-to-br from-blue-50 to-purple-50 hover:border-blue-300 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
@@ -25,7 +25,7 @@ function ProfesorDashboard() {
         </div>
       </Link>
       <Link
-        to="/profesor/EvaluacionesClase"
+        to="/profesor/evaluaciones-clase"
         className="p-6 shadow-lg border-2 border-indigo-200 bg-linear-to-br from-indigo-100 to-purple-100 hover:border-indigo-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
@@ -43,7 +43,7 @@ function ProfesorDashboard() {
         </div>
       </Link>
       <Link
-        to="/profesor/Actividades"
+        to="/profesor/actividades"
         className="p-6 shadow-lg border-2 border-pink-200 bg-linear-to-br from-pink-100 to-purple-100 hover:border-pink-400 hover:shadow-xl hover:scale-105 hover:rotate-1 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
@@ -61,7 +61,7 @@ function ProfesorDashboard() {
         </div>
       </Link>
       <Link
-        to="/profesor/Asistencias"
+        to="/profesor/asistencias"
         className="p-6 shadow-lg border-2 border-green-200 bg-linear-to-br from-green-100 to-blue-100 hover:border-green-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
@@ -86,7 +86,7 @@ function EstudianteDashboard() {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       <Link
-        to="/estudiante/Calificaciones"
+        to="/estudiante/calificaciones"
         className="p-6 shadow-lg border-2 border-transparent bg-linear-to-br from-blue-50 to-purple-50 hover:border-blue-300 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
@@ -104,7 +104,7 @@ function EstudianteDashboard() {
         </div>
       </Link>
       <Link
-        to="/estudiante/Actividades"
+        to="/estudiante/actividades"
         className="p-6 shadow-lg border-2 border-pink-200 bg-linear-to-br from-pink-100 to-purple-100 hover:border-pink-400 hover:shadow-xl hover:scale-105 hover:rotate-1 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
@@ -120,7 +120,7 @@ function EstudianteDashboard() {
         </div>
       </Link>
       <Link
-        to="/estudiante/Evaluaciones"
+        to="/estudiante/evaluaciones"
         className="p-6 shadow-lg border-2 border-green-200 bg-linear-to-br from-green-100 to-blue-100 hover:border-green-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
@@ -161,7 +161,7 @@ function AdminDashboard() {
         </div>
       </Link>
       <Link
-        to="/admin/Materias"
+        to="/admin/materias"
         className="p-6 shadow-lg border-2 border-indigo-200 bg-linear-to-br from-indigo-100 to-purple-100 hover:border-indigo-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">
@@ -179,7 +179,7 @@ function AdminDashboard() {
         </div>
       </Link>
       <Link
-        to="/admin/Reportes"
+        to="/admin/reportes"
         className="p-6 shadow-lg border-2 border-green-200 bg-linear-to-br from-green-100 to-blue-100 hover:border-green-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
       >
         <div className="flex items-center space-x-4">

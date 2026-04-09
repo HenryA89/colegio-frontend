@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   PlusCircle,
   Edit,
@@ -45,6 +45,7 @@ import { fetchClases } from "../../services/profesorServices/clasesService";
 export default function EvaluacionesClase() {
   const { id } = useParams(); // id de la clase
   const { usuario } = useAuth();
+  const navigate = useNavigate();
   const [evaluaciones, setEvaluaciones] = useState([]);
   const [quizzesIA, setQuizzesIA] = useState([]);
   const [evaluacionesIA, setEvaluacionesIA] = useState([]);
@@ -114,6 +115,12 @@ export default function EvaluacionesClase() {
     ponderacion: "igual", // igual, por_dificultad, por_tema
   });
 
+  useEffect(() => {
+    if (!id) {
+      navigate("/profesor/clases", { replace: true });
+    }
+  }, [id, navigate]);
+
   // Cargar material reciente
   const cargarMaterialReciente = async () => {
     setLoadingMaterial(true);
@@ -160,6 +167,11 @@ export default function EvaluacionesClase() {
 
   // Cargar todo (evaluaciones + quizzes IA + evaluaciones IA + clases)
   useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
     const cargarTodo = async () => {
       setLoading(true);
       setError("");

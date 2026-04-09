@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   PlusCircle,
   Users,
@@ -16,6 +17,7 @@ import {
 
 export default function Clases() {
   const { usuario } = useAuth();
+  const navigate = useNavigate();
   const [clases, setClases] = useState([]);
   const [open, setOpen] = useState(false);
   const [texto, setTexto] = useState("");
@@ -190,7 +192,7 @@ export default function Clases() {
                 <div className="flex gap-3">
                   <button
                     onClick={() =>
-                      (window.location.href = `/clases/${clase.id}/estudiantes`)
+                      navigate(`/profesor/estudiantes-clases/${clase.id}`)
                     }
                     className="flex-1 px-3 py-2 text-blue-600 border-2 border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all flex items-center justify-center gap-2"
                   >
@@ -199,7 +201,7 @@ export default function Clases() {
                   </button>
                   <button
                     onClick={() =>
-                      (window.location.href = `/clases/${clase.id}/evaluaciones`)
+                      navigate(`/profesor/evaluaciones-clase/${clase.id}`)
                     }
                     className="flex-1 px-3 py-2 text-purple-600 border-2 border-purple-200 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-all flex items-center justify-center gap-2"
                   >

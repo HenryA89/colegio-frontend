@@ -3,7 +3,7 @@ import { Outlet } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/sidebar";
 
-export default function DashboardLayout() {
+export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -52,7 +52,7 @@ export default function DashboardLayout() {
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar toggleSidebar={toggleSidebar} />
         <main className="flex-1 p-4 overflow-y-auto bg-gray-100 md:p-6">
-          <Outlet />
+          {children ?? <Outlet />}
         </main>
       </div>
     </div>
