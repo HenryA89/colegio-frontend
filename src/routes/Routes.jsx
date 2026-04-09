@@ -62,21 +62,13 @@ export const routes = [
   // 🔐 Generales (logueados)
   {
     path: "/dashboard",
-    element: (
-      <DashboardLayout>
-        <Dashboard />
-      </DashboardLayout>
-    ),
+    element: <Dashboard />,
     isPrivate: true,
     roles: ["estudiante", "profesor", "admin"],
   },
   {
     path: "/perfil",
-    element: (
-      <DashboardLayout>
-        <Perfil />
-      </DashboardLayout>
-    ),
+    element: <Perfil />,
     isPrivate: true,
     roles: ["estudiante", "profesor", "admin"],
   },

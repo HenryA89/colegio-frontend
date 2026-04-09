@@ -9,8 +9,6 @@ import AuthProvider from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
 import NotFound from "./pages/NotFound";
-import { useEffect } from "react";
-import Navbar from "./components/Navbar";
 import { Suspense } from "react";
 import LoadingSpinner from "./components/LoadingSpinner";
 
