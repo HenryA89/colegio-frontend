@@ -180,6 +180,12 @@ export default function Navbar({ toggleSidebar }) {
                     onClick={() => setIsMenuOpen(false)}
                   />
                   <MobileNavLink
+                    to="/profesor/estudiantes-clases"
+                    icon="👥"
+                    text="Estudiantes"
+                    onClick={() => setIsMenuOpen(false)}
+                  />
+                  <MobileNavLink
                     to="/profesor/actividades"
                     icon="🎯"
                     text="Actividades"

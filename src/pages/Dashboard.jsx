@@ -43,6 +43,24 @@ function ProfesorDashboard() {
         </div>
       </Link>
       <Link
+        to="/profesor/estudiantes-clases"
+        className="p-6 shadow-lg border-2 border-purple-200 bg-linear-to-br from-purple-100 to-pink-100 hover:border-purple-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
+      >
+        <div className="flex items-center space-x-4">
+          <div className="p-4 text-3xl text-white bg-linear-to-br from-pink-400 to-purple-600 rounded-xl">
+            👥
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-gray-800 transition-colors group-hover:text-pink-600">
+              Estudiantes
+            </h3>
+            <p className="text-sm text-gray-600">
+              Gestiona la lista de estudiantes por clase
+            </p>
+          </div>
+        </div>
+      </Link>
+      <Link
         to="/profesor/actividades"
         className="p-6 shadow-lg border-2 border-pink-200 bg-linear-to-br from-pink-100 to-purple-100 hover:border-pink-400 hover:shadow-xl hover:scale-105 hover:rotate-1 transition-all duration-300 rounded-2xl group"
       >

@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Users,
@@ -11,7 +11,6 @@ import {
   Award,
   FileText,
 } from "lucide-react";
-import { useAuth } from "../../hooks/UseAuth";
 import {
   fetchEstudiantesPorClase,
   fetchResultadosEstudiantes,
@@ -23,7 +22,6 @@ import {
 
 export default function EstudiantesClases() {
   const { id } = useParams(); // id de la clase
-  const { usuario } = useAuth();
   const navigate = useNavigate();
   const [estudiantes, setEstudiantes] = useState([]);
   const [resultados, setResultados] = useState([]);
@@ -46,60 +44,60 @@ export default function EstudiantesClases() {
     }
   }, [id, navigate]);
 
-  // Cargar resultados académicos
-  useEffect(() => {
+  const cargarResultados = useCallback(async () => {
     if (!id) {
-      setLoading(false);
+      setResultados([]);
       return;
     }
 
-    const cargarResultados = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        // Intentar cargar resultados específicos de la clase primero
-        const resultadosClase = await fetchResultadosPorClase(id);
+    setLoading(true);
+    setError("");
+    try {
+      const resultadosClase = await fetchResultadosPorClase(id);
+      if (Array.isArray(resultadosClase) && resultadosClase.length > 0) {
         setResultados(resultadosClase);
-
-        // Si no hay resultados específicos, cargar generales
-        if (resultadosClase.length === 0) {
-          const resultadosGenerales = await fetchResultadosEstudiantes();
-          setResultados(resultadosGenerales);
-        }
-      } catch (err) {
-        setError("No se pudieron cargar los resultados de los estudiantes.");
-        console.error("Error:", err);
-      } finally {
-        setLoading(false);
+      } else {
+        const resultadosGenerales = await fetchResultadosEstudiantes();
+        setResultados(
+          Array.isArray(resultadosGenerales) ? resultadosGenerales : [],
+        );
       }
-    };
-    cargarResultados();
+    } catch (err) {
+      setError("No se pudieron cargar los resultados de los estudiantes.");
+      console.error("Error cargando resultados:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
 
-  // Cargar estudiantes de la clase
-  useEffect(() => {
+  const cargarEstudiantes = useCallback(async () => {
     if (!id) {
+      setEstudiantes([]);
+      setEstadisticas({});
       setLoadingEstudiantes(false);
       return;
     }
 
-    const cargarEstudiantes = async () => {
-      setLoadingEstudiantes(true);
-      try {
-        const estudiantesData = await fetchEstudiantesPorClase(id);
-        setEstudiantes(estudiantesData);
+    setLoadingEstudiantes(true);
+    setError("");
+    try {
+      const estudiantesData = await fetchEstudiantesPorClase(id);
+      setEstudiantes(estudiantesData || []);
 
-        // Cargar estadísticas de la clase
-        const estadisticasData = await fetchEstadisticasClase(id);
-        setEstadisticas(estadisticasData);
-      } catch (error) {
-        console.error("Error cargando estudiantes:", error);
-      } finally {
-        setLoadingEstudiantes(false);
-      }
-    };
-    cargarEstudiantes();
+      const estadisticasData = await fetchEstadisticasClase(id);
+      setEstadisticas(estadisticasData || {});
+    } catch (error) {
+      setError("No se pudieron cargar los estudiantes de la clase.");
+      console.error("Error cargando estudiantes:", error);
+    } finally {
+      setLoadingEstudiantes(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    cargarResultados();
+    cargarEstudiantes();
+  }, [cargarResultados, cargarEstudiantes]);
 
   // Filtrar por ID y grado
   const resultadosFiltrados = resultados.filter((est) => {
@@ -177,13 +175,18 @@ export default function EstudiantesClases() {
 
   // Manejo de inscripción
   const handleInscripcion = async () => {
+    if (!nuevoEstudiante.nombre.trim() || !nuevoEstudiante.email.trim()) {
+      setError(
+        "El nombre y el email son obligatorios para inscribir un estudiante.",
+      );
+      return;
+    }
+
     try {
       await inscribirEstudiante(id, nuevoEstudiante);
       setMostrarModal(false);
       setNuevoEstudiante({ nombre: "", email: "", identificacion: "" });
-      // Recargar estudiantes
-      const estudiantesData = await fetchEstudiantesPorClase(id);
-      setEstudiantes(estudiantesData);
+      await cargarEstudiantes();
     } catch (error) {
       setError("Error al inscribir estudiante");
       console.error("Error:", error);
@@ -570,14 +573,21 @@ export default function EstudiantesClases() {
               </div>
               <div className="flex gap-3 mt-6">
                 <button
-                  onClick={() => setMostrarModal(false)}
+                  onClick={() => {
+                    setMostrarModal(false);
+                    setError("");
+                  }}
                   className="flex-1 px-4 py-3 text-gray-600 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleInscripcion}
-                  className="flex-1 px-4 py-3 text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors"
+                  disabled={
+                    !nuevoEstudiante.nombre.trim() ||
+                    !nuevoEstudiante.email.trim()
+                  }
+                  className="flex-1 px-4 py-3 text-white bg-purple-600 rounded-xl hover:bg-purple-700 disabled:bg-gray-400 transition-colors"
                 >
                   Inscribir
                 </button>
