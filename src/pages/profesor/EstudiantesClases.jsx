@@ -38,12 +38,6 @@ export default function EstudiantesClases() {
     identificacion: "",
   });
 
-  useEffect(() => {
-    if (!id) {
-      navigate("/profesor/clases", { replace: true });
-    }
-  }, [id, navigate]);
-
   const cargarResultados = useCallback(async () => {
     if (!id) {
       setResultados([]);

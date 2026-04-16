@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   PlusCircle,
   Edit,
@@ -15,7 +15,6 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
-import { useAuth } from "../../hooks/UseAuth";
 import {
   fetchEvaluacionesClase,
   crearEvaluacionClase,
@@ -31,7 +30,6 @@ import {
   generarQuizConIA,
   guardarQuizIA,
   fetchQuizzesIA,
-  editarQuizIA,
   eliminarQuizIA,
   publicarQuizIA,
   fetchResultadosQuizIA,
@@ -44,8 +42,6 @@ import { fetchClases } from "../../services/profesorServices/clasesService";
 
 export default function EvaluacionesClase() {
   const { id } = useParams(); // id de la clase
-  const { usuario } = useAuth();
-  const navigate = useNavigate();
   const [evaluaciones, setEvaluaciones] = useState([]);
   const [quizzesIA, setQuizzesIA] = useState([]);
   const [evaluacionesIA, setEvaluacionesIA] = useState([]);
@@ -66,7 +62,7 @@ export default function EvaluacionesClase() {
   const [evaluacionIASeleccionada, setEvaluacionIASeleccionada] =
     useState(null);
   const [mostrarDetalles, setMostrarDetalles] = useState(false);
-  const [respuestas, setRespuestas] = useState([]);
+  const [_respuestas, setRespuestas] = useState([]);
   const [estadisticas, setEstadisticas] = useState({});
   const [resultados, setResultados] = useState([]);
   const [materialReciente, setMaterialReciente] = useState(null);
@@ -115,12 +111,6 @@ export default function EvaluacionesClase() {
     ponderacion: "igual", // igual, por_dificultad, por_tema
   });
 
-  useEffect(() => {
-    if (!id) {
-      navigate("/profesor/clases", { replace: true });
-    }
-  }, [id, navigate]);
-
   // Cargar material reciente
   const cargarMaterialReciente = async () => {
     setLoadingMaterial(true);
@@ -166,6 +156,7 @@ export default function EvaluacionesClase() {
   };
 
   // Cargar todo (evaluaciones + quizzes IA + evaluaciones IA + clases)
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (!id) {
       setLoading(false);
@@ -207,6 +198,7 @@ export default function EvaluacionesClase() {
     fetchQuizzesIA,
     fetchEvaluacionesIA,
   ]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   // Manejo del formulario de evaluación manual
   const handleInputChange = (e) => {
@@ -562,7 +554,7 @@ export default function EvaluacionesClase() {
       setLoading(true);
 
       // Cargar detalles, respuestas y estadísticas
-      const [detalles, respuestasData, estadisticasData] = await Promise.all([
+      const [, respuestasData, estadisticasData] = await Promise.all([
         fetchDetallesEvaluacion(id, evaluacion.id),
         fetchRespuestasEvaluacionClase(id, evaluacion.id),
         fetchEstadisticasEvaluacion(id, evaluacion.id),
