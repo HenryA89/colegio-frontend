@@ -79,13 +79,21 @@ export default function Materias() {
     setLoading(true);
     setError("");
 
+    console.log("=== ENVIANDO FORMULARIO MATERIA ===");
+    console.log("FormData actual:", formData);
+    console.log("Edit ID:", editId);
+
     try {
       if (editId) {
         // Actualizar materia existente
+        console.log(" Actualizando materia...");
         await actualizarMateria(editId, formData);
+        console.log(" Materia actualizada correctamente");
       } else {
         // Crear nueva materia
+        console.log(" Creando nueva materia...");
         await crearMateria(formData);
+        console.log(" Materia creada correctamente");
       }
 
       // Resetear formulario y recargar lista
@@ -101,12 +109,11 @@ export default function Materias() {
       setShowModal(false);
       loadMaterias();
     } catch (err) {
-      setError(
-        editId ? "Error al actualizar materia." : "Error al crear materia.",
-      );
-      console.error("Error:", err);
+      console.error(" Error en handleSubmit:", err);
+      setError(err.message || "Error al guardar la materia.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   // Editar materia
@@ -356,21 +363,42 @@ export default function Materias() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Profesor Asignado
+                  Profesor Asignado <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="profesorId"
                   value={formData.profesorId}
                   onChange={handleChange}
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Seleccionar profesor</option>
-                  {profesores.map((profesor) => (
-                    <option key={profesor._id} value={profesor._id}>
-                      {profesor.nombre} {profesor.apellido || ""}
+                  <option value="">Seleccionar profesor...</option>
+                  {profesores.length === 0 ? (
+                    <option value="" disabled>
+                      No hay profesores disponibles
                     </option>
-                  ))}
+                  ) : (
+                    profesores.map((profesor) => (
+                      <option key={profesor._id} value={profesor._id}>
+                        {profesor.nombre} {profesor.apellido || ""} (
+                        {profesor.email})
+                      </option>
+                    ))
+                  )}
                 </select>
+                {profesores.length === 0 && (
+                  <p className="mt-1 text-sm text-red-600">
+                    ⚠️ No hay profesores disponibles. Primero cree profesores en
+                    la sección de Usuarios.
+                  </p>
+                )}
+                {formData.profesorId && (
+                  <p className="mt-1 text-sm text-green-600">
+                    ✅ Profesor seleccionado:{" "}
+                    {profesores.find((p) => p._id === formData.profesorId)
+                      ?.nombre || "Desconocido"}
+                  </p>
+                )}
               </div>
 
               <div>
