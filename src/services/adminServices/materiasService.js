@@ -18,6 +18,17 @@ export const crearMateria = async (materiaData, token) => {
     console.log("Datos recibidos:", materiaData);
     console.log("Token disponible:", !!token);
 
+    // Validación detallada del profesorId
+    console.log("🔍 Analizando profesorId...");
+    console.log("profesorId:", materiaData.profesorId);
+    console.log("Tipo:", typeof materiaData.profesorId);
+    console.log("Longitud:", materiaData.profesorId?.length);
+    console.log("Trim():", materiaData.profesorId?.trim());
+    console.log(
+      "Es válido ObjectId?",
+      /^[0-9a-fA-F]{24}$/.test(materiaData.profesorId),
+    );
+
     // Validar campos obligatorios
     if (!materiaData.profesorId || materiaData.profesorId.trim() === "") {
       console.error("❌ profesorId está vacío o es nulo");
@@ -26,16 +37,35 @@ export const crearMateria = async (materiaData, token) => {
       );
     }
 
+    // Validar formato de ObjectId de MongoDB
+    if (!/^[0-9a-fA-F]{24}$/.test(materiaData.profesorId)) {
+      console.error("❌ profesorId no tiene formato válido de ObjectId");
+      throw new Error(
+        "El ID del profesor no tiene un formato válido. Por favor, seleccione un profesor de la lista.",
+      );
+    }
+
     if (!materiaData.nombre || materiaData.nombre.trim() === "") {
       console.error("❌ nombre está vacío");
       throw new Error("El nombre de la materia es obligatorio.");
     }
 
+    // Preparar payload exactamente como lo espera el backend
+    const payload = {
+      nombre: materiaData.nombre.trim(),
+      descripcion: materiaData.descripcion?.trim() || "",
+      curso: materiaData.curso?.trim() || "",
+      profesorId: materiaData.profesorId.trim(), // Asegurar que no tenga espacios
+      horario: materiaData.horario?.trim() || "",
+    };
+
     console.log("✅ Validación pasada. Enviando al backend...");
     console.log("Endpoint: POST api/v1/admin/materias");
-    console.log("Payload:", JSON.stringify(materiaData, null, 2));
+    console.log("Payload final:", JSON.stringify(payload, null, 2));
+    console.log("profesorId final:", payload.profesorId);
+    console.log("Tipo profesorId final:", typeof payload.profesorId);
 
-    const res = await api.post("api/v1/admin/materias", materiaData);
+    const res = await api.post("api/v1/admin/materias", payload);
 
     console.log("✅ Respuesta del backend:", res.status);
     console.log("Data:", res.data);
@@ -57,8 +87,9 @@ export const crearMateria = async (materiaData, token) => {
         errores.includes("Profesor must exist") ||
         errores.includes("Profesor es obligatorio")
       ) {
+        console.error("❌ El backend dice que el profesor no existe");
         throw new Error(
-          "El profesor seleccionado no existe o no es válido. Por favor, seleccione otro profesor.",
+          "El profesor seleccionado no existe en la base de datos. Verifique que el profesor esté registrado correctamente.",
         );
       }
 

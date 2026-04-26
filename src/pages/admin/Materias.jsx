@@ -48,10 +48,24 @@ export default function Materias() {
   // Obtener profesores para asignación
   const loadProfesores = async () => {
     try {
+      console.log("=== CARGANDO PROFESORES ===");
       const usuarios = await fetchUsuarios(localStorage.getItem("token"));
+      console.log("Usuarios recibidos:", usuarios);
+
       const soloProfesores = usuarios.filter(
         (usuario) => usuario.rol === "profesor",
       );
+
+      console.log("Profesores filtrados:", soloProfesores);
+      console.log("Cantidad de profesores:", soloProfesores.length);
+
+      // Mostrar IDs de profesores para debugging
+      soloProfesores.forEach((prof) => {
+        console.log(
+          `Profesor: ${prof.nombre} - ID: ${prof._id} - Tipo: ${typeof prof._id}`,
+        );
+      });
+
       setProfesores(soloProfesores);
     } catch (err) {
       console.error("Error al cargar profesores:", err);
@@ -368,8 +382,8 @@ export default function Materias() {
                   ) : (
                     profesores.map((profesor) => (
                       <option key={profesor._id} value={profesor._id}>
-                        {profesor.nombre} {profesor.apellido || ""} (
-                        {profesor.email})
+                        {profesor.nombre} {profesor.apellido || ""} - ID:{" "}
+                        {profesor._id} ({profesor.email})
                       </option>
                     ))
                   )}
