@@ -114,6 +114,61 @@ export const inscribirEstudiante = async (claseId, estudianteData) => {
   }
 };
 
+// Inscribir automáticamente todos los estudiantes de un grado/curso en una clase
+export const inscribirEstudiantesAutomaticamente = async (claseId, grado) => {
+  try {
+    console.log("=== INSCRIPCIÓN AUTOMÁTICA DE ESTUDIANTES ===");
+    console.log("Clase ID:", claseId);
+    console.log("Grado:", grado);
+
+    const response = await api.post(
+      `api/v1/clases/${claseId}/inscribir-automatico`,
+      {
+        grado: grado,
+      },
+    );
+
+    console.log("✅ Estudiantes inscritos automáticamente:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error en inscripción automática:", error);
+    throw new Error(
+      `No se pudo inscribir automáticamente los estudiantes: ${error.message}`,
+    );
+  }
+};
+
+// Obtener todos los estudiantes disponibles para inscripción (no inscritos aún)
+export const fetchEstudiantesDisponibles = async (grado) => {
+  try {
+    console.log("=== OBTENIENDO ESTUDIANTES DISPONIBLES ===");
+    console.log("Grado:", grado);
+
+    const response = await api.get(
+      `api/v1/estudiantes/disponibles?grado=${grado}`,
+    );
+
+    // Manejar diferentes formatos de respuesta
+    let estudiantes = [];
+    if (Array.isArray(response.data)) {
+      estudiantes = response.data;
+    } else if (
+      response.data?.estudiantes &&
+      Array.isArray(response.data.estudiantes)
+    ) {
+      estudiantes = response.data.estudiantes;
+    } else if (response.data?.data && Array.isArray(response.data.data)) {
+      estudiantes = response.data.data;
+    }
+
+    console.log("✅ Estudiantes disponibles:", estudiantes.length);
+    return estudiantes;
+  } catch (error) {
+    console.error("❌ Error obteniendo estudiantes disponibles:", error);
+    throw new Error("No se pudieron obtener los estudiantes disponibles");
+  }
+};
+
 // Eliminar estudiante de una clase
 export const eliminarEstudianteDeClase = async (claseId, estudianteId) => {
   try {

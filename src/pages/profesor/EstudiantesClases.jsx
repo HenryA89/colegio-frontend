@@ -16,6 +16,8 @@ import {
   fetchResultadosEstudiantes,
   fetchResultadosPorClase,
   inscribirEstudiante,
+  inscribirEstudiantesAutomaticamente,
+  fetchEstudiantesDisponibles,
   eliminarEstudianteDeClase,
   fetchEstadisticasClase,
 } from "../../services/profesorServices/estudiantesClasesService";
@@ -34,6 +36,9 @@ export default function EstudiantesClases() {
   const [filtroId, setFiltroId] = useState("");
   const [filtroGrado, setFiltroGrado] = useState("");
   const [mostrarModal, setMostrarModal] = useState(false);
+  const [mostrarModalAuto, setMostrarModalAuto] = useState(false);
+  const [estudiantesDisponibles, setEstudiantesDisponibles] = useState([]);
+  const [loadingDisponibles, setLoadingDisponibles] = useState(false);
   const [nuevoEstudiante, setNuevoEstudiante] = useState({
     nombre: "",
     email: "",
@@ -262,6 +267,73 @@ export default function EstudiantesClases() {
       setError("Error al inscribir estudiante");
       console.error("Error:", error);
     }
+  };
+
+  // Cargar estudiantes disponibles para inscripción automática
+  const cargarEstudiantesDisponibles = async () => {
+    if (!id) return;
+
+    setLoadingDisponibles(true);
+    try {
+      // Obtener información de la clase actual para saber el grado
+      const claseActual = clases.find((c) => c.id === id);
+      const grado = claseActual?.curso || claseActual?.grado || "";
+
+      if (!grado) {
+        setError(
+          "No se puede determinar el grado de la clase para la inscripción automática",
+        );
+        return;
+      }
+
+      const disponibles = await fetchEstudiantesDisponibles(grado);
+      setEstudiantesDisponibles(disponibles);
+    } catch (error) {
+      console.error("Error cargando estudiantes disponibles:", error);
+      setError("Error al cargar estudiantes disponibles");
+    } finally {
+      setLoadingDisponibles(false);
+    }
+  };
+
+  // Inscripción automática de todos los estudiantes del grado
+  const handleInscripcionAutomatica = async () => {
+    if (!id) return;
+
+    try {
+      // Obtener información de la clase actual
+      const claseActual = clases.find((c) => c.id === id);
+      const grado = claseActual?.curso || claseActual?.grado || "";
+
+      if (!grado) {
+        setError("No se puede determinar el grado de la clase");
+        return;
+      }
+
+      console.log("Iniciando inscripción automática para grado:", grado);
+      const resultado = await inscribirEstudiantesAutomaticamente(id, grado);
+
+      setMostrarModalAuto(false);
+      setEstudiantesDisponibles([]);
+
+      // Recargar estudiantes
+      await cargarEstudiantes();
+
+      // Mostrar mensaje de éxito
+      setError(
+        `✅ ${resultado.mensaje || "Estudiantes inscritos automáticamente"}`,
+      );
+      setTimeout(() => setError(""), 5000);
+    } catch (error) {
+      setError(`Error en inscripción automática: ${error.message}`);
+      console.error("Error:", error);
+    }
+  };
+
+  // Abrir modal de inscripción automática
+  const abrirModalAuto = async () => {
+    setMostrarModalAuto(true);
+    await cargarEstudiantesDisponibles();
   };
 
   // Eliminar estudiante
@@ -615,13 +687,22 @@ export default function EstudiantesClases() {
             <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-purple-600 to-pink-600">
               👥 Estudiantes de la Clase
             </h2>
-            <button
-              onClick={() => setMostrarModal(true)}
-              className="px-6 py-3 text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors flex items-center space-x-2"
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>Inscribir Estudiante</span>
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={abrirModalAuto}
+                className="px-4 py-2 text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors flex items-center space-x-2"
+              >
+                <Users className="w-4 h-4" />
+                <span>Inscribir Automático</span>
+              </button>
+              <button
+                onClick={() => setMostrarModal(true)}
+                className="px-6 py-3 text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors flex items-center space-x-2"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Inscribir Manual</span>
+              </button>
+            </div>
           </div>
 
           {loadingEstudiantes ? (
@@ -673,7 +754,107 @@ export default function EstudiantesClases() {
           )}
         </div>
 
-        {/* Modal para inscribir estudiante */}
+        {/* Modal para inscripción automática */}
+        {mostrarModalAuto && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-8 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+              <h3 className="text-2xl font-bold text-gray-800 mb-6">
+                🚀 Inscripción Automática de Estudiantes
+              </h3>
+
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold mb-4 text-gray-700">
+                  Estudiantes disponibles para inscribir:
+                </h4>
+
+                {loadingDisponibles ? (
+                  <div className="text-center py-8">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                    <p className="mt-2 text-green-600">
+                      Cargando estudiantes disponibles...
+                    </p>
+                  </div>
+                ) : estudiantesDisponibles.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-xl">
+                    <div className="text-6xl mb-4">📚</div>
+                    <p className="text-xl text-gray-600">
+                      No hay estudiantes disponibles para inscribir
+                      automáticamente.
+                    </p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Todos los estudiantes de este grado ya están inscritos en
+                      la clase.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 max-h-60 overflow-y-auto">
+                    {estudiantesDisponibles.map((est) => (
+                      <div
+                        key={est.id}
+                        className="p-3 bg-green-50 border border-green-200 rounded-lg"
+                      >
+                        <div className="font-semibold text-green-800">
+                          {est.nombre}
+                        </div>
+                        <div className="text-sm text-green-600">
+                          {est.email}
+                        </div>
+                        {est.identificacion && (
+                          <div className="text-xs text-green-500">
+                            ID: {est.identificacion}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl mb-6">
+                <h4 className="font-semibold text-blue-800 mb-2">
+                  📋 ¿Qué hará esta función?
+                </h4>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>
+                    ✅ Inscribirá automáticamente todos los estudiantes del
+                    grado correspondiente
+                  </li>
+                  <li>✅ Evita la inscripción manual individual</li>
+                  <li>
+                    ✅ Sincroniza los estudiantes creados por el administrador
+                  </li>
+                  <li>⚠️ Los estudiantes ya inscritos no se duplicarán</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setMostrarModalAuto(false);
+                    setEstudiantesDisponibles([]);
+                    setError("");
+                  }}
+                  className="flex-1 px-4 py-3 text-gray-600 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleInscripcionAutomatica}
+                  disabled={
+                    loadingDisponibles || estudiantesDisponibles.length === 0
+                  }
+                  className="flex-1 px-4 py-3 text-white bg-green-600 rounded-xl hover:bg-green-700 disabled:bg-gray-400 transition-colors"
+                >
+                  {loadingDisponibles
+                    ? "Cargando..."
+                    : `Inscribir ${estudiantesDisponibles.length} estudiantes`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal para inscribir estudiante manual */}
         {mostrarModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
