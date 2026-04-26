@@ -44,8 +44,8 @@ export default function Clases() {
       setPdf(null);
       cargarClases();
     } catch (err) {
-      setError("Error al subir la clase. Intenta nuevamente.");
       console.error("Error:", err);
+      setError("Error al subir la clase. Intenta nuevamente.");
     }
     setLoading(false);
   };
@@ -53,11 +53,35 @@ export default function Clases() {
   // Cargar clases usando el servicio
   const cargarClases = async () => {
     try {
-      const clasesData = await fetchClases();
-      setClases(clasesData);
+      console.log("=== CARGANDO CLASES EN COMPONENTE ===");
+      console.log("Usuario actual:", usuario);
+
+      const clasesData = await fetchClases(usuario?.token);
+
+      console.log(" Clases recibidas en componente:", clasesData);
+      console.log(" Tipo de datos:", typeof clasesData);
+      console.log(" Es array?:", Array.isArray(clasesData));
+      console.log(" Longitud:", clasesData?.length);
+
+      // Mostrar detalles de cada clase
+      if (Array.isArray(clasesData)) {
+        clasesData.forEach((clase, index) => {
+          console.log(
+            `  ${index + 1}. ${clase.nombre || clase.materia} - ID: ${clase.id || clase._id} - Profesor: ${clase.profesor_id || clase.profesorId}`,
+          );
+        });
+      }
+
+      setClases(clasesData || []);
+      console.log(
+        " Clases establecidas en el estado:",
+        clasesData?.length || 0,
+      );
     } catch (error) {
-      setError("Error cargando clases");
-      console.error("Error:", error);
+      console.error(" Error cargando clases:", error);
+      setError(
+        "Error cargando clases: " + (error.message || "Error desconocido"),
+      );
     } finally {
       setLoadingClases(false);
     }
