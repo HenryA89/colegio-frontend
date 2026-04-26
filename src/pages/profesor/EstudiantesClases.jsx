@@ -19,6 +19,7 @@ import {
   eliminarEstudianteDeClase,
   fetchEstadisticasClase,
 } from "../../services/profesorServices/estudiantesClasesService";
+import { fetchClases } from "../../services/profesorServices/clasesService";
 
 export default function EstudiantesClases() {
   const { id } = useParams(); // id de la clase
@@ -26,6 +27,7 @@ export default function EstudiantesClases() {
   const [estudiantes, setEstudiantes] = useState([]);
   const [resultados, setResultados] = useState([]);
   const [estadisticas, setEstadisticas] = useState({});
+  const [clases, setClases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingEstudiantes, setLoadingEstudiantes] = useState(true);
   const [error, setError] = useState("");
@@ -88,10 +90,32 @@ export default function EstudiantesClases() {
     }
   }, [id]);
 
+  // Cargar clases del profesor
+  useEffect(() => {
+    const cargarClases = async () => {
+      try {
+        const clasesData = await fetchClases();
+        setClases(clasesData);
+        
+        // Si hay un id en la URL, buscar la clase correspondiente
+        if (id) {
+          // La clase se selecciona en el selector
+        } else if (clasesData.length > 0) {
+          // Si no hay id, seleccionar la primera clase
+          navigate(`/profesor/estudiantes-clases/${clasesData[0].id}`, { replace: true });
+        }
+      } catch (error) {
+        console.error("Error cargando clases:", error);
+      }
+    };
+    cargarClases();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]);
+
   useEffect(() => {
     cargarResultados();
     cargarEstudiantes();
-  }, [cargarResultados, cargarEstudiantes]);
+  }, [id, cargarResultados, cargarEstudiantes]);
 
   // Filtrar por ID y grado
   const resultadosFiltrados = resultados.filter((est) => {
@@ -226,6 +250,32 @@ export default function EstudiantesClases() {
             clase
           </p>
         </div>
+
+        {/* Selector de clase */}
+        {clases.length > 0 && (
+          <div className="mb-6 p-4 bg-white rounded-xl border-2 border-indigo-200 shadow-md">
+            <label className="block mb-2 text-sm font-semibold text-indigo-700">
+              📚 Selecciona una clase:
+            </label>
+            <select
+              value={id || ""}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                if (selectedId) {
+                  navigate(`/profesor/estudiantes-clases/${selectedId}`);
+                }
+              }}
+              className="w-full px-4 py-3 border-2 border-indigo-200 rounded-xl focus:ring-4 focus:ring-indigo-300 focus:border-indigo-400 transition-all"
+            >
+              <option value="">Selecciona una clase...</option>
+              {clases.map((clase) => (
+                <option key={clase.id} value={clase.id}>
+                  {clase.materia} - Grupo {clase.grupo}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Estadísticas de la clase */}
         {Object.keys(estadisticas).length > 0 && (

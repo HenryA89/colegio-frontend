@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Brain,
@@ -18,7 +18,6 @@ import {
   Settings,
   Sparkles,
 } from "lucide-react";
-import { useAuth } from "../../hooks/UseAuth";
 import {
   fetchMaterialReciente,
   generarQuizConIA,
@@ -34,13 +33,14 @@ import { fetchClases } from "../../services/profesorServices/clasesService";
 
 export default function QuizAi() {
   const { id } = useParams(); // id de la clase
-  const { usuario } = useAuth();
   const navigate = useNavigate();
 
   // Estados principales
   const [clase, setClase] = useState(null);
   const [materialReciente, setMaterialReciente] = useState(null);
   const [quizzes, setQuizzes] = useState([]);
+  const [clases, setClases] = useState([]);
+  const [editingQuiz, setEditingQuiz] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingMaterial, setLoadingMaterial] = useState(false);
   const [generandoQuiz, setGenerandoQuiz] = useState(false);
@@ -79,9 +79,18 @@ export default function QuizAi() {
     const cargarInformacion = async () => {
       setLoading(true);
       try {
-        // Cargar información de la clase
+        // Cargar las clases del profesor siempre para poder seleccionar una clase
         const clasesData = await fetchClases();
-        const claseInfo = clasesData.find((c) => c.id === id);
+        setClases(clasesData);
+
+        if (!id) {
+          setClase(null);
+          setMaterialReciente(null);
+          setQuizzes([]);
+          return;
+        }
+
+        const claseInfo = clasesData.find((c) => String(c.id) === String(id));
         setClase(claseInfo);
 
         // Cargar material reciente
@@ -97,10 +106,11 @@ export default function QuizAi() {
       }
     };
     cargarInformacion();
-  }, [id]);
+  }, [id, cargarMaterialReciente, cargarQuizzes]);
 
   // Cargar material reciente
-  const cargarMaterialReciente = async () => {
+  const cargarMaterialReciente = useCallback(async () => {
+    if (!id) return;
     setLoadingMaterial(true);
     try {
       const materialData = await fetchMaterialReciente(id);
@@ -111,17 +121,18 @@ export default function QuizAi() {
     } finally {
       setLoadingMaterial(false);
     }
-  };
+  }, [id]);
 
   // Cargar quizzes existentes
-  const cargarQuizzes = async () => {
+  const cargarQuizzes = useCallback(async () => {
+    if (!id) return;
     try {
       const quizzesData = await fetchQuizzesIA(id);
       setQuizzes(quizzesData);
     } catch (error) {
       console.error("Error cargando quizzes:", error);
     }
-  };
+  }, [id]);
 
   // Manejar cambios en formulario de generación
   const handleOpcionesChange = (e) => {
@@ -141,6 +152,11 @@ export default function QuizAi() {
 
   // Generar quiz con IA
   const generarQuiz = async () => {
+    if (!id) {
+      setError("Selecciona primero una clase para generar un quiz.");
+      return;
+    }
+
     setGenerandoQuiz(true);
     setError("");
     try {
@@ -176,8 +192,19 @@ export default function QuizAi() {
     }
   };
 
+  const cerrarModalQuiz = () => {
+    setMostrarModalQuiz(false);
+    setEditingQuiz(false);
+    setQuizSeleccionado(null);
+  };
+
   // Guardar quiz
   const guardarQuiz = async () => {
+    if (!id) {
+      setError("No se puede guardar quiz sin seleccionar una clase.");
+      return;
+    }
+
     try {
       const quizData = {
         ...quizForm,
@@ -187,9 +214,15 @@ export default function QuizAi() {
         materialBase: materialReciente,
       };
 
-      await guardarQuizIA(quizData);
+      if (editingQuiz && quizSeleccionado?.id) {
+        await editarQuizIA(quizSeleccionado.id, quizData);
+      } else {
+        await guardarQuizIA(quizData);
+      }
+
       setMostrarModalQuiz(false);
       setQuizSeleccionado(null);
+      setEditingQuiz(false);
 
       // Recargar quizzes
       await cargarQuizzes();
@@ -201,6 +234,7 @@ export default function QuizAi() {
 
   // Editar quiz existente
   const editarQuiz = (quiz) => {
+    setEditingQuiz(true);
     setQuizSeleccionado(quiz);
     setQuizForm({
       titulo: quiz.titulo,
@@ -281,12 +315,42 @@ export default function QuizAi() {
             </h2>
             <button
               onClick={() => setMostrarModalGeneracion(true)}
-              className="px-6 py-3 text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors flex items-center space-x-2"
+              disabled={!id}
+              className={`px-6 py-3 text-white bg-purple-600 rounded-xl transition-colors flex items-center space-x-2 ${
+                !id
+                  ? "opacity-50 cursor-not-allowed hover:bg-purple-600"
+                  : "hover:bg-purple-700"
+              }`}
             >
               <Sparkles className="w-4 h-4" />
               <span>Generar Quiz con IA</span>
             </button>
           </div>
+
+          {clases.length > 0 && (
+            <div className="mb-4">
+              <label className="block mb-2 text-sm font-medium text-gray-700">
+                Selecciona una clase
+              </label>
+              <select
+                value={clase?.id || ""}
+                onChange={(event) => {
+                  const selectedId = event.target.value;
+                  if (selectedId) {
+                    navigate(`/profesor/quiz-ai/${selectedId}`);
+                  }
+                }}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-400 transition-all"
+              >
+                <option value="">Selecciona una clase...</option>
+                {clases.map((claseItem) => (
+                  <option key={claseItem.id} value={claseItem.id}>
+                    {claseItem.materia} - Grupo {claseItem.grupo}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {loadingMaterial ? (
             <div className="text-center py-4">
@@ -614,7 +678,7 @@ export default function QuizAi() {
                   {editingQuiz ? "✏️ Editar Quiz" : "📝 Configurar Quiz"}
                 </h3>
                 <button
-                  onClick={() => setMostrarModalQuiz(false)}
+                  onClick={cerrarModalQuiz}
                   className="text-gray-600 hover:text-gray-800"
                 >
                   ❌
@@ -759,7 +823,7 @@ export default function QuizAi() {
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => setMostrarModalQuiz(false)}
+                  onClick={cerrarModalQuiz}
                   className="flex-1 px-4 py-3 text-gray-600 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
                 >
                   Cancelar
