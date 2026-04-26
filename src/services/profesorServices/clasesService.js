@@ -6,7 +6,14 @@ export const fetchClases = async (token) => {
     console.log("=== OBTENIENDO MATERIAS ===");
     console.log("Token disponible:", !!token);
 
-    const res = await api.get("api/v1/admin/materias");
+    // Obtener ID del usuario desde el token o localStorage
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
+    const profesorId = usuario?.id || usuario?.usuario?.id;
+
+    console.log("ID del profesor:", profesorId);
+
+    // Usar el endpoint correcto que el backend espera
+    const res = await api.get(`api/v1/materias/${profesorId}`);
 
     console.log("✅ Respuesta del backend:", res.status);
     console.log("Estructura completa de la respuesta:", res.data);
