@@ -12,6 +12,7 @@ export default function Materias() {
   const [profesores, setProfesores] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
 
@@ -28,6 +29,7 @@ export default function Materias() {
   const loadMaterias = async () => {
     setLoading(true);
     setError("");
+    setSuccess(""); // Limpiar mensaje de éxito
     console.log("=== CARGANDO MATERIAS EN COMPONENTE ===");
     try {
       const token = localStorage.getItem("token");
@@ -121,11 +123,13 @@ export default function Materias() {
         console.log(" Actualizando materia...");
         await actualizarMateria(editId, formData);
         console.log(" Materia actualizada correctamente");
+        setSuccess("✅ Materia actualizada correctamente");
       } else {
         // Crear nueva materia
         console.log(" Creando nueva materia...");
         await crearMateria(formData);
         console.log(" Materia creada correctamente");
+        setSuccess("✅ Materia creada exitosamente");
       }
 
       // Resetear formulario y recargar lista
@@ -143,6 +147,11 @@ export default function Materias() {
       // Forzar recarga de materias
       await loadMaterias();
       console.log("✅ Recarga completada");
+
+      // Auto-ocultar mensaje de éxito después de 3 segundos
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
     } catch (err) {
       console.error(" Error en handleSubmit:", err);
       setError(err.message || "Error al guardar la materia.");
@@ -173,9 +182,16 @@ export default function Materias() {
     }
 
     setLoading(true);
+    setError("");
     try {
       await eliminarMateria(id);
-      loadMaterias();
+      setSuccess("✅ Materia eliminada correctamente");
+      await loadMaterias();
+
+      // Auto-ocultar mensaje de éxito después de 3 segundos
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
     } catch (err) {
       setError("Error al eliminar materia.");
       console.error("Error:", err);
@@ -242,6 +258,12 @@ export default function Materias() {
       {error && (
         <div className="p-4 mb-4 text-red-700 bg-red-100 border border-red-400 rounded-lg">
           {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="p-4 mb-4 text-green-700 bg-green-100 border border-green-400 rounded-lg animate-pulse">
+          {success}
         </div>
       )}
 
