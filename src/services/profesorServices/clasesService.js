@@ -6,67 +6,40 @@ export const fetchClases = async (token) => {
     console.log("=== OBTENIENDO CLASES DEL PROFESOR ===");
     console.log("Token disponible:", !!token);
 
-    // Intentar diferentes endpoints para obtener las clases del profesor
+    // Usar el endpoint correcto para obtener materias
+    console.log(" Llamando a /api/v1/materias...");
+    const res = await api.get("api/v1/materias");
+
+    console.log(" Respuesta de /api/v1/materias:", res.data);
+    console.log("Status:", res.status);
+    console.log("Estructura completa:", Object.keys(res.data));
+
+    // Verificar diferentes posibles estructuras de respuesta
     let clasesData = [];
 
-    try {
-      // Opción 1: Endpoint específico para profesor
-      console.log("Intentando endpoint de profesor...");
-      const res1 = await api.get("api/v1/materias");
-      console.log("✅ Respuesta de profesor/clases:", res1.data);
-
-      if (res1.data.clases && Array.isArray(res1.data.clases)) {
-        clasesData = res1.data.clases;
-        console.log("✅ Usando res.data.clases:", clasesData.length, "clases");
-      } else if (res1.data.data && Array.isArray(res1.data.data)) {
-        clasesData = res1.data.data;
-        console.log("✅ Usando res.data.data:", clasesData.length, "clases");
-      } else if (Array.isArray(res1.data)) {
-        clasesData = res1.data;
-        console.log(
-          "✅ Usando res.data directamente:",
-          clasesData.length,
-          "clases",
-        );
-      }
-    } catch (err1) {
-      console.log("❌ Endpoint profesor/clases falló:", err1.message);
-
-      try {
-        // Opción 2: Endpoint de materias (fallback)
-        console.log("Intentando endpoint de materias...");
-        const res2 = await api.get("api/v1/materias");
-        console.log("✅ Respuesta de materias:", res2.data);
-
-        if (res2.data.materias && Array.isArray(res2.data.materias)) {
-          clasesData = res2.data.materias;
-          console.log(
-            "✅ Usando res.data.materias:",
-            clasesData.length,
-            "clases",
-          );
-        } else if (res2.data.data && Array.isArray(res2.data.data)) {
-          clasesData = res2.data.data;
-          console.log("✅ Usando res.data.data:", clasesData.length, "clases");
-        } else if (Array.isArray(res2.data)) {
-          clasesData = res2.data;
-          console.log(
-            "✅ Usando res.data directamente:",
-            clasesData.length,
-            "clases",
-          );
-        }
-      } catch (err2) {
-        console.log("❌ Endpoint materias también falló:", err2.message);
-        throw new Error("No se pudieron obtener las clases de ningún endpoint");
-      }
+    if (res.data.materias && Array.isArray(res.data.materias)) {
+      clasesData = res.data.materias;
+      console.log(" Usando res.data.materias:", clasesData.length, "materias");
+    } else if (res.data.data && Array.isArray(res.data.data)) {
+      clasesData = res.data.data;
+      console.log(" Usando res.data.data:", clasesData.length, "materias");
+    } else if (Array.isArray(res.data)) {
+      clasesData = res.data;
+      console.log(
+        " Usando res.data directamente:",
+        clasesData.length,
+        "materias",
+      );
+    } else {
+      console.warn(" Estructura de respuesta no reconocida");
+      console.warn("Datos recibidos:", res.data);
     }
 
-    // Filtrar clases asignadas al profesor actual si no vienen filtradas
-    console.log("📊 Clases recibidas:", clasesData.length);
-    clasesData.forEach((clase, index) => {
+    // Mostrar detalles de cada materia/clase
+    console.log(" Materias recibidas:", clasesData.length);
+    clasesData.forEach((materia, index) => {
       console.log(
-        `  ${index + 1}. ${clase.nombre || clase.materia} - Profesor: ${clase.profesor_id || clase.profesorId || "No asignado"}`,
+        `  ${index + 1}. ${materia.nombre || materia.materia || "Sin nombre"} - ID: ${materia.id || materia._id} - Profesor: ${materia.profesor_id || materia.profesorId || "No asignado"}`,
       );
     });
 
@@ -76,6 +49,7 @@ export const fetchClases = async (token) => {
     console.error("Error completo:", error);
     console.error("Respuesta del servidor:", error.response?.data);
     console.error("Status:", error.response?.status);
+    console.error("Headers:", error.response?.headers);
     throw error;
   }
 };
