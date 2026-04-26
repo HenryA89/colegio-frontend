@@ -28,15 +28,34 @@ export default function Materias() {
   const loadMaterias = async () => {
     setLoading(true);
     setError("");
-    console.log("Cargando materias...");
+    console.log("=== CARGANDO MATERIAS EN COMPONENTE ===");
     try {
       const token = localStorage.getItem("token");
       console.log("Token disponible:", !!token);
+
       const materiasData = await fetchMaterias(token);
-      console.log("Respuesta del backend:", materiasData);
+
+      console.log("📊 Materias recibidas en componente:", materiasData);
+      console.log("📊 Tipo de datos:", typeof materiasData);
+      console.log("📊 Es array?:", Array.isArray(materiasData));
+      console.log("📊 Longitud:", materiasData?.length);
+
+      // Mostrar detalles de cada materia
+      if (Array.isArray(materiasData)) {
+        materiasData.forEach((materia, index) => {
+          console.log(
+            `  ${index + 1}. ${materia.nombre} - ID: ${materia.id || materia._id} - Profesor: ${materia.profesor_id || materia.profesorId}`,
+          );
+        });
+      }
+
       setMaterias(materiasData || []);
+      console.log(
+        "✅ Materias establecidas en el estado:",
+        materiasData?.length || 0,
+      );
     } catch (err) {
-      console.error("Error detallado al cargar materias:", err);
+      console.error("❌ Error detallado al cargar materias:", err);
       setError(
         `Error: ${err.message || "No se pudieron cargar las materias."}`,
       );
@@ -110,6 +129,7 @@ export default function Materias() {
       }
 
       // Resetear formulario y recargar lista
+      console.log("🔄 Recargando materias después de crear/actualizar...");
       setFormData({
         nombre: "",
         descripcion: "",
@@ -119,7 +139,10 @@ export default function Materias() {
       });
       setEditId(null);
       setShowModal(false);
-      loadMaterias();
+
+      // Forzar recarga de materias
+      await loadMaterias();
+      console.log("✅ Recarga completada");
     } catch (err) {
       console.error(" Error en handleSubmit:", err);
       setError(err.message || "Error al guardar la materia.");

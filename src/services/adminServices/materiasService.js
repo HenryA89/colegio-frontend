@@ -3,10 +3,51 @@ import api from "../api";
 // Obtener materias (admin)
 export const fetchMaterias = async (token) => {
   try {
+    console.log("=== OBTENIENDO MATERIAS ===");
+    console.log("Token disponible:", !!token);
+
     const res = await api.get("api/v1/admin/materias");
-    return res.data.materias || [];
+
+    console.log("✅ Respuesta del backend:", res.status);
+    console.log("Estructura completa de la respuesta:", res.data);
+    console.log("res.data.materias:", res.data.materias);
+    console.log("Tipo de res.data.materias:", typeof res.data.materias);
+    console.log("Longitud de materias:", res.data.materias?.length);
+
+    // Verificar diferentes posibles estructuras de respuesta
+    let materias = [];
+
+    if (res.data.materias && Array.isArray(res.data.materias)) {
+      materias = res.data.materias;
+      console.log("✅ Usando res.data.materias:", materias.length, "materias");
+    } else if (res.data.data && Array.isArray(res.data.data)) {
+      materias = res.data.data;
+      console.log("✅ Usando res.data.data:", materias.length, "materias");
+    } else if (Array.isArray(res.data)) {
+      materias = res.data;
+      console.log(
+        "✅ Usando res.data directamente:",
+        materias.length,
+        "materias",
+      );
+    } else {
+      console.warn("⚠️ No se encontró un array de materias en la respuesta");
+      console.warn("Estructura recibida:", Object.keys(res.data));
+    }
+
+    console.log("📊 Materias finales:", materias.length);
+    materias.forEach((materia, index) => {
+      console.log(
+        `  ${index + 1}. ${materia.nombre} - ID: ${materia.id || materia._id}`,
+      );
+    });
+
+    return materias;
   } catch (error) {
-    console.error("Error al obtener materias:", error);
+    console.error("=== ERROR OBTENIENDO MATERIAS ===");
+    console.error("Error completo:", error);
+    console.error("Respuesta del servidor:", error.response?.data);
+    console.error("Status:", error.response?.status);
     return [];
   }
 };
