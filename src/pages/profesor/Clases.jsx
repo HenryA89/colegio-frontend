@@ -191,51 +191,78 @@ export default function Clases() {
             <p className="mt-2 text-blue-600">Cargando clases...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {clases.map((clase) => (
-              <div
-                key={clase.id}
-                className="p-6 bg-white rounded-2xl border-2 border-blue-100 hover:border-blue-300 hover:shadow-xl hover:scale-105 transition-all duration-300"
-              >
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xl font-bold text-gray-800">
-                      {clase.materia}
-                    </h3>
-                    <span className="px-3 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-700">
-                      {clase.grupo}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Clock className="w-4 h-4" />
-                    <span className="text-sm">{clase.horario}</span>
-                  </div>
-                </div>
-
-                {/* Acciones */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={() =>
-                      navigate(`/profesor/estudiantes-clases/${clase.id}`)
-                    }
-                    className="flex-1 px-3 py-2 text-blue-600 border-2 border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all flex items-center justify-center gap-2"
-                  >
-                    <Users className="w-4 h-4" />
-                    <span className="text-sm">Estudiantes</span>
-                  </button>
-                  <button
-                    onClick={() =>
-                      navigate(`/profesor/evaluaciones-clase/${clase.id}`)
-                    }
-                    className="flex-1 px-3 py-2 text-purple-600 border-2 border-purple-200 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-all flex items-center justify-center gap-2"
-                  >
-                    <FileText className="w-4 h-4" />
-                    <span className="text-sm">Evaluaciones</span>
-                  </button>
-                </div>
+          <>
+            {/* Debug info */}
+            <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
+              <h4 className="font-bold text-yellow-800 mb-2">🔍 Debug Info:</h4>
+              <div>
+                Estado loadingClases: {loadingClases ? "true" : "false"}
               </div>
-            ))}
-          </div>
+              <div>Cantidad de clases en estado: {clases?.length || 0}</div>
+              <div>
+                Clases es array: {Array.isArray(clases) ? "true" : "false"}
+              </div>
+              <div>
+                Primera clase:{" "}
+                {clases[0] ? JSON.stringify(clases[0]) : "No hay clases"}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {clases.map((clase, index) => {
+                console.log(`🔄 Renderizando clase ${index + 1}:`, clase);
+                return (
+                  <div
+                    key={clase.id || clase._id || index}
+                    className="p-6 bg-white rounded-2xl border-2 border-blue-100 hover:border-blue-300 hover:shadow-xl hover:scale-105 transition-all duration-300"
+                  >
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-xl font-bold text-gray-800">
+                          {clase.nombre || clase.materia || "Sin nombre"}
+                        </h3>
+                        <span className="px-3 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-700">
+                          {clase.grupo || clase.curso || "Sin grupo"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-sm">
+                          {clase.horario || "Sin horario"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Acciones */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/profesor/estudiantes-clases/${clase.id || clase._id}`,
+                          )
+                        }
+                        className="flex-1 px-3 py-2 text-blue-600 border-2 border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all flex items-center justify-center gap-2"
+                      >
+                        <Users className="w-4 h-4" />
+                        <span className="text-sm">Estudiantes</span>
+                      </button>
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/profesor/evaluaciones-clase/${clase.id || clase._id}`,
+                          )
+                        }
+                        className="flex-1 px-3 py-2 text-purple-600 border-2 border-purple-200 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-all flex items-center justify-center gap-2"
+                      >
+                        <FileText className="w-4 h-4" />
+                        <span className="text-sm">Evaluaciones</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
 
         {/* Si no hay clases */}
