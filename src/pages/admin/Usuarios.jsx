@@ -26,17 +26,69 @@ export default function Usuarios() {
   const cargarUsuarios = async () => {
     setLoading(true);
     setError("");
-    console.log("Iniciando carga de usuarios...");
+    console.log("=== INICIANDO CARGA DE USUARIOS ===");
     try {
       const token = localStorage.getItem("token");
       console.log("Token disponible:", !!token);
+      console.log("Token length:", token?.length || 0);
+
       const usuariosData = await fetchUsuarios(token);
-      console.log("Respuesta del backend:", usuariosData);
-      setUsuarios(usuariosData || []);
+      console.log("Respuesta completa del backend:", usuariosData);
+      console.log("Tipo de dato:", typeof usuariosData);
+      console.log("Es array:", Array.isArray(usuariosData));
+
+      // Manejar diferentes formatos de respuesta
+      let usuariosProcesados = [];
+
+      if (Array.isArray(usuariosData)) {
+        usuariosProcesados = usuariosData;
+      } else if (
+        usuariosData &&
+        usuariosData.usuarios &&
+        Array.isArray(usuariosData.usuarios)
+      ) {
+        usuariosProcesados = usuariosData.usuarios;
+      } else if (
+        usuariosData &&
+        usuariosData.data &&
+        Array.isArray(usuariosData.data)
+      ) {
+        usuariosProcesados = usuariosData.data;
+      } else if (usuariosData && typeof usuariosData === "object") {
+        // Si es un objeto, intentar extraer el array
+        const possibleArrays = Object.values(usuariosData).filter((val) =>
+          Array.isArray(val),
+        );
+        if (possibleArrays.length > 0) {
+          usuariosProcesados = possibleArrays[0];
+        }
+      }
+
+      console.log("Usuarios procesados:", usuariosProcesados);
+      console.log("Cantidad de usuarios:", usuariosProcesados.length);
+
+      // Mostrar detalles de los usuarios encontrados
+      if (usuariosProcesados.length > 0) {
+        console.log("Primer usuario:", usuariosProcesados[0]);
+        console.log("Roles encontrados:", [
+          ...new Set(usuariosProcesados.map((u) => u.rol)),
+        ]);
+        console.log(
+          "IDs:",
+          usuariosProcesados.map((u) => u.id || u._id),
+        );
+      }
+
+      setUsuarios(usuariosProcesados);
     } catch (err) {
-      console.error("Error detallado al cargar usuarios:", err);
+      console.error("=== ERROR AL CARGAR USUARIOS ===");
+      console.error("Error completo:", err);
+      console.error("Mensaje:", err.message);
+      console.error("Respuesta:", err.response?.data);
+      console.error("Status:", err.response?.status);
+
       setError(
-        `Error: ${err.message || "No se pudieron cargar los usuarios."}`,
+        `Error: ${err.message || "No se pudieron cargar los usuarios."} (${err.response?.status || "Sin status"})`,
       );
     } finally {
       setLoading(false);
@@ -103,11 +155,37 @@ export default function Usuarios() {
         👥 Gestión de Usuarios
       </h2>
 
-      {/* Debug info */}
-      <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
-        <div>Estado de carga: {loading ? "Cargando..." : "Completado"}</div>
+      {/* Debug info mejorado */}
+      <div className="mb-4 p-3 bg-gray-100 rounded text-sm">
+        <div className="font-bold mb-2">🔍 Información de Depuración:</div>
+        <div>
+          Estado de carga: {loading ? "⏳ Cargando..." : "✅ Completado"}
+        </div>
         <div>Cantidad de usuarios: {usuarios?.length || 0}</div>
-        {error && <div className="text-red-600">Error: {error}</div>}
+        {usuarios && usuarios.length > 0 && (
+          <>
+            <div>
+              Roles encontrados:{" "}
+              {[...new Set(usuarios.map((u) => u.rol))].join(", ")}
+            </div>
+            <div>
+              Primer usuario: {usuarios[0]?.nombre || "Sin nombre"} (
+              {usuarios[0]?.email})
+            </div>
+            <div>
+              Tokens ID:{" "}
+              {usuarios
+                .slice(0, 3)
+                .map((u) => u.id || u._id || "sin-id")
+                .join(", ")}
+            </div>
+          </>
+        )}
+        {error && (
+          <div className="text-red-600 mt-2 p-2 bg-red-50 rounded">
+            <strong>❌ Error:</strong> {error}
+          </div>
+        )}
       </div>
       <form
         onSubmit={handleSubmit}
