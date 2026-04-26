@@ -22,7 +22,6 @@ export default function Materias() {
     curso: "",
     profesorId: "",
     horario: "",
-    aula: "",
   });
 
   // Obtener todas las materias usando el servicio
@@ -103,7 +102,6 @@ export default function Materias() {
         curso: "",
         profesorId: "",
         horario: "",
-        aula: "",
       });
       setEditId(null);
       setShowModal(false);
@@ -124,7 +122,6 @@ export default function Materias() {
       curso: materia.curso || "",
       profesorId: materia.profesorId || "",
       horario: materia.horario || "",
-      aula: materia.aula || "",
     });
     setEditId(materia._id);
     setShowModal(true);
@@ -157,7 +154,6 @@ export default function Materias() {
       curso: "",
       profesorId: "",
       horario: "",
-      aula: "",
     });
     setEditId(null);
     setShowModal(false);
@@ -238,9 +234,6 @@ export default function Materias() {
                   Horario
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Aula
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
@@ -249,7 +242,7 @@ export default function Materias() {
               {materias.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="6"
                     className="px-6 py-8 text-center text-gray-500"
                   >
                     No hay materias registradas. Crea la primera materia.
@@ -283,11 +276,6 @@ export default function Materias() {
                         {materia.horario || "Sin horario"}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {materia.aula || "Sin aula"}
-                      </div>
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => handleEdit(materia)}
@@ -313,7 +301,7 @@ export default function Materias() {
       {/* Modal para crear/editar materia */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
+          <div className="w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
               {editId ? "Editar Materia" : "Nueva Materia"}
             </h3>
@@ -411,20 +399,6 @@ export default function Materias() {
                   value={formData.horario}
                   onChange={handleChange}
                   placeholder="Ej: Lunes 8:00-10:00"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Aula
-                </label>
-                <input
-                  type="text"
-                  name="aula"
-                  value={formData.aula}
-                  onChange={handleChange}
-                  placeholder="Ej: A-101, Laboratorio 2, etc."
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
