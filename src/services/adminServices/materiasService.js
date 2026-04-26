@@ -23,25 +23,12 @@ export const crearMateria = async (materiaData, token) => {
     console.log("profesorId:", materiaData.profesorId);
     console.log("Tipo:", typeof materiaData.profesorId);
     console.log("Longitud:", materiaData.profesorId?.length);
-    console.log("Trim():", materiaData.profesorId?.trim());
-    console.log(
-      "Es válido ObjectId?",
-      /^[0-9a-fA-F]{24}$/.test(materiaData.profesorId),
-    );
 
     // Validar campos obligatorios
     if (!materiaData.profesorId || materiaData.profesorId.trim() === "") {
       console.error("❌ profesorId está vacío o es nulo");
       throw new Error(
         "El profesor es obligatorio. Por favor, seleccione un profesor válido.",
-      );
-    }
-
-    // Validar formato de ObjectId de MongoDB
-    if (!/^[0-9a-fA-F]{24}$/.test(materiaData.profesorId)) {
-      console.error("❌ profesorId no tiene formato válido de ObjectId");
-      throw new Error(
-        "El ID del profesor no tiene un formato válido. Por favor, seleccione un profesor de la lista.",
       );
     }
 
@@ -55,15 +42,15 @@ export const crearMateria = async (materiaData, token) => {
       nombre: materiaData.nombre.trim(),
       descripcion: materiaData.descripcion?.trim() || "",
       curso: materiaData.curso?.trim() || "",
-      profesorId: materiaData.profesorId.trim(), // Asegurar que no tenga espacios
+      profesor_id: parseInt(materiaData.profesorId), // Convertir a número y usar profesor_id
       horario: materiaData.horario?.trim() || "",
     };
 
     console.log("✅ Validación pasada. Enviando al backend...");
     console.log("Endpoint: POST api/v1/admin/materias");
     console.log("Payload final:", JSON.stringify(payload, null, 2));
-    console.log("profesorId final:", payload.profesorId);
-    console.log("Tipo profesorId final:", typeof payload.profesorId);
+    console.log("profesor_id final:", payload.profesor_id);
+    console.log("Tipo profesor_id final:", typeof payload.profesor_id);
 
     const res = await api.post("api/v1/admin/materias", payload);
 

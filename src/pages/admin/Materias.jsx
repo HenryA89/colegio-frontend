@@ -62,7 +62,7 @@ export default function Materias() {
       // Mostrar IDs de profesores para debugging
       soloProfesores.forEach((prof) => {
         console.log(
-          `Profesor: ${prof.nombre} - ID: ${prof._id} - Tipo: ${typeof prof._id}`,
+          `Profesor: ${prof.nombre} - ID: ${prof.id} - _id: ${prof._id} - Tipo ID: ${typeof prof.id}`,
         );
       });
 
@@ -175,7 +175,7 @@ export default function Materias() {
 
   // Obtener nombre del profesor asignado
   const getProfesorNombre = (profesorId) => {
-    const profesor = profesores.find((p) => p._id === profesorId);
+    const profesor = profesores.find((p) => p.id === parseInt(profesorId));
     return profesor
       ? `${profesor.nombre} ${profesor.apellido || ""}`
       : "Sin asignar";
@@ -381,9 +381,9 @@ export default function Materias() {
                     </option>
                   ) : (
                     profesores.map((profesor) => (
-                      <option key={profesor._id} value={profesor._id}>
+                      <option key={profesor.id} value={profesor.id}>
                         {profesor.nombre} {profesor.apellido || ""} - ID:{" "}
-                        {profesor._id} ({profesor.email})
+                        {profesor.id} ({profesor.email})
                       </option>
                     ))
                   )}
@@ -397,8 +397,9 @@ export default function Materias() {
                 {formData.profesorId && (
                   <p className="mt-1 text-sm text-green-600">
                     ✅ Profesor seleccionado:{" "}
-                    {profesores.find((p) => p._id === formData.profesorId)
-                      ?.nombre || "Desconocido"}
+                    {profesores.find(
+                      (p) => p.id === parseInt(formData.profesorId),
+                    )?.nombre || "Desconocido"}
                   </p>
                 )}
               </div>
