@@ -12,7 +12,7 @@ export const fetchClases = async (token) => {
     try {
       // Opción 1: Endpoint específico para profesor
       console.log("Intentando endpoint de profesor...");
-      const res1 = await api.get("api/v1/profesores/clases");
+      const res1 = await api.get("api/v1/profesores/materias");
       console.log("✅ Respuesta de profesor/clases:", res1.data);
 
       if (res1.data.clases && Array.isArray(res1.data.clases)) {
