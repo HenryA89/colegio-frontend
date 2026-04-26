@@ -68,23 +68,74 @@ export default function EstudiantesClases() {
 
   const cargarEstudiantes = useCallback(async () => {
     if (!id) {
+      console.log("❌ No hay ID de clase - limpiando estados");
       setEstudiantes([]);
       setEstadisticas({});
       setLoadingEstudiantes(false);
       return;
     }
 
+    console.log("=== INICIANDO CARGA DE ESTUDIANTES ===");
+    console.log("ID de clase:", id);
     setLoadingEstudiantes(true);
     setError("");
-    try {
-      const estudiantesData = await fetchEstudiantesPorClase(id);
-      setEstudiantes(estudiantesData || []);
 
+    try {
+      console.log("🔄 Cargando estudiantes de la clase...");
+      const estudiantesData = await fetchEstudiantesPorClase(id);
+      console.log("✅ Estudiantes recibidos:", estudiantesData);
+      console.log("Cantidad de estudiantes:", estudiantesData.length);
+
+      // Manejar diferentes formatos de respuesta
+      let estudiantesProcesados = [];
+
+      if (Array.isArray(estudiantesData)) {
+        estudiantesProcesados = estudiantesData;
+      } else if (
+        estudiantesData &&
+        estudiantesData.estudiantes &&
+        Array.isArray(estudiantesData.estudiantes)
+      ) {
+        estudiantesProcesados = estudiantesData.estudiantes;
+      } else if (
+        estudiantesData &&
+        estudiantesData.data &&
+        Array.isArray(estudiantesData.data)
+      ) {
+        estudiantesProcesados = estudiantesData.data;
+      } else if (estudiantesData && typeof estudiantesData === "object") {
+        // Si es un objeto, intentar extraer el array
+        const possibleArrays = Object.values(estudiantesData).filter((val) =>
+          Array.isArray(val),
+        );
+        if (possibleArrays.length > 0) {
+          estudiantesProcesados = possibleArrays[0];
+        }
+      }
+
+      console.log("📊 Estudiantes procesados:", estudiantesProcesados);
+      console.log("📊 Estableciendo estudiantes en el estado...");
+      setEstudiantes(estudiantesProcesados);
+
+      console.log("🔄 Cargando estadísticas de la clase...");
       const estadisticasData = await fetchEstadisticasClase(id);
+      console.log("✅ Estadísticas recibidas:", estadisticasData);
       setEstadisticas(estadisticasData || {});
+
+      console.log("✅ Carga de estudiantes completada");
     } catch (error) {
-      setError("No se pudieron cargar los estudiantes de la clase.");
-      console.error("Error cargando estudiantes:", error);
+      console.error("=== ERROR CARGANDO ESTUDIANTES ===");
+      console.error("Error completo:", error);
+      console.error("Mensaje:", error.message);
+      console.error("Respuesta:", error.response?.data);
+      console.error("Status:", error.response?.status);
+
+      setError(
+        `Error: ${error.message} (${error.response?.status || "Sin status"})`,
+      );
+      console.error("⚠️ Estableciendo array vacío por error");
+      setEstudiantes([]);
+      setEstadisticas({});
     } finally {
       setLoadingEstudiantes(false);
     }
@@ -96,13 +147,15 @@ export default function EstudiantesClases() {
       try {
         const clasesData = await fetchClases();
         setClases(clasesData);
-        
+
         // Si hay un id en la URL, buscar la clase correspondiente
         if (id) {
           // La clase se selecciona en el selector
         } else if (clasesData.length > 0) {
           // Si no hay id, seleccionar la primera clase
-          navigate(`/profesor/estudiantes-clases/${clasesData[0].id}`, { replace: true });
+          navigate(`/profesor/estudiantes-clases/${clasesData[0].id}`, {
+            replace: true,
+          });
         }
       } catch (error) {
         console.error("Error cargando clases:", error);
@@ -251,7 +304,60 @@ export default function EstudiantesClases() {
           </p>
         </div>
 
-        {/* Selector de clase */}
+        {/* Debug info mejorado */}
+        {id && (
+          <div className="mb-6 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
+            <div className="font-bold mb-2 text-yellow-800">
+              🔍 Información de Depuración:
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <div>
+                  ID de Clase:{" "}
+                  <span className="font-mono bg-yellow-100 px-2 py-1 rounded">
+                    {id}
+                  </span>
+                </div>
+                <div>
+                  Estado de carga:{" "}
+                  {loadingEstudiantes ? "⏳ Cargando..." : "✅ Completado"}
+                </div>
+                <div>
+                  Cantidad de estudiantes:{" "}
+                  <span className="font-bold text-blue-600">
+                    {estudiantes?.length || 0}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div>
+                  Estadísticas:{" "}
+                  {Object.keys(estadisticas).length > 0
+                    ? "✅ Cargadas"
+                    : "❌ No disponibles"}
+                </div>
+                {estudiantes && estudiantes.length > 0 && (
+                  <>
+                    <div>
+                      Primer estudiante:{" "}
+                      {estudiantes[0]?.nombre || "Sin nombre"}
+                    </div>
+                    <div>Email: {estudiantes[0]?.email || "Sin email"}</div>
+                    <div>
+                      ID:{" "}
+                      {estudiantes[0]?.id || estudiantes[0]?._id || "sin-id"}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+            {error && (
+              <div className="mt-2 p-2 bg-red-100 text-red-700 rounded">
+                <strong>❌ Error:</strong> {error}
+              </div>
+            )}
+          </div>
+        )}
         {clases.length > 0 && (
           <div className="mb-6 p-4 bg-white rounded-xl border-2 border-indigo-200 shadow-md">
             <label className="block mb-2 text-sm font-semibold text-indigo-700">

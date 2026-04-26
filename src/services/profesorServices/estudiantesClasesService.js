@@ -3,11 +3,78 @@ import api from "../../services/api";
 // Obtener estudiantes de una clase específica
 export const fetchEstudiantesPorClase = async (claseId) => {
   try {
+    console.log("=== FETCH ESTUDIANTES POR CLASE ===");
+    console.log("Clase ID:", claseId);
+    console.log("Endpoint:", `api/v1/clases/${claseId}/estudiantes`);
+
     const response = await api.get(`api/v1/clases/${claseId}/estudiantes`);
-    return response.data.estudiantes || [];
+    console.log("Respuesta HTTP:", response.status);
+    console.log("Data cruda:", response.data);
+    console.log("Data tipo:", typeof response.data);
+
+    // Intentar diferentes formatos de respuesta
+    let estudiantes = [];
+
+    if (Array.isArray(response.data)) {
+      estudiantes = response.data;
+    } else if (
+      response.data &&
+      response.data.estudiantes &&
+      Array.isArray(response.data.estudiantes)
+    ) {
+      estudiantes = response.data.estudiantes;
+    } else if (
+      response.data &&
+      response.data.data &&
+      Array.isArray(response.data.data)
+    ) {
+      estudiantes = response.data.data;
+    } else if (response.data && typeof response.data === "object") {
+      // Buscar arrays dentro del objeto
+      const arrays = Object.values(response.data).filter((val) =>
+        Array.isArray(val),
+      );
+      if (arrays.length > 0) {
+        estudiantes = arrays[0];
+      }
+    }
+
+    console.log("Estudiantes extraídos:", estudiantes);
+    console.log("Cantidad:", estudiantes.length);
+
+    // Mostrar detalles de los estudiantes encontrados
+    if (estudiantes.length > 0) {
+      console.log("Primer estudiante:", estudiantes[0]);
+      console.log(
+        "Nombres:",
+        estudiantes.slice(0, 3).map((e) => e.nombre || "Sin nombre"),
+      );
+      console.log(
+        "IDs:",
+        estudiantes.slice(0, 3).map((e) => e.id || e._id || "sin-id"),
+      );
+    }
+
+    return estudiantes;
   } catch (error) {
-    console.error("❌ Error obteniendo estudiantes de la clase:", error);
-    throw new Error("No se pudieron cargar los estudiantes de la clase");
+    console.error("=== ERROR FETCH ESTUDIANTES POR CLASE ===");
+    console.error("Error completo:", error);
+    console.error("Respuesta del servidor:", error.response?.data);
+    console.error("Status:", error.response?.status);
+    console.error("Headers:", error.response?.headers);
+
+    // Si es error 401, puede ser problema de autenticación
+    if (error.response?.status === 401) {
+      console.error("Error de autenticación - token inválido o expirado");
+    }
+
+    if (error.response?.status === 404) {
+      console.error("Clase no encontrada - ID inválido");
+    }
+
+    throw new Error(
+      `No se pudieron cargar los estudiantes de la clase (${error.response?.status || "Sin status"})`,
+    );
   }
 };
 
@@ -36,7 +103,10 @@ export const fetchResultadosPorClase = async (claseId) => {
 // Inscribir estudiante en una clase
 export const inscribirEstudiante = async (claseId, estudianteData) => {
   try {
-    const response = await api.post(`api/v1/clases/${claseId}/inscribir`, estudianteData);
+    const response = await api.post(
+      `api/v1/clases/${claseId}/inscribir`,
+      estudianteData,
+    );
     return response.data;
   } catch (error) {
     console.error("❌ Error inscribiendo estudiante:", error);
@@ -47,7 +117,9 @@ export const inscribirEstudiante = async (claseId, estudianteData) => {
 // Eliminar estudiante de una clase
 export const eliminarEstudianteDeClase = async (claseId, estudianteId) => {
   try {
-    const response = await api.delete(`api/v1/clases/${claseId}/estudiantes/${estudianteId}`);
+    const response = await api.delete(
+      `api/v1/clases/${claseId}/estudiantes/${estudianteId}`,
+    );
     return response.data;
   } catch (error) {
     console.error("❌ Error eliminando estudiante de la clase:", error);
