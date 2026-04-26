@@ -3,57 +3,54 @@ import api from "../api";
 // Obtener todas las clases del profesor
 export const fetchClases = async (token) => {
   try {
-    console.log("=== OBTENIENDO CLASES DEL PROFESOR ===");
+    console.log("=== OBTENIENDO MATERIAS ===");
     console.log("Token disponible:", !!token);
 
-    // Usar el endpoint correcto para obtener materias
-    console.log(" Llamando a /api/v1/materias...");
-    const res = await api.get("api/v1/materias");
+    const res = await api.get("api/v1/admin/materias");
 
-    console.log(" Respuesta de /api/v1/materias:", res.data);
-    console.log("Status:", res.status);
-    console.log("Estructura completa:", Object.keys(res.data));
+    console.log("✅ Respuesta del backend:", res.status);
+    console.log("Estructura completa de la respuesta:", res.data);
+    console.log("res.data.materias:", res.data.materias);
+    console.log("Tipo de res.data.materias:", typeof res.data.materias);
+    console.log("Longitud de materias:", res.data.materias?.length);
 
     // Verificar diferentes posibles estructuras de respuesta
-    let clasesData = [];
+    let materias = [];
 
     if (res.data.materias && Array.isArray(res.data.materias)) {
-      clasesData = res.data.materias;
-      console.log(" Usando res.data.materias:", clasesData.length, "materias");
+      materias = res.data.materias;
+      console.log("✅ Usando res.data.materias:", materias.length, "materias");
     } else if (res.data.data && Array.isArray(res.data.data)) {
-      clasesData = res.data.data;
-      console.log(" Usando res.data.data:", clasesData.length, "materias");
+      materias = res.data.data;
+      console.log("✅ Usando res.data.data:", materias.length, "materias");
     } else if (Array.isArray(res.data)) {
-      clasesData = res.data;
+      materias = res.data;
       console.log(
-        " Usando res.data directamente:",
-        clasesData.length,
+        "✅ Usando res.data directamente:",
+        materias.length,
         "materias",
       );
     } else {
-      console.warn(" Estructura de respuesta no reconocida");
-      console.warn("Datos recibidos:", res.data);
+      console.warn("⚠️ No se encontró un array de materias en la respuesta");
+      console.warn("Estructura recibida:", Object.keys(res.data));
     }
 
-    // Mostrar detalles de cada materia/clase
-    console.log(" Materias recibidas:", clasesData.length);
-    clasesData.forEach((materia, index) => {
+    console.log("📊 Materias finales:", materias.length);
+    materias.forEach((materia, index) => {
       console.log(
-        `  ${index + 1}. ${materia.nombre || materia.materia || "Sin nombre"} - ID: ${materia.id || materia._id} - Profesor: ${materia.profesor_id || materia.profesorId || "No asignado"}`,
+        `  ${index + 1}. ${materia.nombre} - ID: ${materia.id || materia._id}`,
       );
     });
 
-    return clasesData;
+    return materias;
   } catch (error) {
-    console.error("=== ERROR OBTENIENDO CLASES ===");
+    console.error("=== ERROR OBTENIENDO MATERIAS ===");
     console.error("Error completo:", error);
     console.error("Respuesta del servidor:", error.response?.data);
     console.error("Status:", error.response?.status);
-    console.error("Headers:", error.response?.headers);
-    throw error;
+    return [];
   }
 };
-
 // Subir material de clase (PDF o texto)
 export const subirClase = async ({ pdf, texto }) => {
   try {

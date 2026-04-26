@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/UseAuth";
 import Button from "../components/iu/Button";
 import Input from "../components/iu/Input";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function Login() {
   // Variables con nombres consistentes con la API
@@ -10,6 +11,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [rol, setRol] = useState("estudiante");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const { login } = useAuth(); // Hook de autenticación global
   const navigate = useNavigate();
@@ -17,6 +19,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     try {
       // Envía credenciales al servicio de autenticación
@@ -36,11 +39,18 @@ export default function Login() {
           err.message ||
           "Error al iniciar sesión, verifica tus credenciales",
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Mostrar LoadingSpinner si está cargando
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-fuchsia-500 via-indigo-600 to-emerald-400 animate-gradient-x">
+    <div className="flex items-center justify-center min-h-screen bg-linear-to-br from-fuchsia-500 via-indigo-600 to-emerald-400 animate-gradient-x">
       <div className="w-full max-w-md px-8 py-10 rounded-3xl shadow-[0_8px_32px_0_rgba(31,38,135,0.2)] border border-fuchsia-200/40 bg-white/30 backdrop-blur-lg">
         <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-center text-white drop-shadow-xl md:text-5xl">
           ESTUD-IA
