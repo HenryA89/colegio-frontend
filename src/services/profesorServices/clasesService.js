@@ -1,123 +1,60 @@
 import api from "../api";
 
-// Obtener todas las clases del profesor
-export const fetchClases = async (token) => {
+// ─── Utilidad: obtener usuario y token desde localStorage ───────────────────
+const getSession = () => {
+  const token = localStorage.getItem("token");
+  const usuario = JSON.parse(localStorage.getItem("usuario") || "null");
+  return { token, usuario };
+};
+
+// ─── Utilidad: extraer el ID del profesor de la estructura del usuario ───────
+const getProfesorId = (usuario) => {
+  return usuario?.id ?? usuario?.usuario?.id ?? usuario?.profesor?.id ?? null;
+};
+
+// ─── Obtener materias del profesor autenticado ────────────────────────────────
+export const fetchClases = async () => {
+  const { usuario } = getSession();
+
+  if (!usuario) {
+    throw new Error("No hay información del usuario en localStorage.");
+  }
+
+  const profesorId = getProfesorId(usuario);
+
+  if (!profesorId) {
+    throw new Error("No se pudo obtener el ID del profesor.");
+  }
+
   try {
-    console.log("=== OBTENIENDO MATERIAS ===");
-    console.log("Token disponible:", !!token);
+    // El backend filtra por profesor — no exponemos datos de otros profesores
+    const res = await api.get(`api/v1/profesores/${profesorId}/materias`);
 
-    // Obtener ID del usuario desde el token o localStorage
-    const usuario = JSON.parse(localStorage.getItem("usuario"));
-    const tokenStorage = localStorage.getItem("token");
-
-    console.log("Usuario completo:", usuario);
-    console.log(
-      "Token en storage:",
-      tokenStorage ? "disponible" : "no disponible",
-    );
-
-    // Validar que tengamos el ID del profesor
-    if (!usuario) {
-      throw new Error("No hay información del usuario en localStorage");
-    }
-
-    const profesorId =
-      usuario?.id || usuario?.usuario?.id || usuario?.profesor?.id;
-
-    if (!profesorId) {
-      throw new Error("No se pudo obtener el ID del profesor del usuario");
-    }
-
-    console.log("ID del profesor:", profesorId);
-    console.log("Rol del usuario:", usuario?.rol || usuario?.usuario?.rol);
-
-    // Usar directamente el endpoint general de materias
-    console.log("🔍 Obteniendo materias desde endpoint general...");
-    const res = await api.get("api/v1/materias");
-    const endpointUsed = "api/v1/materias";
-
-    console.log(
-      "✅ Respuesta del backend (endpoint: " + endpointUsed + "):",
-      res.status,
-    );
-    console.log("Estructura completa de la respuesta:", res.data);
-    console.log("res.data.materias:", res.data.materias);
-    console.log("Tipo de res.data.materias:", typeof res.data.materias);
-    console.log("Longitud de materias:", res.data.materias?.length);
-
-    // Verificar diferentes posibles estructuras de respuesta
-    let materias = [];
-
-    if (res.data.materias && Array.isArray(res.data.materias)) {
-      materias = res.data.materias;
-      console.log("✅ Usando res.data.materias:", materias.length, "materias");
-    } else if (res.data.data && Array.isArray(res.data.data)) {
-      materias = res.data.data;
-      console.log("✅ Usando res.data.data:", materias.length, "materias");
-    } else if (Array.isArray(res.data)) {
-      materias = res.data;
-      console.log(
-        "✅ Usando res.data directamente:",
-        materias.length,
-        "materias",
-      );
-    } else {
-      console.warn("⚠️ No se encontró un array de materias en la respuesta");
-      console.warn("Estructura recibida:", Object.keys(res.data));
-    }
-
-    // Filtrar materias por profesor
-    if (Array.isArray(materias)) {
-      const materiasFiltradas = materias.filter((materia) => {
-        const materiaProfesorId = materia.profesor_id || materia.profesorId;
-        const coincide = materiaProfesorId === profesorId;
-        console.log(
-          `Materia ${materia.nombre}: profesor_id=${materiaProfesorId}, busca=${profesorId}, coincide=${coincide}`,
-        );
-        return coincide;
-      });
-
-      console.log(
-        `📊 Filtrado: ${materias.length} totales → ${materiasFiltradas.length} del profesor`,
-      );
-      materias = materiasFiltradas;
-    }
-
-    console.log("📊 Materias finales:", materias.length);
-    materias.forEach((materia, index) => {
-      console.log(
-        `  ${index + 1}. ${materia.nombre} - ID: ${materia.id || materia._id} - Profesor: ${materia.profesor_id || materia.profesorId}`,
-      );
-    });
+    // Normalizar la respuesta: aceptar res.data.materias, res.data.data o res.data[]
+    const materias =
+      res.data?.materias ??
+      res.data?.data ??
+      (Array.isArray(res.data) ? res.data : []);
 
     return materias;
   } catch (error) {
-    console.error("=== ERROR OBTENIENDO MATERIAS ===");
-    console.error("Error completo:", error);
+    const status = error.response?.status;
 
-    if (error.response) {
-      console.error("Status:", error.response.status);
-      console.error("Respuesta del servidor:", error.response.data);
-
-      if (error.response.status === 403) {
-        throw new Error(
-          "Acceso denegado: No tienes permisos para ver estas materias. Por favor, verifica tu rol o contacta al administrador.",
-        );
-      } else if (error.response.status === 401) {
-        throw new Error(
-          "No autorizado: Tu sesión ha expirado. Por favor, inicia sesión nuevamente.",
-        );
-      } else if (error.response.status === 404) {
-        throw new Error(
-          "Materias no encontradas: No se encontraron materias para este profesor.",
-        );
-      }
+    if (status === 401) {
+      throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
+    }
+    if (status === 403) {
+      throw new Error("No tienes permisos para ver estas materias.");
+    }
+    if (status === 404) {
+      throw new Error("No se encontraron materias para este profesor.");
     }
 
-    return [];
+    throw new Error(`Error al obtener materias: ${error.message}`);
   }
 };
-// Subir material de clase (PDF o texto)
+
+// ─── Subir material de clase (PDF) ────────────────────────────────────────────
 export const subirClase = async ({ fileInput }) => {
   const pdf = fileInput?.files?.[0];
 
@@ -171,7 +108,12 @@ export const subirClase = async ({ fileInput }) => {
   }
 };
 
-// Crear nueva clase
-export const crearClase = async (form, token) => {
-  await api.post("api/v1/profesores/crear_clase", { ...form });
+// ─── Crear nueva clase ─────────────────────────────────────────────────────────
+export const crearClase = async (form) => {
+  try {
+    const res = await api.post("api/v1/profesores/crear_clase", form);
+    return res.data;
+  } catch (error) {
+    throw new Error(`Error al crear la clase: ${error.message}`);
+  }
 };
