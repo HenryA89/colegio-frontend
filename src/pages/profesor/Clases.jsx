@@ -41,14 +41,35 @@ export default function Clases() {
 
     try {
       // Validar que se tenga una clase disponible
+      console.log("🔍 Verificando clases disponibles:");
+      console.log("  - Total de clases:", clases.length);
+      console.log(
+        "  - Lista de clases:",
+        clases.map((c, i) => ({
+          index: i,
+          id: c.id || c._id,
+          nombre: c.nombre || c.materia,
+          profesor: c.profesor_id || c.profesorId,
+        })),
+      );
+
       const claseSeleccionada = clases[0];
       if (!claseSeleccionada) {
+        console.error("❌ No hay clases disponibles");
         setError("No hay clases disponibles. Crea una clase primero.");
         return;
       }
 
+      console.log("✅ Clase seleccionada:", {
+        id: claseSeleccionada.id || claseSeleccionada._id,
+        nombre: claseSeleccionada.nombre || claseSeleccionada.materia,
+        profesor: claseSeleccionada.profesor_id || claseSeleccionada.profesorId,
+        datos_completos: claseSeleccionada,
+      });
+
       // Validar que se tenga un archivo PDF
       if (!pdf) {
+        console.error("❌ No se proporcionó archivo PDF");
         setError("Debes seleccionar un archivo PDF para subir.");
         return;
       }
@@ -56,9 +77,12 @@ export default function Clases() {
       // Obtener el ID de la clase
       const claseId = claseSeleccionada.id || claseSeleccionada._id;
 
-      console.log(" Enviando material con los siguientes datos:");
+      console.log("📋 Enviando material con los siguientes datos:");
       console.log("  - claseId:", claseId);
+      console.log("  - claseId tipo:", typeof claseId);
       console.log("  - pdf:", pdf.name);
+      console.log("  - pdf tamaño:", pdf.size);
+      console.log("  - pdf tipo:", pdf.type);
 
       // Enviar solo claseId y pdf como lo solicita el backend
       await subirClase({
