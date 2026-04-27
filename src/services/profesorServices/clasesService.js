@@ -118,15 +118,25 @@ export const fetchClases = async (token) => {
   }
 };
 // Subir material de clase (PDF o texto)
-export const subirClase = async ({ pdf }) => {
+export const subirClase = async ({ fileInput }) => {
   try {
     console.log("=== INICIANDO SUBIDA DE MATERIAL ===");
-    console.log("pdf recibido:", pdf ? pdf.name : "null");
+    console.log("fileInput recibido:", fileInput);
+
+    // Obtener el archivo directamente del input
+    const pdf = fileInput?.files?.[0];
+    console.log("pdf extraído:", pdf ? pdf.name : "null");
 
     // Validar que se tenga un archivo PDF
     if (!pdf) {
       console.error("❌ No se proporcionó archivo PDF");
       throw new Error("Debe seleccionar un archivo PDF");
+    }
+
+    // Validar que sea un PDF
+    if (pdf.type !== "application/pdf") {
+      console.error("❌ El archivo no es un PDF:", pdf.type);
+      throw new Error("El archivo debe ser un PDF");
     }
 
     // Obtener y validar token del profesor
@@ -175,7 +185,7 @@ export const subirClase = async ({ pdf }) => {
 
     const formData = new FormData();
 
-    // Agregar solo archivo_pdf (sin clase_id)
+    // Agregar archivo_pdf directamente del fileInput
     formData.append("archivo_pdf", pdf);
     console.log(
       "✅ archivo_pdf agregado al FormData:",
