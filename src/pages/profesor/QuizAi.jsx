@@ -28,6 +28,7 @@ import {
   publicarQuizIA,
   fetchResultadosQuizIA,
   fetchEstadisticasQuizIA,
+  extraerTemasPDF,
 } from "../../services/profesorServices/quizAiService";
 import { fetchClases } from "../../services/profesorServices/clasesService";
 
@@ -86,8 +87,6 @@ export default function QuizAi() {
       console.log("🔍 Extrayendo temas del PDF:", materialReciente.nombre);
 
       // Llamar al servicio para extraer temas del PDF
-      const { extraerTemasPDF } =
-        await import("../../services/profesorServices/quizAiService");
       const resultado = await extraerTemasPDF(materialReciente.id);
 
       console.log("✅ Temas extraídos del PDF:", resultado.temas);
@@ -193,33 +192,109 @@ export default function QuizAi() {
     setGenerandoQuiz(true);
     setError("");
     try {
-      const quizGenerado = await generarQuizConIA(id, opcionesGeneracion);
+      console.log("🎯 Generando quiz con IA para clase:", clase?.nombre);
+      console.log("📋 Opciones de generación:", opcionesGeneracion);
 
-      // Pre-llenar formulario con datos generados
-      setQuizForm({
-        titulo:
-          quizGenerado.titulo ||
-          `Quiz IA - ${new Date().toLocaleDateString("es-ES")}`,
-        descripcion:
-          quizGenerado.descripcion || "Quiz generado automáticamente con IA",
-        instrucciones:
-          quizGenerado.instrucciones || "Responde cada pregunta cuidadosamente",
-        tiempoTotal:
-          quizGenerado.tiempoTotal ||
-          (opcionesGeneracion.numeroPreguntas *
-            opcionesGeneracion.tiempoPorPregunta) /
-            60,
-        intentosMaximos: 3,
-        mostrarRetroalimentacion: opcionesGeneracion.incluirRetroalimentacion,
-        aleatorioOrden: true,
-      });
+      // Si no hay temas específicos pero hay material PDF, usar el PDF
+      if (!opcionesGeneracion.temas.trim() && materialReciente) {
+        console.log("📄 No hay temas específicos, usando material PDF...");
 
-      setQuizSeleccionado(quizGenerado);
-      setMostrarModalGeneracion(false);
-      setMostrarModalQuiz(true);
+        // Extraer temas automáticamente del PDF
+        const resultado = await extraerTemasPDF(materialReciente.id);
+
+        // Actualizar opciones con temas extraídos
+        const opcionesConTemas = {
+          ...opcionesGeneracion,
+          temas: resultado.temas.join(", "),
+          usarMaterialPDF: true,
+          materialId: materialReciente.id,
+        };
+
+        console.log("✅ Temas extraídos automáticamente:", resultado.temas);
+
+        // Generar quiz con temas extraídos
+        const quizGenerado = await generarQuizConIA(id, opcionesConTemas);
+        console.log("🎉 Quiz generado con éxito usando PDF:", quizGenerado);
+
+        // Pre-llenar formulario con datos generados
+        setQuizForm({
+          titulo:
+            quizGenerado.titulo ||
+            `Quiz IA - ${new Date().toLocaleDateString("es-ES")}`,
+          descripcion:
+            quizGenerado.descripcion ||
+            "Quiz generado automáticamente con IA basado en PDF",
+          instrucciones:
+            quizGenerado.instrucciones ||
+            "Responde cada pregunta cuidadosamente basándote en el material proporcionado",
+          tiempoTotal:
+            quizGenerado.tiempoTotal ||
+            (opcionesGeneracion.numeroPreguntas *
+              opcionesGeneracion.tiempoPorPregunta) /
+              60,
+          intentosMaximos: 3,
+          mostrarRetroalimentacion: opcionesGeneracion.incluirRetroalimentacion,
+          aleatorioOrden: true,
+        });
+
+        setQuizSeleccionado(quizGenerado);
+        setMostrarModalGeneracion(false);
+        setMostrarModalQuiz(true);
+
+        // Resetear formulario
+        setOpcionesGeneracion({
+          numeroPreguntas: 5,
+          dificultad: "media",
+          tipoPreguntas: "mixto",
+          temas: "",
+          tiempoPorPregunta: 60,
+          incluirRetroalimentacion: true,
+          idioma: "es",
+        });
+      } else {
+        // Generar quiz con las opciones proporcionadas
+        console.log("✏️ Generando quiz con opciones manuales");
+        const quizGenerado = await generarQuizConIA(id, opcionesGeneracion);
+        console.log("🎉 Quiz generado con éxito:", quizGenerado);
+
+        // Pre-llenar formulario con datos generados
+        setQuizForm({
+          titulo:
+            quizGenerado.titulo ||
+            `Quiz IA - ${new Date().toLocaleDateString("es-ES")}`,
+          descripcion:
+            quizGenerado.descripcion || "Quiz generado automáticamente con IA",
+          instrucciones:
+            quizGenerado.instrucciones ||
+            "Responde cada pregunta cuidadosamente",
+          tiempoTotal:
+            quizGenerado.tiempoTotal ||
+            (opcionesGeneracion.numeroPreguntas *
+              opcionesGeneracion.tiempoPorPregunta) /
+              60,
+          intentosMaximos: 3,
+          mostrarRetroalimentacion: opcionesGeneracion.incluirRetroalimentacion,
+          aleatorioOrden: true,
+        });
+
+        setQuizSeleccionado(quizGenerado);
+        setMostrarModalGeneracion(false);
+        setMostrarModalQuiz(true);
+
+        // Resetear formulario
+        setOpcionesGeneracion({
+          numeroPreguntas: 5,
+          dificultad: "media",
+          tipoPreguntas: "mixto",
+          temas: "",
+          tiempoPorPregunta: 60,
+          incluirRetroalimentacion: true,
+          idioma: "es",
+        });
+      }
     } catch (error) {
-      setError("Error generando quiz con IA");
-      console.error("Error:", error);
+      console.error("❌ Error generando quiz:", error);
+      setError(`Error al generar el quiz: ${error.message}`);
     } finally {
       setGenerandoQuiz(false);
     }
