@@ -120,19 +120,56 @@ export const fetchClases = async (token) => {
 // Subir material de clase (PDF o texto)
 export const subirClase = async ({ claseId, pdf }) => {
   try {
+    console.log("=== INICIANDO SUBIDA DE MATERIAL ===");
+    console.log("claseId recibido:", claseId);
+    console.log("pdf recibido:", pdf ? pdf.name : "null");
+
     const formData = new FormData();
 
     // Agregar clase_id (requerido por el backend)
-    if (claseId) formData.append("clase_id", claseId.toString());
+    if (claseId) {
+      formData.append("clase_id", claseId.toString());
+      console.log("✅ clase_id agregado al FormData:", claseId.toString());
+    } else {
+      console.error("❌ claseId es nulo o undefined");
+      throw new Error("claseId es requerido");
+    }
 
     // Agregar archivo_pdf si existe
-    if (pdf) formData.append("archivo_pdf", pdf);
+    if (pdf) {
+      formData.append("archivo_pdf", pdf);
+      console.log(
+        "✅ archivo_pdf agregado al FormData:",
+        pdf.name,
+        "Tamaño:",
+        pdf.size,
+        "Tipo:",
+        pdf.type,
+      );
+    } else {
+      console.error("❌ pdf es nulo o undefined");
+      throw new Error("pdf es requerido");
+    }
 
     // Obtener token del profesor
     const token = localStorage.getItem("token");
     if (!token) {
+      console.error("❌ No se encontró token de autorización");
       throw new Error("No se encontró token de autorización");
     }
+
+    console.log("🔍 FormData completo:");
+    for (let [key, value] of formData.entries()) {
+      console.log(
+        `  ${key}:`,
+        typeof value === "object"
+          ? `${value.name} (${value.size} bytes)`
+          : value,
+      );
+    }
+
+    console.log("🚀 Enviando request a: api/v1/profesores/subir_material");
+    console.log("🔑 Token disponible:", !!token);
 
     const response = await api.post(
       "api/v1/profesores/subir_material",
@@ -145,9 +182,12 @@ export const subirClase = async ({ claseId, pdf }) => {
       },
     );
 
+    console.log("✅ Respuesta del backend:", response.status, response.data);
     return response.data;
   } catch (error) {
-    console.error("Error al subir clase:", error);
+    console.error("❌ Error al subir clase:", error);
+    console.error("❌ Respuesta del servidor:", error.response?.data);
+    console.error("❌ Status:", error.response?.status);
     throw new Error("No se pudo subir la clase");
   }
 };
