@@ -118,18 +118,35 @@ export const fetchClases = async (token) => {
   }
 };
 // Subir material de clase (PDF o texto)
-export const subirClase = async ({ pdf, texto }) => {
+export const subirClase = async ({ claseId, pdf, texto, titulo }) => {
   try {
     const formData = new FormData();
-    if (pdf) formData.append("pdf", pdf);
-    if (texto) formData.append("texto", texto);
+
+    // Agregar clase_id (requerido por el backend)
+    if (claseId) formData.append("clase_id", claseId.toString());
+
+    // Agregar material_titulo (requerido por el backend)
+    formData.append("material_titulo", titulo || "Material de Clase");
+
+    // Agregar material_texto (opcional)
+    if (texto) formData.append("material_texto", texto);
+
+    // Agregar archivo_pdf si existe
+    if (pdf) formData.append("archivo_pdf", pdf);
+
+    // Obtener token del profesor
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No se encontró token de autorización");
+    }
 
     const response = await api.post(
       "api/v1/profesores/subir_material",
       formData,
       {
         headers: {
-          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+          // No incluir Content-Type para que el navegador establezca multipart/form-data automáticamente
         },
       },
     );
