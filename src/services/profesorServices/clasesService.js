@@ -171,23 +171,30 @@ export const subirClase = async ({ claseId, pdf }) => {
     console.log("🚀 Enviando request a: api/v1/profesores/subir_material");
     console.log("🔑 Token disponible:", !!token);
 
-    const response = await api.post(
-      "api/v1/profesores/subir_material",
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          // No incluir Content-Type para que el navegador establezca multipart/form-data automáticamente
-        },
+    // Usar fetch directamente como en el ejemplo proporcionado
+    const response = await fetch("api/v1/profesores/subir_material", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // No incluir Content-Type para que el navegador establezca multipart/form-data automáticamente
       },
-    );
+      body: formData,
+    });
 
-    console.log("✅ Respuesta del backend:", response.status, response.data);
-    return response.data;
+    console.log("📊 Status de la respuesta:", response.status);
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error("❌ Error en respuesta:", errorData);
+      throw new Error(`Error ${response.status}: ${errorData}`);
+    }
+
+    const resultado = await response.json();
+    console.log("✅ Respuesta del backend:", resultado);
+    return resultado;
   } catch (error) {
     console.error("❌ Error al subir clase:", error);
-    console.error("❌ Respuesta del servidor:", error.response?.data);
-    console.error("❌ Status:", error.response?.status);
+    console.error("❌ Detalles del error:", error.message);
     throw new Error("No se pudo subir la clase");
   }
 };
