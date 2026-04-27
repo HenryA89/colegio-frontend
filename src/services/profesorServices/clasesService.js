@@ -119,156 +119,52 @@ export const fetchClases = async (token) => {
 };
 // Subir material de clase (PDF o texto)
 export const subirClase = async ({ fileInput }) => {
+  const pdf = fileInput?.files?.[0];
+
+  if (!pdf) {
+    throw new Error("Debe seleccionar un archivo PDF.");
+  }
+
+  if (pdf.type !== "application/pdf") {
+    throw new Error("El archivo debe ser un PDF.");
+  }
+
+  const { token } = getSession();
+
+  if (!token) {
+    throw new Error("No hay sesión activa. Por favor, inicia sesión.");
+  }
+
+  const formData = new FormData();
+  // Pasar el File explícitamente con nombre de archivo
+  formData.append("archivo_pdf", pdf, pdf.name);
+
   try {
-    console.log("=== INICIANDO SUBIDA DE MATERIAL ===");
-    console.log("fileInput recibido:", fileInput);
-
-    // Obtener el archivo directamente del input
-    const pdf = fileInput?.files?.[0];
-    console.log("pdf extraído:", pdf ? pdf.name : "null");
-
-    // Validar que se tenga un archivo PDF
-    if (!pdf) {
-      console.error("❌ No se proporcionó archivo PDF");
-      throw new Error("Debe seleccionar un archivo PDF");
-    }
-
-    // Validar que sea un PDF
-    if (pdf.type !== "application/pdf") {
-      console.error("❌ El archivo no es un PDF:", pdf.type);
-      throw new Error("El archivo debe ser un PDF");
-    }
-
-    // Obtener y validar token del profesor
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("❌ No se encontró token de autorización en localStorage");
-      throw new Error(
-        "No hay sesión activa. Por favor, inicie sesión nuevamente.",
-      );
-    }
-
-    // Validar formato del token (debe ser JWT válido)
-    try {
-      const tokenParts = token.split(".");
-      if (tokenParts.length !== 3) {
-        console.error("❌ Token con formato inválido (no es JWT)");
-        throw new Error("Token de autenticación inválido");
-      }
-
-      // Decodificar payload del token para verificar expiración
-      const payload = JSON.parse(atob(tokenParts[1]));
-      const currentTime = Date.now() / 1000;
-
-      if (payload.exp && payload.exp < currentTime) {
-        console.error(
-          "❌ Token expirado. Exp:",
-          new Date(payload.exp * 1000),
-          "Actual:",
-          new Date(currentTime),
-        );
-        throw new Error(
-          "Tu sesión ha expirado. Por favor, inicie sesión nuevamente.",
-        );
-      }
-
-      console.log("✅ Token válido y no expirado");
-      console.log("🔑 Token payload:", {
-        userId: payload.sub || payload.userId,
-        role: payload.role,
-        exp: new Date(payload.exp * 1000),
-      });
-    } catch (tokenError) {
-      console.error("❌ Error validando token:", tokenError);
-      throw new Error("Error en la validación del token de autenticación");
-    }
-
-    const formData = new FormData();
-
-    // Agregar archivo_pdf directamente del fileInput
-    formData.append("archivo_pdf", pdf);
-    console.log(
-      "✅ archivo_pdf agregado al FormData:",
-      pdf.name,
-      "Tamaño:",
-      pdf.size,
-      "Tipo:",
-      pdf.type,
-    );
-
-    console.log("🔍 FormData completo:");
-    for (let [key, value] of formData.entries()) {
-      console.log(
-        `  ${key}:`,
-        typeof value === "object"
-          ? `${value.name} (${value.size} bytes)`
-          : value,
-      );
-    }
-
-    // Verificación adicional del FormData
-    console.log("🔬 Verificación detallada del FormData:");
-    console.log("  - FormData entries count:", formData.entries.length);
-    console.log("  - archivo_pdf en FormData:", formData.has("archivo_pdf"));
-    console.log("  - Valor de archivo_pdf:", formData.get("archivo_pdf"));
-
-    // Verificar si el archivo es realmente un File object
-    if (formData.get("archivo_pdf") instanceof File) {
-      console.log("✅ archivo_pdf es un File object válido");
-    } else {
-      console.error("❌ archivo_pdf NO es un File object válido");
-      console.error("❌ Tipo recibido:", typeof formData.get("archivo_pdf"));
-      console.error("❌ Valor recibido:", formData.get("archivo_pdf"));
-    }
-
-    // Verificar URL completa y configuración
-    const baseURL =
-      import.meta.env.VITE_API_BASE_URL ||
-      "https://colegio-backend-ia.onrender.com";
-    const fullURL = `${baseURL}/api/v1/profesores/subir_material`;
-
-    console.log("🌐 Configuración de la petición:");
-    console.log("  - Base URL:", baseURL);
-    console.log("  - Endpoint:", "/api/v1/profesores/subir_material");
-    console.log("  - URL completa:", fullURL);
-    console.log("  - Método:", "POST");
-    console.log("  - Headers simplificados:");
-    console.log("    - Authorization:", `Bearer ${token.substring(0, 20)}...`);
-    console.log(
-      "    - Content-Type:",
-      "multipart/form-data (automático - no especificado)",
-    );
-    console.log("🚀 Enviando request a: /api/v1/profesores/subir_material");
-    console.log("🔑 Token validado y disponible:", !!token);
-
-    // Usar axios con headers simplificados - solo Authorization
     const response = await api.post(
       "/api/v1/profesores/subir_material",
       formData,
       {
         headers: {
           Authorization: `Bearer ${token}`,
-          // No incluir Content-Type - dejar que axios lo establezca automáticamente para multipart/form-data
+          // Forzar multipart — evita que Rails haga wrap_parameters
+          "Content-Type": "multipart/form-data",
+          // Desactiva el wrap de Rails en el frontend
+          "X-No-Wrap": "true",
         },
       },
     );
 
-    console.log("📊 Status de la respuesta:", response.status);
-    console.log("✅ Respuesta del backend:", response.data);
     return response.data;
   } catch (error) {
-    console.error("❌ Error al subir clase:", error);
-    console.error("❌ Detalles del error:", error.message);
+    const status = error.response?.status;
 
-    // Manejar errores específicos de autenticación
-    if (
-      error.message?.includes("expirado") ||
-      error.message?.includes("sesión")
-    ) {
-      // Limpiar token expirado
+    if (status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("usuario");
-      throw new Error("Sesión expirada. Por favor, inicie sesión nuevamente.");
+      throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
+    }
+    if (status === 413) {
+      throw new Error("El archivo es demasiado grande.");
     }
 
     throw new Error(`No se pudo subir el material: ${error.message}`);
