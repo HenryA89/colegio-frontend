@@ -118,18 +118,12 @@ export const fetchClases = async (token) => {
   }
 };
 // Subir material de clase (PDF o texto)
-export const subirClase = async ({ claseId, pdf, texto, titulo }) => {
+export const subirClase = async ({ claseId, pdf }) => {
   try {
     const formData = new FormData();
 
     // Agregar clase_id (requerido por el backend)
     if (claseId) formData.append("clase_id", claseId.toString());
-
-    // Agregar material_titulo (requerido por el backend)
-    formData.append("material_titulo", titulo || "Material de Clase");
-
-    // Agregar material_texto (opcional)
-    if (texto) formData.append("material_texto", texto);
 
     // Agregar archivo_pdf si existe
     if (pdf) formData.append("archivo_pdf", pdf);

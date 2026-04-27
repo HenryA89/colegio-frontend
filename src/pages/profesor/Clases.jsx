@@ -47,26 +47,23 @@ export default function Clases() {
         return;
       }
 
+      // Validar que se tenga un archivo PDF
+      if (!pdf) {
+        setError("Debes seleccionar un archivo PDF para subir.");
+        return;
+      }
+
       // Obtener el ID de la clase
       const claseId = claseSeleccionada.id || claseSeleccionada._id;
 
-      // Validar que se tenga un título
-      const tituloFinal =
-        titulo.trim() ||
-        `Material de ${claseSeleccionada.nombre || "Clase"} - ${new Date().toLocaleDateString()}`;
-
       console.log(" Enviando material con los siguientes datos:");
       console.log("  - claseId:", claseId);
-      console.log("  - titulo:", tituloFinal);
-      console.log("  - texto:", texto || "(sin texto)");
-      console.log("  - pdf:", pdf ? pdf.name : "(sin PDF)");
+      console.log("  - pdf:", pdf.name);
 
-      // Enviar todos los parámetros requeridos por el backend
+      // Enviar solo claseId y pdf como lo solicita el backend
       await subirClase({
         claseId: claseId,
         pdf: pdf,
-        texto: texto,
-        titulo: tituloFinal,
       });
 
       setMensaje("¡Material subido correctamente!");
@@ -203,10 +200,10 @@ export default function Clases() {
             <button
               type="submit"
               className="w-full px-6 py-3 text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:bg-blue-400 transition-colors flex items-center justify-center space-x-2"
-              disabled={loading || (!pdf && !texto)}
+              disabled={loading || !pdf}
             >
               <Upload className="w-4 h-4" />
-              <span>{loading ? "Subiendo..." : "Subir Clase"}</span>
+              <span>{loading ? "Subiendo..." : "Subir PDF"}</span>
             </button>
             {mensaje && (
               <div className="p-4 mt-4 text-green-700 bg-green-100 border border-green-400 rounded-lg">
