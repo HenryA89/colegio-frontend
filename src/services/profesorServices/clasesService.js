@@ -136,8 +136,8 @@ export const subirClase = async ({ file }) => {
   }
 
   const formData = new FormData();
-  // Pasar el File explícitamente con nombre de archivo
-  formData.append("archivo_pdf", pdf, pdf.name);
+  // Enviar el archivo PDF directamente como archivo, no como array
+  formData.append("archivo_pdf", pdf);
 
   try {
     const response = await api.post(
