@@ -118,9 +118,8 @@ export default function Clases() {
       });
 
       // Validar que se tenga un archivo PDF
-      const fileInput = { files: [pdf] };
       if (!pdf) {
-        console.error(" No se proporcionó archivo PDF");
+        console.error("❌ No se proporcionó archivo PDF");
         setError("Debes seleccionar un archivo PDF para subir.");
         return;
       }
@@ -128,17 +127,16 @@ export default function Clases() {
       // Obtener el ID de la clase
       const claseId = claseSeleccionada.id || claseSeleccionada._id;
 
-      console.log(" Enviando material con los siguientes datos:");
+      console.log("📋 Enviando material con los siguientes datos:");
       console.log("  - claseId:", claseId);
       console.log("  - claseId tipo:", typeof claseId);
       console.log("  - pdf:", pdf.name);
       console.log("  - pdf tamaño:", pdf.size);
       console.log("  - pdf tipo:", pdf.type);
-      console.log("  - fileInput completo:", fileInput);
 
-      // Enviar fileInput completo como lo solicita el backend
+      // Enviar archivo directamente con el parámetro correcto
       await subirClase({
-        fileInput: fileInput,
+        file: pdf,
       });
 
       setMensaje("¡Material subido correctamente!");
