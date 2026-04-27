@@ -74,6 +74,39 @@ export default function QuizAi() {
     aleatorioOrden: true,
   });
 
+  // Función para extraer temas del PDF usando IA
+  const extraerTemasDelPDF = async () => {
+    if (!materialReciente) {
+      setError("No hay material PDF disponible para extraer temas");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log("🔍 Extrayendo temas del PDF:", materialReciente.nombre);
+
+      // Llamar al servicio para extraer temas del PDF
+      const { extraerTemasPDF } =
+        await import("../../services/profesorServices/quizAiService");
+      const resultado = await extraerTemasPDF(materialReciente.id);
+
+      console.log("✅ Temas extraídos del PDF:", resultado.temas);
+
+      // Actualizar el formulario con los temas extraídos
+      setOpcionesGeneracion((prev) => ({
+        ...prev,
+        temas: resultado.temas.join(", "),
+      }));
+
+      setError("");
+    } catch (error) {
+      console.error("❌ Error extrayendo temas del PDF:", error);
+      setError(`Error al extraer temas del PDF: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Cargar información inicial
   useEffect(() => {
     const cargarInformacion = async () => {
@@ -607,16 +640,68 @@ export default function QuizAi() {
 
                 <div>
                   <label className="block mb-2 font-medium text-gray-700">
-                    Temas Específicos (opcional)
+                    Temas del Material PDF
                   </label>
-                  <textarea
-                    name="temas"
-                    value={opcionesGeneracion.temas}
-                    onChange={handleOpcionesChange}
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-400 transition-all"
-                    rows={3}
-                    placeholder="Ej: fracciones, ecuaciones lineales, teorema de Pitágoras..."
-                  />
+                  <div className="space-y-3">
+                    <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-blue-700">
+                          Material disponible:
+                        </span>
+                        {materialReciente && (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                            PDF Disponible
+                          </span>
+                        )}
+                      </div>
+                      {materialReciente ? (
+                        <div className="text-sm text-blue-600">
+                          <p className="font-medium">
+                            {materialReciente.nombre || "Material reciente"}
+                          </p>
+                          <p className="text-xs text-blue-500 mt-1">
+                            Subido:{" "}
+                            {new Date(
+                              materialReciente.fecha_subida,
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-500">
+                          No hay material PDF disponible para esta clase
+                        </div>
+                      )}
+                    </div>
+
+                    <textarea
+                      name="temas"
+                      value={opcionesGeneracion.temas}
+                      onChange={handleOpcionesChange}
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                      rows={3}
+                      placeholder={
+                        materialReciente
+                          ? "Los temas se extraerán automáticamente del PDF. Puedes agregar temas específicos si lo deseas..."
+                          : "Ej: fracciones, ecuaciones lineales, teorema de Pitágoras..."
+                      }
+                    />
+
+                    {materialReciente && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => extraerTemasDelPDF()}
+                          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm flex items-center gap-2"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          Extraer temas del PDF
+                        </button>
+                        <span className="text-xs text-gray-500">
+                          IA analizará el contenido del PDF
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-4">

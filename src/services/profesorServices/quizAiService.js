@@ -13,6 +13,19 @@ export const fetchMaterialReciente = async (claseId) => {
   }
 };
 
+// Extraer temas de un PDF usando IA
+export const extraerTemasPDF = async (materialId) => {
+  try {
+    const response = await api.post(`api/v1/quiz-ia/extraer-temas`, {
+      materialId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error extrayendo temas del PDF:", error);
+    throw new Error("No se pudieron extraer los temas del PDF");
+  }
+};
+
 // Generar quiz con IA basado en el material (1 clase)
 export const generarQuizConIA = async (claseId, opciones) => {
   try {
