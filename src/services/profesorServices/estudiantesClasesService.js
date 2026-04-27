@@ -5,9 +5,9 @@ export const fetchEstudiantesPorClase = async (claseId) => {
   try {
     console.log("=== FETCH ESTUDIANTES POR CLASE ===");
     console.log("Clase ID:", claseId);
-    console.log("Endpoint:", `api/v1/clases/${claseId}/estudiantes`);
+    console.log("Endpoint:", `/api/v1/admin/usuarios/estudiantes`);
 
-    const response = await api.get(`api/v1/clases/${claseId}/estudiantes`);
+    const response = await api.get(`/api/v1/admin/usuarios/estudiantes`);
     console.log("Respuesta HTTP:", response.status);
     console.log("Data cruda:", response.data);
     console.log("Data tipo:", typeof response.data);
@@ -104,7 +104,7 @@ export const fetchResultadosPorClase = async (claseId) => {
 export const inscribirEstudiante = async (claseId, estudianteData) => {
   try {
     const response = await api.post(
-      `api/v1/clases/${claseId}/inscribir`,
+      `/api/v1/admin/usuarios/estudiantes`,
       estudianteData,
     );
     return response.data;
@@ -121,12 +121,10 @@ export const inscribirEstudiantesAutomaticamente = async (claseId, grado) => {
     console.log("Clase ID:", claseId);
     console.log("Grado:", grado);
 
-    const response = await api.post(
-      `api/v1/clases/${claseId}/inscribir-automatico`,
-      {
-        grado: grado,
-      },
-    );
+    const response = await api.post(`/api/v1/admin/usuarios/estudiantes`, {
+      grado: grado,
+      claseId: claseId,
+    });
 
     console.log("✅ Estudiantes inscritos automáticamente:", response.data);
     return response.data;
@@ -144,9 +142,7 @@ export const fetchEstudiantesDisponibles = async (grado) => {
     console.log("=== OBTENIENDO ESTUDIANTES DISPONIBLES ===");
     console.log("Grado:", grado);
 
-    const response = await api.get(
-      `api/v1/estudiantes/disponibles?grado=${grado}`,
-    );
+    const response = await api.get(`/api/v1/admin/usuarios/estudiantes`);
 
     // Manejar diferentes formatos de respuesta
     let estudiantes = [];
