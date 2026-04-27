@@ -22,6 +22,7 @@ export default function Clases() {
   const [open, setOpen] = useState(false);
   const [texto, setTexto] = useState("");
   const [pdf, setPdf] = useState(null);
+  const [titulo, setTitulo] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingClases, setLoadingClases] = useState(true);
   const [mensaje, setMensaje] = useState("");
@@ -37,15 +38,46 @@ export default function Clases() {
     setLoading(true);
     setMensaje("");
     setError("");
+
     try {
-      await subirClase({ pdf, texto });
-      setMensaje("¡Clase subida correctamente!");
+      // Validar que se tenga una clase disponible
+      const claseSeleccionada = clases[0];
+      if (!claseSeleccionada) {
+        setError("No hay clases disponibles. Crea una clase primero.");
+        return;
+      }
+
+      // Obtener el ID de la clase
+      const claseId = claseSeleccionada.id || claseSeleccionada._id;
+
+      // Validar que se tenga un título
+      const tituloFinal =
+        titulo.trim() ||
+        `Material de ${claseSeleccionada.nombre || "Clase"} - ${new Date().toLocaleDateString()}`;
+
+      console.log(" Enviando material con los siguientes datos:");
+      console.log("  - claseId:", claseId);
+      console.log("  - titulo:", tituloFinal);
+      console.log("  - texto:", texto || "(sin texto)");
+      console.log("  - pdf:", pdf ? pdf.name : "(sin PDF)");
+
+      // Enviar todos los parámetros requeridos por el backend
+      await subirClase({
+        claseId: claseId,
+        pdf: pdf,
+        texto: texto,
+        titulo: tituloFinal,
+      });
+
+      setMensaje("¡Material subido correctamente!");
+      // Limpiar formulario
       setTexto("");
       setPdf(null);
+      setTitulo("");
       cargarClases();
     } catch (err) {
       console.error("Error:", err);
-      setError("Error al subir la clase. Intenta nuevamente.");
+      setError(`Error al subir el material: ${err.message}`);
     }
     setLoading(false);
   };
@@ -67,7 +99,7 @@ export default function Clases() {
       if (Array.isArray(clasesData)) {
         clasesData.forEach((clase, index) => {
           console.log(
-            `  ${index + 1}. ${clase.nombre || clase.materia} - ID: ${clase.id || clase._id} - Profesor: ${clase.profesor_id || clase.profesorId}`,
+            `  ${index + 1}. ${clase.nombre} - ID: ${clase.id || clase._id} - Profesor: ${clase.profesor_id || clase.profesorId}`,
           );
         });
       }
@@ -125,6 +157,19 @@ export default function Clases() {
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
+              <label className="flex mb-2 font-medium text-gray-700 items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                Título del Material
+              </label>
+              <input
+                type="text"
+                value={titulo}
+                onChange={(e) => setTitulo(e.target.value)}
+                placeholder="Ej: Guía de Estudio, Material Complementario..."
+                className="block w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-400 transition-all"
+              />
+            </div>
+            <div>
               <label className="block mb-2 font-medium text-gray-700 flex items-center gap-2">
                 <Upload className="w-4 h-4" />
                 Subir PDF
@@ -135,6 +180,12 @@ export default function Clases() {
                 onChange={handleFileChange}
                 className="block w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-400 transition-all"
               />
+              {pdf && (
+                <div className="mt-2 text-sm text-green-600 flex items-center">
+                  <FileText className="w-4 h-4 mr-1" />
+                  {pdf.name}
+                </div>
+              )}
             </div>
             <div>
               <label className="block mb-2 font-medium text-gray-700 flex items-center gap-2">
