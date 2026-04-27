@@ -20,6 +20,7 @@ import {
   fetchEstudiantesDisponibles,
   eliminarEstudianteDeClase,
   fetchEstadisticasClase,
+  inscribirTodosEstudiantesEnTodasLasClases,
 } from "../../services/profesorServices/estudiantesClasesService";
 import { fetchClases } from "../../services/profesorServices/clasesService";
 
@@ -44,6 +45,37 @@ export default function EstudiantesClases() {
     email: "",
     identificacion: "",
   });
+  const [loadingMasiva, setLoadingMasiva] = useState(false);
+  const [resultadoMasiva, setResultadoMasiva] = useState(null);
+
+  // Función para inscribir todos los estudiantes en todas las clases
+  const handleInscripcionMasivaAutomatica = async () => {
+    setLoadingMasiva(true);
+    setResultadoMasiva(null);
+
+    try {
+      const usuario = JSON.parse(localStorage.getItem("usuario"));
+      const profesorId =
+        usuario?.id || usuario?.usuario?.id || usuario?.profesor?.id;
+
+      console.log("🚀 Iniciando inscripción masiva automática...");
+      const resultado =
+        await inscribirTodosEstudiantesEnTodasLasClases(profesorId);
+
+      setResultadoMasiva(resultado);
+
+      // Recargar datos después de la inscripción
+      await cargarEstudiantes();
+      await cargarClases();
+
+      console.log("✅ Inscripción masiva completada:", resultado);
+    } catch (error) {
+      console.error("❌ Error en inscripción masiva:", error);
+      setError(error.message);
+    } finally {
+      setLoadingMasiva(false);
+    }
+  };
 
   const cargarResultados = useCallback(async () => {
     if (!id) {
@@ -521,7 +553,74 @@ export default function EstudiantesClases() {
               <FileText className="w-4 h-4" />
               <span>Gestionar Evaluaciones</span>
             </button>
+            <button
+              onClick={handleInscripcionMasivaAutomatica}
+              disabled={loadingMasiva}
+              className="px-6 py-3 text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Users className="w-4 h-4" />
+              <span>
+                {loadingMasiva
+                  ? "Inscribiendo..."
+                  : "Inscribir Todos los Estudiantes"}
+              </span>
+            </button>
           </div>
+
+          {/* Resultados de Inscripción Masiva */}
+          {resultadoMasiva && (
+            <div className="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-xl">
+              <h3 className="text-lg font-bold text-green-800 mb-3">
+                📊 Resultados de Inscripción Masiva
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {resultadoMasiva.totalExitosas}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Inscripciones Exitosas
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {resultadoMasiva.clasesProcesadas}
+                  </div>
+                  <div className="text-sm text-gray-600">Clases Procesadas</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {resultadoMasiva.estudiantesProcesados}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Estudiantes Procesados
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">
+                    {resultadoMasiva.totalErrores}
+                  </div>
+                  <div className="text-sm text-gray-600">Errores</div>
+                </div>
+              </div>
+              <p className="text-sm text-gray-700">{resultadoMasiva.mensaje}</p>
+
+              {resultadoMasiva.errores.length > 0 && (
+                <details className="mt-3">
+                  <summary className="cursor-pointer text-sm font-semibold text-red-600 hover:text-red-800">
+                    Ver errores ({resultadoMasiva.errores.length})
+                  </summary>
+                  <div className="mt-2 max-h-40 overflow-y-auto bg-red-50 p-2 rounded">
+                    {resultadoMasiva.errores.map((error, index) => (
+                      <div key={index} className="text-xs text-red-700 mb-1">
+                        • {error.estudiante} en {error.clase}: {error.error}
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+            </div>
+          )}
 
           {/* Filtros */}
           <div className="flex gap-4 mb-6">

@@ -151,11 +151,131 @@ export const fetchEstudiantesDisponibles = async (grado) => {
       estudiantes = response.data.data;
     }
 
-    console.log("✅ Estudiantes disponibles:", estudiantes.length);
-    return estudiantes;
+    console.log(`📊 Estudiantes encontrados: ${estudiantes.length}`);
+
+    // Filtrar solo estudiantes con rol de estudiante
+    const estudiantesFiltrados = estudiantes.filter(
+      (estudiante) =>
+        estudiante.rol === "estudiante" ||
+        estudiante.tipo === "estudiante" ||
+        estudiante.role === "estudiante",
+    );
+
+    console.log(
+      `📊 Estudiantes totales: ${estudiantes.length} → Estudiantes con rol estudiante: ${estudiantesFiltrados.length}`,
+    );
+
+    return estudiantesFiltrados;
   } catch (error) {
     console.error("❌ Error obteniendo estudiantes disponibles:", error);
     throw new Error("No se pudieron obtener los estudiantes disponibles");
+  }
+};
+
+// Inscribir estudiantes masivamente
+export const inscribirEstudiantesMasivamente = async (claseId, estudiantes) => {
+  try {
+    console.log("=== INSCRIPCIÓN MASIVA DE ESTUDIANTES ===");
+    console.log("Clase ID:", claseId);
+    console.log("Estudiantes:", estudiantes.length);
+
+    const response = await api.post(`/api/v1/estudiantes/masivo`, {
+      claseId: claseId,
+      estudiantes: estudiantes,
+    });
+    console.log("✅ Estudiantes inscritos masivamente:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error en inscripción masiva:", error);
+    throw new Error(
+      `No se pudo inscribir masivamente los estudiantes: ${error.message}`,
+    );
+  }
+};
+
+// Inscribir todos los estudiantes en todas las clases del profesor
+export const inscribirTodosEstudiantesEnTodasLasClases = async (profesorId) => {
+  try {
+    console.log("=== INSCRIPCIÓN MASIVA AUTOMÁTICA ===");
+    console.log("Profesor ID:", profesorId);
+
+    // 1. Obtener todas las clases del profesor
+    const { fetchClases } = await import("./clasesService");
+    const clases = await fetchClases(localStorage.getItem("token"));
+
+    console.log(`📚 Clases del profesor: ${clases.length}`);
+    clases.forEach((clase, index) => {
+      console.log(
+        `  ${index + 1}. ${clase.nombre} - ID: ${clase.id || clase._id}`,
+      );
+    });
+
+    // 2. Obtener todos los estudiantes
+    const estudiantes = await fetchEstudiantesPorClase();
+    console.log(`👥 Estudiantes disponibles: ${estudiantes.length}`);
+
+    if (clases.length === 0) {
+      console.warn("⚠️ No hay clases disponibles para inscribir estudiantes");
+      return { mensaje: "No hay clases disponibles", inscritos: 0 };
+    }
+
+    if (estudiantes.length === 0) {
+      console.warn("⚠️ No hay estudiantes disponibles para inscribir");
+      return { mensaje: "No hay estudiantes disponibles", inscritos: 0 };
+    }
+
+    let totalInscripciones = 0;
+    let errores = [];
+
+    // 3. Inscribir cada estudiante en cada clase
+    for (const clase of clases) {
+      const claseId = clase.id || clase._id;
+      console.log(`\n🔄 Procesando clase: ${clase.nombre} (ID: ${claseId})`);
+
+      for (const estudiante of estudiantes) {
+        try {
+          const response = await api.post(`/api/v1/estudiantes`, {
+            estudianteId: estudiante.id || estudiante._id,
+            claseId: claseId,
+            profesorId: profesorId,
+            accion: "inscribir",
+          });
+
+          console.log(
+            `✅ Estudiante ${estudiante.nombre} inscrito en ${clase.nombre}`,
+          );
+          totalInscripciones++;
+        } catch (error) {
+          console.error(
+            `❌ Error inscribiendo ${estudiante.nombre} en ${clase.nombre}:`,
+            error.response?.data || error.message,
+          );
+          errores.push({
+            estudiante: estudiante.nombre,
+            clase: clase.nombre,
+            error: error.response?.data?.message || error.message,
+          });
+        }
+      }
+    }
+
+    const resultado = {
+      mensaje: `Proceso completado: ${totalInscripciones} inscripciones exitosas de ${clases.length * estudiantes.length} posibles`,
+      totalPosibles: clases.length * estudiantes.length,
+      totalExitosas: totalInscripciones,
+      totalErrores: errores.length,
+      clasesProcesadas: clases.length,
+      estudiantesProcesados: estudiantes.length,
+      errores: errores,
+    };
+
+    console.log("📊 RESULTADO FINAL:", resultado);
+    return resultado;
+  } catch (error) {
+    console.error("❌ Error en inscripción masiva:", error);
+    throw new Error(
+      `No se pudo completar la inscripción masiva: ${error.message}`,
+    );
   }
 };
 
