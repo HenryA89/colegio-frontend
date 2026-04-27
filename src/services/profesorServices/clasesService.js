@@ -124,39 +124,78 @@ export const subirClase = async ({ claseId, pdf }) => {
     console.log("claseId recibido:", claseId);
     console.log("pdf recibido:", pdf ? pdf.name : "null");
 
+    // Validar que se tenga un archivo PDF
+    if (!pdf) {
+      console.error("❌ No se proporcionó archivo PDF");
+      throw new Error("Debe seleccionar un archivo PDF");
+    }
+
+    // Validar que se tenga un ID de clase
+    if (!claseId) {
+      console.error("❌ No se proporcionó ID de clase");
+      throw new Error("Debe proporcionar un ID de clase válido");
+    }
+
+    // Obtener y validar token del profesor
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("❌ No se encontró token de autorización en localStorage");
+      throw new Error(
+        "No hay sesión activa. Por favor, inicie sesión nuevamente.",
+      );
+    }
+
+    // Validar formato del token (debe ser JWT válido)
+    try {
+      const tokenParts = token.split(".");
+      if (tokenParts.length !== 3) {
+        console.error("❌ Token con formato inválido (no es JWT)");
+        throw new Error("Token de autenticación inválido");
+      }
+
+      // Decodificar payload del token para verificar expiración
+      const payload = JSON.parse(atob(tokenParts[1]));
+      const currentTime = Date.now() / 1000;
+
+      if (payload.exp && payload.exp < currentTime) {
+        console.error(
+          "❌ Token expirado. Exp:",
+          new Date(payload.exp * 1000),
+          "Actual:",
+          new Date(currentTime),
+        );
+        throw new Error(
+          "Tu sesión ha expirado. Por favor, inicie sesión nuevamente.",
+        );
+      }
+
+      console.log("✅ Token válido y no expirado");
+      console.log("🔑 Token payload:", {
+        userId: payload.sub || payload.userId,
+        role: payload.role,
+        exp: new Date(payload.exp * 1000),
+      });
+    } catch (tokenError) {
+      console.error("❌ Error validando token:", tokenError);
+      throw new Error("Error en la validación del token de autenticación");
+    }
+
     const formData = new FormData();
 
     // Agregar clase_id (requerido por el backend)
-    if (claseId) {
-      formData.append("clase_id", claseId.toString());
-      console.log("✅ clase_id agregado al FormData:", claseId.toString());
-    } else {
-      console.error("❌ claseId es nulo o undefined");
-      throw new Error("claseId es requerido");
-    }
+    formData.append("clase_id", claseId.toString());
+    console.log("✅ clase_id agregado al FormData:", claseId.toString());
 
     // Agregar archivo_pdf si existe
-    if (pdf) {
-      formData.append("archivo_pdf", pdf);
-      console.log(
-        "✅ archivo_pdf agregado al FormData:",
-        pdf.name,
-        "Tamaño:",
-        pdf.size,
-        "Tipo:",
-        pdf.type,
-      );
-    } else {
-      console.error("❌ pdf es nulo o undefined");
-      throw new Error("pdf es requerido");
-    }
-
-    // Obtener token del profesor
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("❌ No se encontró token de autorización");
-      throw new Error("No se encontró token de autorización");
-    }
+    formData.append("archivo_pdf", pdf);
+    console.log(
+      "✅ archivo_pdf agregado al FormData:",
+      pdf.name,
+      "Tamaño:",
+      pdf.size,
+      "Tipo:",
+      pdf.type,
+    );
 
     console.log("🔍 FormData completo:");
     for (let [key, value] of formData.entries()) {
@@ -169,7 +208,7 @@ export const subirClase = async ({ claseId, pdf }) => {
     }
 
     console.log("🚀 Enviando request a: api/v1/profesores/subir_material");
-    console.log("🔑 Token disponible:", !!token);
+    console.log("🔑 Token validado y disponible:", !!token);
 
     // Usar axios con la configuración normal del proyecto
     const response = await api.post(
@@ -189,7 +228,19 @@ export const subirClase = async ({ claseId, pdf }) => {
   } catch (error) {
     console.error("❌ Error al subir clase:", error);
     console.error("❌ Detalles del error:", error.message);
-    throw new Error("No se pudo subir la clase");
+
+    // Manejar errores específicos de autenticación
+    if (
+      error.message?.includes("expirado") ||
+      error.message?.includes("sesión")
+    ) {
+      // Limpiar token expirado
+      localStorage.removeItem("token");
+      localStorage.removeItem("usuario");
+      throw new Error("Sesión expirada. Por favor, inicie sesión nuevamente.");
+    }
+
+    throw new Error(`No se pudo subir el material: ${error.message}`);
   }
 };
 
