@@ -145,10 +145,14 @@ export default function QuizAi() {
     if (!id) return;
     setLoadingMaterial(true);
     try {
+      console.log("🔍 Cargando material reciente para clase ID:", id);
       const materialData = await fetchMaterialReciente(id);
+      console.log("📄 Material recibido:", materialData);
       setMaterialReciente(materialData);
+      console.log("✅ Material establecido en estado");
     } catch (error) {
-      console.error("Error cargando material:", error);
+      console.error("❌ Error cargando material:", error);
+      console.log("📝 Estableciendo materialReciente a null");
       setMaterialReciente(null);
     } finally {
       setLoadingMaterial(false);
@@ -403,6 +407,12 @@ export default function QuizAi() {
 
   return (
     <div className="min-h-screen p-6 bg-linear-to-br from-purple-50 via-pink-50 to-rose-50">
+      {console.log("🔍 Renderizando QuizAi, estado:", {
+        id,
+        clase,
+        materialReciente,
+        loadingMaterial,
+      })}
       <div className="max-w-7xl mx-auto">
         {/* Encabezado */}
         <div className="text-center mb-8">
@@ -636,16 +646,30 @@ export default function QuizAi() {
 
               <div className="space-y-6">
                 {/* Información del material */}
-                {materialReciente && (
+                {console.log(
+                  "🔍 Renderizando modal, materialReciente:",
+                  materialReciente,
+                )}
+                {materialReciente ? (
                   <div className="p-4 bg-purple-50 rounded-xl">
                     <h4 className="font-semibold text-purple-700 mb-2">
                       📄 Material Base
                     </h4>
                     <p className="text-sm text-gray-700">
-                      {materialReciente.nombreArchivo}
+                      {materialReciente.nombreArchivo ||
+                        materialReciente.nombre}
                     </p>
                     <p className="text-xs text-gray-600">
                       {materialReciente.resumen}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <h4 className="font-semibold text-gray-700 mb-2">
+                      📄 Material Base
+                    </h4>
+                    <p className="text-sm text-gray-500">
+                      No hay material PDF disponible para esta clase
                     </p>
                   </div>
                 )}
