@@ -31,16 +31,19 @@ export const fetchEstudiantesPorClase = async () => {
     }
 
     console.log(`📊 Estudiantes encontrados: ${estudiantes.length}`);
-    
+
     // Filtrar solo estudiantes con rol de estudiante
-    const estudiantesFiltrados = estudiantes.filter(estudiante => 
-      estudiante.rol === "estudiante" || 
-      estudiante.tipo === "estudiante" ||
-      estudiante.role === "estudiante"
+    const estudiantesFiltrados = estudiantes.filter(
+      (estudiante) =>
+        estudiante.rol === "estudiante" ||
+        estudiante.tipo === "estudiante" ||
+        estudiante.role === "estudiante",
     );
 
-    console.log(`📊 Estudiantes totales: ${estudiantes.length} → Estudiantes con rol estudiante: ${estudiantesFiltrados.length}`);
-    
+    console.log(
+      `📊 Estudiantes totales: ${estudiantes.length} → Estudiantes con rol estudiante: ${estudiantesFiltrados.length}`,
+    );
+
     return estudiantesFiltrados;
   } catch (error) {
     console.error("❌ Error obteniendo estudiantes:", error);
@@ -64,9 +67,7 @@ export const fetchResultadosEstudiantes = async (estudianteId) => {
 // Obtener resultados de una clase específica
 export const fetchResultadosPorClase = async (claseId) => {
   try {
-    const response = await api.get(
-      `api/v1/clases/${claseId}/resultados`,
-    );
+    const response = await api.get(`api/v1/clases/${claseId}/resultados`);
     return response.data.resultados || [];
   } catch (error) {
     console.error("❌ Error obteniendo resultados de la clase:", error);
@@ -77,14 +78,11 @@ export const fetchResultadosPorClase = async (claseId) => {
 // Inscribir estudiante en una clase
 export const inscribirEstudiante = async (claseId, estudianteData) => {
   try {
-    const response = await api.post(
-      `/api/v1/profesores/crear_clase`,
-      {
-        ...estudianteData,
-        claseId: claseId,
-        accion: "inscribir_estudiante"
-      },
-    );
+    const response = await api.post(`/api/v1/profesores/crear_clase`, {
+      ...estudianteData,
+      claseId: claseId,
+      accion: "inscribir_estudiante",
+    });
     return response.data;
   } catch (error) {
     console.error("❌ Error inscribiendo estudiante:", error);
@@ -99,14 +97,11 @@ export const inscribirEstudiantesAutomaticamente = async (claseId, grado) => {
     console.log("Clase ID:", claseId);
     console.log("Grado:", grado);
 
-    const response = await api.post(
-      `/api/v1/profesores/crear_clase`,
-      {
-        claseId: claseId,
-        grado: grado,
-        accion: "inscribir_automatico"
-      },
-    );
+    const response = await api.post(`/api/v1/profesores/crear_clase`, {
+      claseId: claseId,
+      grado: grado,
+      accion: "inscribir_automatico",
+    });
     console.log("✅ Estudiantes inscritos automáticamente:", response.data);
     return response.data;
   } catch (error) {
@@ -142,7 +137,7 @@ export const fetchEstudiantesDisponibles = async (grado) => {
     }
 
     console.log(`📊 Estudiantes disponibles: ${estudiantes.length}`);
-    
+
     return estudiantes;
   } catch (error) {
     console.error("❌ Error obteniendo estudiantes disponibles:", error);
@@ -159,10 +154,12 @@ export const inscribirTodosEstudiantesEnTodasLasClases = async (profesorId) => {
     // 1. Obtener todas las clases del profesor
     const { fetchClases } = await import("./clasesService");
     const clases = await fetchClases(localStorage.getItem("token"));
-    
+
     console.log(`📚 Clases del profesor: ${clases.length}`);
     clases.forEach((clase, index) => {
-      console.log(`  ${index + 1}. ${clase.nombre} - ID: ${clase.id || clase._id}`);
+      console.log(
+        `  ${index + 1}. ${clase.nombre} - ID: ${clase.id || clase._id}`,
+      );
     });
 
     // 2. Obtener todos los estudiantes
@@ -182,28 +179,35 @@ export const inscribirTodosEstudiantesEnTodasLasClases = async (profesorId) => {
     let totalInscripciones = 0;
     let errores = [];
 
-    // 3. Inscribir cada estudiante en cada clase
+    // 3. Inscribir cada estudiante en cada clase usando el endpoint específico
     for (const clase of clases) {
       const claseId = clase.id || clase._id;
       console.log(`\n🔄 Procesando clase: ${clase.nombre} (ID: ${claseId})`);
-      
+
       for (const estudiante of estudiantes) {
         try {
-          const response = await api.post(`/api/v1/profesores/crear_clase`, {
-            estudianteId: estudiante.id || estudiante._id,
-            claseId: claseId,
-            profesorId: profesorId,
-            accion: "inscribir_todos"
-          });
-          
-          console.log(`✅ Estudiante ${estudiante.nombre} inscrito en ${clase.nombre}`);
+          const response = await api.post(
+            `/api/v1/inscripciones/inscribir_todos`,
+            {
+              estudianteId: estudiante.id || estudiante._id,
+              claseId: claseId,
+              profesorId: profesorId,
+            },
+          );
+
+          console.log(
+            `✅ Estudiante ${estudiante.nombre} inscrito en ${clase.nombre}`,
+          );
           totalInscripciones++;
         } catch (error) {
-          console.error(`❌ Error inscribiendo ${estudiante.nombre} en ${clase.nombre}:`, error.response?.data || error.message);
+          console.error(
+            `❌ Error inscribiendo ${estudiante.nombre} en ${clase.nombre}:`,
+            error.response?.data || error.message,
+          );
           errores.push({
             estudiante: estudiante.nombre,
             clase: clase.nombre,
-            error: error.response?.data?.message || error.message
+            error: error.response?.data?.message || error.message,
           });
         }
       }
@@ -216,15 +220,16 @@ export const inscribirTodosEstudiantesEnTodasLasClases = async (profesorId) => {
       totalErrores: errores.length,
       clasesProcesadas: clases.length,
       estudiantesProcesados: estudiantes.length,
-      errores: errores
+      errores: errores,
     };
 
     console.log("📊 RESULTADO FINAL:", resultado);
     return resultado;
-
   } catch (error) {
     console.error("❌ Error en inscripción masiva:", error);
-    throw new Error(`No se pudo completar la inscripción masiva: ${error.message}`);
+    throw new Error(
+      `No se pudo completar la inscripción masiva: ${error.message}`,
+    );
   }
 };
 
