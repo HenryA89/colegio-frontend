@@ -4,12 +4,28 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Users,
-  Download,
   Search,
-  UserPlus,
+  Plus,
+  X,
   TrendingUp,
   Award,
+  Download,
   FileText,
+  Upload,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  Clock,
+  BookOpen,
+  UserPlus,
+  Trash2,
+  Edit,
+  Filter,
+  ChevronDown,
+  BarChart3,
+  Target,
+  Zap,
+  AlertCircle,
 } from "lucide-react";
 import {
   fetchEstudiantesPorClase,
@@ -21,6 +37,7 @@ import {
   eliminarEstudianteDeClase,
   fetchEstadisticasClase,
   inscribirTodosEstudiantesEnTodasLasClases,
+  subirMaterialClase,
 } from "../../services/profesorServices/estudiantesClasesService";
 import { fetchClases } from "../../services/profesorServices/clasesService";
 
@@ -47,6 +64,70 @@ export default function EstudiantesClases() {
   });
   const [loadingMasiva, setLoadingMasiva] = useState(false);
   const [resultadoMasiva, setResultadoMasiva] = useState(null);
+  const [loadingMaterial, setLoadingMaterial] = useState(false);
+  const [materialData, setMaterialData] = useState({
+    titulo: "",
+    texto: "",
+    archivoPdf: null,
+  });
+
+  // Función para subir material de clase
+  const handleSubirMaterial = async (claseId) => {
+    if (
+      !materialData.titulo &&
+      !materialData.texto &&
+      !materialData.archivoPdf
+    ) {
+      setError("Debes proporcionar al menos un título, texto o archivo PDF");
+      return;
+    }
+
+    setLoadingMaterial(true);
+    try {
+      console.log("🚀 Iniciando subida de material...");
+      const resultado = await subirMaterialClase(claseId, materialData);
+
+      console.log("✅ Material subido exitosamente:", resultado);
+
+      // Resetear formulario
+      setMaterialData({
+        titulo: "",
+        texto: "",
+        archivoPdf: null,
+      });
+
+      // Mostrar mensaje de éxito
+      alert("Material subido exitosamente");
+    } catch (error) {
+      console.error("❌ Error subiendo material:", error);
+      setError(error.message);
+    } finally {
+      setLoadingMaterial(false);
+    }
+  };
+
+  // Manejar cambio de archivo PDF
+  const handleArchivoChange = (e) => {
+    const archivo = e.target.files[0];
+    if (archivo) {
+      // Validar que sea PDF
+      if (archivo.type !== "application/pdf") {
+        setError("Solo se permiten archivos PDF");
+        return;
+      }
+
+      // Validar tamaño (máximo 10MB)
+      if (archivo.size > 10 * 1024 * 1024) {
+        setError("El archivo no puede ser mayor a 10MB");
+        return;
+      }
+
+      setMaterialData((prev) => ({
+        ...prev,
+        archivoPdf: archivo,
+      }));
+    }
+  };
 
   // Función para inscribir todos los estudiantes en todas las clases
   const handleInscripcionMasivaAutomatica = async () => {
@@ -565,6 +646,96 @@ export default function EstudiantesClases() {
                   : "Inscribir Todos los Estudiantes"}
               </span>
             </button>
+          </div>
+
+          {/* Sección para Subir Material de Clase */}
+          <div className="mb-8 p-6 bg-white rounded-2xl shadow-xl border-2 border-blue-100">
+            <h3 className="text-xl font-bold text-blue-800 mb-4 flex items-center">
+              <Upload className="w-5 h-5 mr-2" />
+              Subir Material de Clase
+            </h3>
+
+            <div className="space-y-4">
+              {/* Título del Material */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Título del Material
+                </label>
+                <input
+                  type="text"
+                  value={materialData.titulo}
+                  onChange={(e) =>
+                    setMaterialData((prev) => ({
+                      ...prev,
+                      titulo: e.target.value,
+                    }))
+                  }
+                  placeholder="Ej: Guía de Estudio, Material Complementario..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Texto Complementario */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Texto Complementario
+                </label>
+                <textarea
+                  value={materialData.texto}
+                  onChange={(e) =>
+                    setMaterialData((prev) => ({
+                      ...prev,
+                      texto: e.target.value,
+                    }))
+                  }
+                  placeholder="Descripción o texto adicional del material..."
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Archivo PDF */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Archivo PDF (Opcional)
+                </label>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleArchivoChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                {materialData.archivoPdf && (
+                  <div className="mt-2 text-sm text-green-600 flex items-center">
+                    <FileText className="w-4 h-4 mr-1" />
+                    {materialData.archivoPdf.name}
+                  </div>
+                )}
+              </div>
+
+              {/* Botones de Acción */}
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => handleSubirMaterial(id)}
+                  disabled={loadingMaterial}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>
+                    {loadingMaterial ? "Subiendo..." : "Subir Material"}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() =>
+                    setMaterialData({ titulo: "", texto: "", archivoPdf: null })
+                  }
+                  className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Limpiar Formulario
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Resultados de Inscripción Masiva */}

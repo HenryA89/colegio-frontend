@@ -233,6 +233,74 @@ export const inscribirTodosEstudiantesEnTodasLasClases = async (profesorId) => {
   }
 };
 
+// Subir material de clase (PDF o texto)
+export const subirMaterialClase = async (claseId, materialData) => {
+  try {
+    console.log("=== SUBIENDO MATERIAL DE CLASE ===");
+    console.log("Clase ID:", claseId);
+    console.log("Material Data:", materialData);
+
+    const formData = new FormData();
+
+    // Agregar datos básicos
+    formData.append("clase_id", claseId.toString());
+    formData.append(
+      "material_titulo",
+      materialData.titulo || "Material de Clase",
+    );
+    formData.append("material_texto", materialData.texto || "");
+
+    // Agregar archivo PDF si existe
+    if (materialData.archivoPdf) {
+      formData.append("archivo_pdf", materialData.archivoPdf);
+      console.log("📄 Archivo PDF agregado:", materialData.archivoPdf.name);
+    }
+
+    // Obtener token del profesor
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No se encontró token de autorización");
+    }
+
+    console.log("🔍 Enviando material al backend...");
+
+    const response = await api.post(
+      "/api/v1/profesores/subir_material",
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // No incluir Content-Type para que el navegador establezca multipart/form-data automáticamente
+        },
+      },
+    );
+
+    console.log("✅ Material subido exitosamente:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error subiendo material de clase:", error);
+    console.error("Respuesta del servidor:", error.response?.data);
+
+    if (error.response?.status === 413) {
+      throw new Error(
+        "El archivo es demasiado grande. El tamaño máximo permitido es 10MB.",
+      );
+    } else if (error.response?.status === 415) {
+      throw new Error(
+        "Formato de archivo no soportado. Solo se permiten archivos PDF.",
+      );
+    } else if (error.response?.status === 401) {
+      throw new Error(
+        "No autorizado. Tu sesión ha expirado. Por favor, inicia sesión nuevamente.",
+      );
+    } else {
+      throw new Error(
+        `No se pudo subir el material: ${error.response?.data?.message || error.message}`,
+      );
+    }
+  }
+};
+
 // Eliminar estudiante de una clase
 export const eliminarEstudianteDeClase = async (claseId, estudianteId) => {
   try {
