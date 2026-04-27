@@ -196,6 +196,21 @@ export const subirClase = async ({ pdf }) => {
       );
     }
 
+    // Verificación adicional del FormData
+    console.log("🔬 Verificación detallada del FormData:");
+    console.log("  - FormData entries count:", formData.entries.length);
+    console.log("  - archivo_pdf en FormData:", formData.has("archivo_pdf"));
+    console.log("  - Valor de archivo_pdf:", formData.get("archivo_pdf"));
+
+    // Verificar si el archivo es realmente un File object
+    if (formData.get("archivo_pdf") instanceof File) {
+      console.log("✅ archivo_pdf es un File object válido");
+    } else {
+      console.error("❌ archivo_pdf NO es un File object válido");
+      console.error("❌ Tipo recibido:", typeof formData.get("archivo_pdf"));
+      console.error("❌ Valor recibido:", formData.get("archivo_pdf"));
+    }
+
     // Verificar URL completa y configuración
     const baseURL =
       import.meta.env.VITE_API_BASE_URL ||
