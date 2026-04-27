@@ -29,8 +29,58 @@ export default function Clases() {
   const [error, setError] = useState("");
   const [form, setForm] = useState({ materia: "", grupo: "", horario: "" });
 
+  // Estados para la creación de clase con texto
+  const [nombreClase, setNombreClase] = useState("");
+  const [mensajeTexto, setMensajeTexto] = useState("");
+  const [errorTexto, setErrorTexto] = useState("");
+
   const handleFileChange = (e) => {
     setPdf(e.target.files[0]);
+  };
+
+  const handleCrearClaseConTexto = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMensajeTexto("");
+    setErrorTexto("");
+
+    try {
+      // Validar que se tenga nombre de clase y contenido
+      if (!nombreClase.trim()) {
+        setErrorTexto("Debes ingresar un nombre para la clase.");
+        return;
+      }
+
+      if (!texto.trim()) {
+        setErrorTexto("Debes escribir el contenido de la clase.");
+        return;
+      }
+
+      console.log("✍️ Creando clase con texto:");
+      console.log("  - nombreClase:", nombreClase);
+      console.log("  - contenido:", texto.substring(0, 100) + "...");
+
+      // Crear clase con el texto como contenido
+      const nuevaClase = {
+        nombre: nombreClase,
+        materia: nombreClase,
+        contenido: texto,
+        descripcion: texto,
+        tipo: "texto",
+      };
+
+      await crearClase(nuevaClase, usuario?.token);
+
+      setMensajeTexto("¡Clase creada correctamente!");
+      // Limpiar formulario
+      setNombreClase("");
+      setTexto("");
+      cargarClases();
+    } catch (err) {
+      console.error("Error:", err);
+      setErrorTexto(`Error al crear la clase: ${err.message}`);
+    }
+    setLoading(false);
   };
 
   const handleSubmit = async (e) => {
@@ -163,32 +213,18 @@ export default function Clases() {
   return (
     <div className="min-h-screen p-6 bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="max-w-6xl mx-auto">
-        {/* Sección de subir material */}
+        {/* Sección de subir material PDF */}
         <div className="mb-8 p-8 rounded-3xl shadow-2xl border-2 border-transparent bg-linear-to-br from-blue-50 to-indigo-50 hover:border-blue-300 hover:shadow-xl hover:scale-105 transition-all duration-300">
           <div className="text-center mb-6">
-            <div className="text-4xl mb-2 animate-bounce">📘</div>
+            <div className="text-4xl mb-2 animate-bounce">�</div>
             <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-600">
-              Subir Material de Clase
+              Subir Material PDF
             </h2>
             <p className="text-gray-600">
-              Sube el material de la clase del día en PDF o escríbelo
-              manualmente.
+              Sube el material de la clase en formato PDF.
             </p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="flex mb-2 font-medium text-gray-700 items-center gap-2">
-                <BookOpen className="w-4 h-4" />
-                Título del Material
-              </label>
-              <input
-                type="text"
-                value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
-                placeholder="Ej: Guía de Estudio, Material Complementario..."
-                className="block w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-400 transition-all"
-              />
-            </div>
             <div>
               <label className="block mb-2 font-medium text-gray-700 flex items-center gap-2">
                 <Upload className="w-4 h-4" />
@@ -207,19 +243,6 @@ export default function Clases() {
                 </div>
               )}
             </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700 flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
-                Contenido de la clase
-              </label>
-              <textarea
-                className="w-full p-4 border-2 border-blue-200 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-400 transition-all"
-                rows={5}
-                value={texto}
-                onChange={(e) => setTexto(e.target.value)}
-                placeholder="Escribe el contenido de la clase aquí..."
-              />
-            </div>
             <button
               type="submit"
               className="w-full px-6 py-3 text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:bg-blue-400 transition-colors flex items-center justify-center space-x-2"
@@ -236,6 +259,65 @@ export default function Clases() {
             {error && (
               <div className="p-4 mt-4 text-red-700 bg-red-100 border border-red-400 rounded-lg">
                 {error}
+              </div>
+            )}
+          </form>
+        </div>
+
+        {/* Sección de crear clase con texto */}
+        <div className="mb-8 p-8 rounded-3xl shadow-2xl border-2 border-transparent bg-linear-to-br from-green-50 to-emerald-50 hover:border-green-300 hover:shadow-xl hover:scale-105 transition-all duration-300">
+          <div className="text-center mb-6">
+            <div className="text-4xl mb-2 animate-bounce">✍️</div>
+            <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-green-600 to-emerald-600">
+              Crear Clase con Texto
+            </h2>
+            <p className="text-gray-600">
+              Crea una nueva clase escribiendo el contenido manualmente.
+            </p>
+          </div>
+          <form onSubmit={handleCrearClaseConTexto} className="space-y-6">
+            <div>
+              <label className="flex mb-2 font-medium text-gray-700 items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                Nombre de la Clase
+              </label>
+              <input
+                type="text"
+                value={nombreClase}
+                onChange={(e) => setNombreClase(e.target.value)}
+                placeholder="Ej: Matemáticas Avanzadas, Historia Universal..."
+                className="block w-full px-4 py-3 border-2 border-green-200 rounded-xl focus:ring-4 focus:ring-green-300 focus:border-green-400 transition-all"
+              />
+            </div>
+            <div>
+              <label className="flex mb-2 font-medium text-gray-700 items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                Contenido de la clase
+              </label>
+              <textarea
+                className="w-full p-4 border-2 border-green-200 rounded-xl focus:ring-4 focus:ring-green-300 focus:border-green-400 transition-all"
+                rows={8}
+                value={texto}
+                onChange={(e) => setTexto(e.target.value)}
+                placeholder="Escribe el contenido de la clase aquí..."
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full px-6 py-3 text-white bg-green-600 rounded-xl hover:bg-green-700 disabled:bg-green-400 transition-colors flex items-center justify-center space-x-2"
+              disabled={loading || !nombreClase || !texto}
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>{loading ? "Creando..." : "Crear Clase"}</span>
+            </button>
+            {mensajeTexto && (
+              <div className="p-4 mt-4 text-green-700 bg-green-100 border border-green-400 rounded-lg">
+                {mensajeTexto}
+              </div>
+            )}
+            {errorTexto && (
+              <div className="p-4 mt-4 text-red-700 bg-red-100 border border-red-400 rounded-lg">
+                {errorTexto}
               </div>
             )}
           </form>

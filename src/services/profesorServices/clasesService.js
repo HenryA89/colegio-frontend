@@ -216,7 +216,7 @@ export const subirClase = async ({ pdf }) => {
 
     // Usar axios con la configuración normal del proyecto
     const response = await api.post(
-      "api/v1/profesores/subir_material",
+      "/api/v1/profesores/subir_material",
       formData,
       {
         headers: {
