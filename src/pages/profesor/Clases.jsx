@@ -84,9 +84,8 @@ export default function Clases() {
       console.log("  - pdf tamaño:", pdf.size);
       console.log("  - pdf tipo:", pdf.type);
 
-      // Enviar solo claseId y pdf como lo solicita el backend
+      // Enviar solo pdf como lo solicita el backend
       await subirClase({
-        claseId: claseId,
         pdf: pdf,
       });
 

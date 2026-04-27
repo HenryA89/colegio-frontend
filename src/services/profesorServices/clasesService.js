@@ -118,22 +118,15 @@ export const fetchClases = async (token) => {
   }
 };
 // Subir material de clase (PDF o texto)
-export const subirClase = async ({ claseId, pdf }) => {
+export const subirClase = async ({ pdf }) => {
   try {
     console.log("=== INICIANDO SUBIDA DE MATERIAL ===");
-    console.log("claseId recibido:", claseId);
     console.log("pdf recibido:", pdf ? pdf.name : "null");
 
     // Validar que se tenga un archivo PDF
     if (!pdf) {
       console.error("❌ No se proporcionó archivo PDF");
       throw new Error("Debe seleccionar un archivo PDF");
-    }
-
-    // Validar que se tenga un ID de clase
-    if (!claseId) {
-      console.error("❌ No se proporcionó ID de clase");
-      throw new Error("Debe proporcionar un ID de clase válido");
     }
 
     // Obtener y validar token del profesor
@@ -182,11 +175,7 @@ export const subirClase = async ({ claseId, pdf }) => {
 
     const formData = new FormData();
 
-    // Agregar clase_id (requerido por el backend)
-    formData.append("clase_id", claseId.toString());
-    console.log("✅ clase_id agregado al FormData:", claseId.toString());
-
-    // Agregar archivo_pdf si existe
+    // Agregar solo archivo_pdf (sin clase_id)
     formData.append("archivo_pdf", pdf);
     console.log(
       "✅ archivo_pdf agregado al FormData:",
@@ -227,7 +216,7 @@ export const subirClase = async ({ claseId, pdf }) => {
 
     // Usar axios con la configuración normal del proyecto
     const response = await api.post(
-      "/api/v1/profesores/subir_material",
+      "api/v1/profesores/subir_material",
       formData,
       {
         headers: {
