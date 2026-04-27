@@ -171,27 +171,21 @@ export const subirClase = async ({ claseId, pdf }) => {
     console.log("🚀 Enviando request a: api/v1/profesores/subir_material");
     console.log("🔑 Token disponible:", !!token);
 
-    // Usar fetch directamente como en el ejemplo proporcionado
-    const response = await fetch("api/v1/profesores/subir_material", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        // No incluir Content-Type para que el navegador establezca multipart/form-data automáticamente
+    // Usar axios con la configuración normal del proyecto
+    const response = await api.post(
+      "api/v1/profesores/subir_material",
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // No incluir Content-Type para que el navegador establezca multipart/form-data automáticamente
+        },
       },
-      body: formData,
-    });
+    );
 
     console.log("📊 Status de la respuesta:", response.status);
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error("❌ Error en respuesta:", errorData);
-      throw new Error(`Error ${response.status}: ${errorData}`);
-    }
-
-    const resultado = await response.json();
-    console.log("✅ Respuesta del backend:", resultado);
-    return resultado;
+    console.log("✅ Respuesta del backend:", response.data);
+    return response.data;
   } catch (error) {
     console.error("❌ Error al subir clase:", error);
     console.error("❌ Detalles del error:", error.message);
