@@ -207,7 +207,22 @@ export const subirClase = async ({ claseId, pdf }) => {
       );
     }
 
-    console.log("🚀 Enviando request a: api/v1/profesores/subir_material");
+    // Verificar URL completa y configuración
+    const baseURL =
+      import.meta.env.VITE_API_BASE_URL ||
+      "https://colegio-backend-ia.onrender.com";
+    const fullURL = `${baseURL}/api/v1/profesores/subir_material`;
+
+    console.log("🌐 Configuración de la petición:");
+    console.log("  - Base URL:", baseURL);
+    console.log("  - Endpoint:", "/api/v1/profesores/subir_material");
+    console.log("  - URL completa:", fullURL);
+    console.log("  - Método:", "POST");
+    console.log("  - Headers:", {
+      Authorization: `Bearer ${token.substring(0, 20)}...`,
+      "Content-Type": "multipart/form-data (automático)",
+    });
+    console.log("🚀 Enviando request a: /api/v1/profesores/subir_material");
     console.log("🔑 Token validado y disponible:", !!token);
 
     // Usar axios con la configuración normal del proyecto
