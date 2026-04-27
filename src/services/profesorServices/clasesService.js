@@ -31,46 +31,10 @@ export const fetchClases = async (token) => {
     console.log("ID del profesor:", profesorId);
     console.log("Rol del usuario:", usuario?.rol || usuario?.usuario?.rol);
 
-    // Intentar diferentes endpoints para obtener las materias
-    let res;
-    let endpointUsed = "";
-
-    try {
-      // Opción 1: Endpoint específico para profesor
-      console.log("🔍 Intentando endpoint específico para profesor...");
-      res = await api.get(`api/v1/materias/${profesorId}`);
-      endpointUsed = `api/v1/materias/${profesorId}`;
-      console.log("✅ Endpoint específico funcionó");
-    } catch (err1) {
-      console.log(
-        "❌ Endpoint específico falló:",
-        err1.response?.status,
-        err1.response?.data,
-      );
-
-      if (err1.response?.status === 403) {
-        console.warn(
-          "⚠️ Acceso denegado al endpoint específico, intentando endpoint general...",
-        );
-      }
-
-      try {
-        // Opción 2: Endpoint general de materias (fallback)
-        console.log("🔍 Intentando endpoint general de materias...");
-        res = await api.get("api/v1/materias");
-        endpointUsed = "api/v1/materias";
-        console.log("✅ Endpoint general funcionó");
-      } catch (err2) {
-        console.log(
-          "❌ Endpoint general también falló:",
-          err2.response?.status,
-          err2.response?.data,
-        );
-        throw new Error(
-          "No se pudieron obtener las materias de ningún endpoint",
-        );
-      }
-    }
+    // Usar directamente el endpoint general de materias
+    console.log("🔍 Obteniendo materias desde endpoint general...");
+    const res = await api.get("api/v1/materias");
+    const endpointUsed = "api/v1/materias";
 
     console.log(
       "✅ Respuesta del backend (endpoint: " + endpointUsed + "):",
@@ -102,8 +66,8 @@ export const fetchClases = async (token) => {
       console.warn("Estructura recibida:", Object.keys(res.data));
     }
 
-    // Filtrar materias por profesor si el endpoint no lo hace automáticamente
-    if (endpointUsed === "api/v1/materias" && Array.isArray(materias)) {
+    // Filtrar materias por profesor
+    if (Array.isArray(materias)) {
       const materiasFiltradas = materias.filter((materia) => {
         const materiaProfesorId = materia.profesor_id || materia.profesorId;
         const coincide = materiaProfesorId === profesorId;
