@@ -118,8 +118,8 @@ export const fetchClases = async (token) => {
   }
 };
 // Subir material de clase (PDF o texto)
-export const subirClase = async ({ fileInput }) => {
-  const pdf = fileInput?.files?.[0];
+export const subirClase = async ({ file }) => {
+  const pdf = file;
 
   if (!pdf) {
     throw new Error("Debe seleccionar un archivo PDF.");
