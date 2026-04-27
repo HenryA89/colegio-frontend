@@ -1,10 +1,9 @@
 import api from "../../services/api";
 
-// Obtener estudiantes de una clase específica
-export const fetchEstudiantesPorClase = async (claseId) => {
+// Obtener todos los estudiantes
+export const fetchEstudiantesPorClase = async () => {
   try {
-    console.log("=== FETCH ESTUDIANTES POR CLASE ===");
-    console.log("Clase ID:", claseId);
+    console.log("=== FETCH ESTUDIANTES ===");
     console.log("Endpoint:", `/api/v1/admin/usuarios/estudiantes`);
 
     const response = await api.get(`/api/v1/admin/usuarios/estudiantes`);

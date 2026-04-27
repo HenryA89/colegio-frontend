@@ -72,22 +72,13 @@ export default function EstudiantesClases() {
   }, [id]);
 
   const cargarEstudiantes = useCallback(async () => {
-    if (!id) {
-      console.log("❌ No hay ID de clase - limpiando estados");
-      setEstudiantes([]);
-      setEstadisticas({});
-      setLoadingEstudiantes(false);
-      return;
-    }
-
     console.log("=== INICIANDO CARGA DE ESTUDIANTES ===");
-    console.log("ID de clase:", id);
     setLoadingEstudiantes(true);
     setError("");
 
     try {
-      console.log("🔄 Cargando estudiantes de la clase...");
-      const estudiantesData = await fetchEstudiantesPorClase(id);
+      console.log("🔄 Cargando estudiantes...");
+      const estudiantesData = await fetchEstudiantesPorClase();
       console.log("✅ Estudiantes recibidos:", estudiantesData);
       console.log("Cantidad de estudiantes:", estudiantesData.length);
 
