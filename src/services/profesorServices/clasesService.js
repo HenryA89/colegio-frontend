@@ -129,6 +129,8 @@ export const subirClase = async ({ fileInput }) => {
     throw new Error("El archivo debe ser un PDF.");
   }
 
+  const token = localStorage.getItem("token");
+
   if (!token) {
     throw new Error("No hay sesión activa. Por favor, inicia sesión.");
   }
