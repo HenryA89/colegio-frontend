@@ -124,11 +124,15 @@ export const subirClase = async ({ pdf, texto }) => {
     if (pdf) formData.append("pdf", pdf);
     if (texto) formData.append("texto", texto);
 
-    const response = await api.post("api/v1/clases", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
+    const response = await api.post(
+      "api/v1/profesores/subir_material",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       },
-    });
+    );
 
     return response.data;
   } catch (error) {
