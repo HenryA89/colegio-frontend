@@ -4,7 +4,7 @@ import api from "../../services/api";
 export const fetchMaterialReciente = async (claseId) => {
   try {
     const response = await api.get(
-      `api/v1/clases/${claseId}/material-reciente`,
+      `api/v1/clases/${claseId}/materiales/reciente`,
     );
     return response.data;
   } catch (error) {
@@ -29,10 +29,17 @@ export const extraerTemasPDF = async (materialId) => {
 // Generar quiz con IA basado en el material (1 clase)
 export const generarQuizConIA = async (claseId, opciones) => {
   try {
-    const response = await api.post(`api/v1/quiz-ia/generar`, {
+    const payload = {
       claseId,
       ...opciones,
-    });
+    };
+
+    // Si se va a usar material PDF, agregar el materialId
+    if (opciones.usarMaterialPDF && opciones.materialId) {
+      payload.materialId = opciones.materialId;
+    }
+
+    const response = await api.post(`api/v1/quiz-ia/generar`, payload);
     return response.data;
   } catch (error) {
     console.error("❌ Error generando quiz con IA:", error);
