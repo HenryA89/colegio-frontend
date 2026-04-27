@@ -232,21 +232,23 @@ export const subirClase = async ({ fileInput }) => {
     console.log("  - Endpoint:", "/api/v1/profesores/subir_material");
     console.log("  - URL completa:", fullURL);
     console.log("  - Método:", "POST");
-    console.log("  - Headers:", {
-      Authorization: `Bearer ${token.substring(0, 20)}...`,
-      "Content-Type": "multipart/form-data (automático)",
-    });
+    console.log("  - Headers simplificados:");
+    console.log("    - Authorization:", `Bearer ${token.substring(0, 20)}...`);
+    console.log(
+      "    - Content-Type:",
+      "multipart/form-data (automático - no especificado)",
+    );
     console.log("🚀 Enviando request a: /api/v1/profesores/subir_material");
     console.log("🔑 Token validado y disponible:", !!token);
 
-    // Usar axios con la configuración normal del proyecto
+    // Usar axios con headers simplificados - solo Authorization
     const response = await api.post(
       "/api/v1/profesores/subir_material",
       formData,
       {
         headers: {
           Authorization: `Bearer ${token}`,
-          // No incluir Content-Type para que el navegador establezca multipart/form-data automáticamente
+          // No incluir Content-Type - dejar que axios lo establezca automáticamente para multipart/form-data
         },
       },
     );
