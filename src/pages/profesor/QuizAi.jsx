@@ -52,6 +52,8 @@ export default function QuizAi() {
   const [mostrarResultados, setMostrarResultados] = useState(false);
   const [resultados, setResultados] = useState([]);
   const [estadisticas, setEstadisticas] = useState({});
+  const [pdfDirecto, setPdfDirecto] = useState(null);
+  const [subiendoPDF, setSubiendoPDF] = useState(false);
 
   // Formulario de generación
   const [opcionesGeneracion, setOpcionesGeneracion] = useState({
@@ -184,6 +186,90 @@ export default function QuizAi() {
       ...quizForm,
       [e.target.name]: e.target.value,
     });
+  };
+
+  // Subir PDF directo para generar quiz
+  const subirPDFDirecto = async () => {
+    if (!pdfDirecto) {
+      setError("Por favor selecciona un archivo PDF");
+      return;
+    }
+
+    setSubiendoPDF(true);
+    setError("");
+    try {
+      console.log("📤 Subiendo PDF directo para generar quiz...");
+
+      // Crear FormData para enviar el PDF
+      const formData = new FormData();
+      formData.append("pdf", pdfDirecto);
+      formData.append("claseId", id);
+      formData.append("opciones", JSON.stringify(opcionesGeneracion));
+
+      // Enviar directamente al endpoint de crear quiz
+      const response = await fetch(
+        "https://colegio-backend-ia.onrender.com/api/v1/ai/crear_quiz",
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+
+      const quizGenerado = await response.json();
+      console.log(
+        "🎉 Quiz generado con éxito desde PDF directo:",
+        quizGenerado,
+      );
+
+      // Pre-llenar formulario con datos generados
+      setQuizForm({
+        titulo:
+          quizGenerado.titulo ||
+          `Quiz IA - ${new Date().toLocaleDateString("es-ES")}`,
+        descripcion:
+          quizGenerado.descripcion ||
+          "Quiz generado automáticamente con IA basado en PDF",
+        instrucciones:
+          quizGenerado.instrucciones ||
+          "Responde cada pregunta cuidadosamente basándote en el material proporcionado",
+        tiempoTotal:
+          quizGenerado.tiempoTotal ||
+          (opcionesGeneracion.numeroPreguntas *
+            opcionesGeneracion.tiempoPorPregunta) /
+            60,
+        intentosMaximos: 3,
+        mostrarRetroalimentacion: opcionesGeneracion.incluirRetroalimentacion,
+        aleatorioOrden: true,
+      });
+
+      setQuizSeleccionado(quizGenerado);
+      setMostrarModalGeneracion(false);
+      setMostrarModalQuiz(true);
+      setPdfDirecto(null);
+
+      // Resetear formulario
+      setOpcionesGeneracion({
+        numeroPreguntas: 5,
+        dificultad: "media",
+        tipoPreguntas: "mixto",
+        temas: "",
+        tiempoPorPregunta: 60,
+        incluirRetroalimentacion: true,
+        idioma: "es",
+      });
+    } catch (error) {
+      console.error("❌ Error subiendo PDF directo:", error);
+      setError(`Error al subir PDF: ${error.message}`);
+    } finally {
+      setSubiendoPDF(false);
+    }
   };
 
   // Generar quiz con IA
@@ -668,9 +754,41 @@ export default function QuizAi() {
                     <h4 className="font-semibold text-gray-700 mb-2">
                       📄 Material Base
                     </h4>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 mb-3">
                       No hay material PDF disponible para esta clase
                     </p>
+
+                    {/* Opción para subir PDF directo */}
+                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-4">
+                      <div className="text-center">
+                        <FileText className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-600 mb-2">
+                          Sube un PDF directamente para generar el quiz
+                        </p>
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          onChange={(e) => setPdfDirecto(e.target.files[0])}
+                          className="hidden"
+                          id="pdf-directo"
+                        />
+                        <label
+                          htmlFor="pdf-directo"
+                          className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer text-sm"
+                        >
+                          <PlusCircle className="w-4 h-4 inline mr-1" />
+                          Seleccionar PDF
+                        </label>
+                        {pdfDirecto && (
+                          <div className="mt-3 p-2 bg-green-50 rounded-lg">
+                            <p className="text-xs text-green-700">
+                              ✅ {pdfDirecto.name} (
+                              {(pdfDirecto.size / 1024 / 1024).toFixed(2)} MB)
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -831,23 +949,49 @@ export default function QuizAi() {
                 >
                   Cancelar
                 </button>
-                <button
-                  onClick={generarQuiz}
-                  disabled={generandoQuiz || !materialReciente}
-                  className="flex-1 px-4 py-3 text-white bg-purple-600 rounded-xl hover:bg-purple-700 disabled:bg-purple-400 transition-colors flex items-center justify-center gap-2"
-                >
-                  {generandoQuiz ? (
-                    <>
-                      <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Generando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-4 h-4" />
-                      <span>Generar Quiz</span>
-                    </>
-                  )}
-                </button>
+                {!materialReciente && pdfDirecto ? (
+                  <button
+                    onClick={subirPDFDirecto}
+                    disabled={subiendoPDF}
+                    className="flex-1 px-4 py-3 text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:bg-blue-400 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {subiendoPDF ? (
+                      <>
+                        <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Subiendo y Generando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4" />
+                        <span>Generar Quiz desde PDF</span>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    onClick={materialReciente ? generarQuiz : undefined}
+                    disabled={
+                      generandoQuiz || (!materialReciente && !pdfDirecto)
+                    }
+                    className="flex-1 px-4 py-3 text-white bg-purple-600 rounded-xl hover:bg-purple-700 disabled:bg-purple-400 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {generandoQuiz ? (
+                      <>
+                        <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Generando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4" />
+                        <span>
+                          {materialReciente
+                            ? "Generar Quiz"
+                            : "Selecciona un PDF o sube material"}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           </div>
