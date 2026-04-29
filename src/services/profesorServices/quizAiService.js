@@ -3,9 +3,7 @@ import api from "../../services/api";
 // Obtener material reciente de una clase para generar quiz
 export const fetchMaterialReciente = async (claseId) => {
   try {
-    const response = await api.get(
-      `api/v1/clases/${claseId}/materiales/reciente`,
-    );
+    const response = await api.get(`api/v1/profesor/materiales`);
     return response.data;
   } catch (error) {
     console.error("❌ Error obteniendo material reciente:", error);

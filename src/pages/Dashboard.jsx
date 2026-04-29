@@ -5,115 +5,66 @@ import { useAuth } from "../hooks/UseAuth";
 // Componentes separados por rol
 function ProfesorDashboard() {
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <Link
-        to="/profesor/clases"
-        className="p-6 shadow-lg border-2 border-transparent bg-linear-to-br from-blue-50 to-purple-50 hover:border-blue-300 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-linear-to-br from-blue-400 to-blue-600 rounded-xl">
-            📘
+    <div className="text-center py-12">
+      <div className="text-6xl mb-6">👨‍🏫</div>
+      <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-purple-600 to-pink-600 mb-4">
+        Bienvenido Profesor
+      </h2>
+      <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+        Para comenzar, por favor selecciona una de tus materias asignadas para
+        acceder a todas las herramientas de gestión.
+      </p>
+
+      <div className="max-w-md mx-auto">
+        <Link
+          to="/profesor/seleccionar-materia"
+          className="block w-full p-6 shadow-lg border-2 border-transparent bg-linear-to-br from-purple-50 to-pink-50 hover:border-purple-300 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
+        >
+          <div className="flex items-center justify-center space-x-4">
+            <div className="p-4 text-3xl text-white bg-linear-to-br from-purple-400 to-pink-600 rounded-xl">
+              📚
+            </div>
+            <div className="text-left">
+              <h3 className="text-xl font-bold text-gray-800 transition-colors group-hover:text-purple-600">
+                Seleccionar Materia
+              </h3>
+              <p className="text-sm text-gray-600">
+                Elige una materia para gestionar sus actividades
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-800 transition-colors group-hover:text-blue-600">
-              Material de Clases
-            </h3>
-            <p className="text-sm text-gray-600">
-              Gestiona tus materiales educativos
-            </p>
-          </div>
+        </Link>
+      </div>
+
+      <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-4xl mx-auto">
+        <div className="p-6 bg-white rounded-xl shadow-md border border-gray-200">
+          <div className="text-2xl mb-3">🎯</div>
+          <h4 className="font-semibold text-gray-800 mb-2">
+            Gestión Centralizada
+          </h4>
+          <p className="text-sm text-gray-600">
+            Accede a todas las herramientas desde una interfaz unificada por
+            materia
+          </p>
         </div>
-      </Link>
-      <Link
-        to="/profesor/evaluaciones-clase"
-        className="p-6 shadow-lg border-2 border-indigo-200 bg-linear-to-br from-indigo-100 to-purple-100 hover:border-indigo-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-linear-to-br from-purple-400 to-indigo-600 rounded-xl">
-            🤖
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-800 transition-colors group-hover:text-purple-600">
-              Evaluaciones IA
-            </h3>
-            <p className="text-sm text-gray-600">
-              Crea evaluaciones con inteligencia artificial
-            </p>
-          </div>
+
+        <div className="p-6 bg-white rounded-xl shadow-md border border-gray-200">
+          <div className="text-2xl mb-3">🤖</div>
+          <h4 className="font-semibold text-gray-800 mb-2">Herramientas IA</h4>
+          <p className="text-sm text-gray-600">
+            Quiz, actividades y evaluaciones generadas con inteligencia
+            artificial
+          </p>
         </div>
-      </Link>
-      <Link
-        to="/profesor/quiz-ai"
-        className="p-6 shadow-lg border-2 border-cyan-200 bg-linear-to-br from-cyan-100 to-sky-100 hover:border-cyan-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-linear-to-br from-teal-400 to-cyan-600 rounded-xl">
-            ⚡
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-800 transition-colors group-hover:text-cyan-600">
-              Quiz AI
-            </h3>
-            <p className="text-sm text-gray-600">
-              Diseña quizzes inteligentes con IA
-            </p>
-          </div>
+
+        <div className="p-6 bg-white rounded-xl shadow-md border border-gray-200">
+          <div className="text-2xl mb-3">�</div>
+          <h4 className="font-semibold text-gray-800 mb-2">Seguimiento</h4>
+          <p className="text-sm text-gray-600">
+            Controla asistencia, calificaciones y progreso de tus estudiantes
+          </p>
         </div>
-      </Link>
-      <Link
-        to="/profesor/estudiantes-clases"
-        className="p-6 shadow-lg border-2 border-purple-200 bg-linear-to-br from-purple-100 to-pink-100 hover:border-purple-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-linear-to-br from-pink-400 to-purple-600 rounded-xl">
-            👥
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-800 transition-colors group-hover:text-pink-600">
-              Estudiantes
-            </h3>
-            <p className="text-sm text-gray-600">
-              Gestiona la lista de estudiantes por clase
-            </p>
-          </div>
-        </div>
-      </Link>
-      <Link
-        to="/profesor/actividades"
-        className="p-6 shadow-lg border-2 border-pink-200 bg-linear-to-br from-pink-100 to-purple-100 hover:border-pink-400 hover:shadow-xl hover:scale-105 hover:rotate-1 transition-all duration-300 rounded-2xl group"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-linear-to-br from-pink-400 to-purple-600 rounded-xl">
-            🎯
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-800 transition-colors group-hover:text-pink-600">
-              Actividades IA
-            </h3>
-            <p className="text-sm text-gray-600">
-              Genera actividades dinámicas y divertidas
-            </p>
-          </div>
-        </div>
-      </Link>
-      <Link
-        to="/profesor/asistencias"
-        className="p-6 shadow-lg border-2 border-green-200 bg-linear-to-br from-green-100 to-blue-100 hover:border-green-400 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="p-4 text-3xl text-white bg-linear-to-br from-green-400 to-teal-600 rounded-xl">
-            📋
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-800 transition-colors group-hover:text-green-600">
-              Asistencia
-            </h3>
-            <p className="text-sm text-gray-600">
-              Controla la asistencia de estudiantes
-            </p>
-          </div>
-        </div>
-      </Link>
+      </div>
     </div>
   );
 }

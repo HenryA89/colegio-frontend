@@ -4,9 +4,9 @@ import api from "../../services/api";
 export const fetchEstudiantesPorClase = async () => {
   try {
     console.log("=== FETCH ESTUDIANTES ===");
-    console.log("Endpoint:", `/api/v1/profesores/estudiantes`);
+    console.log("Endpoint:", `/api/v1/admin/estudiantes`);
 
-    const response = await api.get(`/api/v1/profesores/estudiantes`);
+    const response = await api.get(`/api/v1/admin/estudiantes`);
     console.log("Respuesta HTTP:", response.status);
     console.log("Data cruda:", response.data);
     console.log("Data tipo:", typeof response.data);
@@ -54,9 +54,7 @@ export const fetchEstudiantesPorClase = async () => {
 // Obtener resultados de un estudiante específico
 export const fetchResultadosEstudiantes = async (estudianteId) => {
   try {
-    const response = await api.get(
-      `api/v1/estudiantes/${estudianteId}/resultados`,
-    );
+    const response = await api.get(`api/v1/admin/estudiantes/${estudianteId}`);
     return response.data.resultados || [];
   } catch (error) {
     console.error("❌ Error obteniendo resultados del estudiante:", error);
@@ -78,11 +76,14 @@ export const fetchResultadosPorClase = async (claseId) => {
 // Inscribir estudiante en una clase
 export const inscribirEstudiante = async (claseId, estudianteData) => {
   try {
-    const response = await api.post(`/api/v1/profesores/crear_clase`, {
-      ...estudianteData,
-      claseId: claseId,
-      accion: "inscribir_estudiante",
-    });
+    const response = await api.post(
+      `/api/v1/profesores/inscribir_estudiantes_todas_clases`,
+      {
+        ...estudianteData,
+        claseId: claseId,
+        accion: "inscribir_estudiante",
+      },
+    );
     return response.data;
   } catch (error) {
     console.error("❌ Error inscribiendo estudiante:", error);
@@ -97,11 +98,14 @@ export const inscribirEstudiantesAutomaticamente = async (claseId, grado) => {
     console.log("Clase ID:", claseId);
     console.log("Grado:", grado);
 
-    const response = await api.post(`/api/v1/profesores/crear_clase`, {
-      claseId: claseId,
-      grado: grado,
-      accion: "inscribir_automatico",
-    });
+    const response = await api.post(
+      `/api/v1/profesores/inscribir_estudiantes_todas_clases`,
+      {
+        claseId: claseId,
+        grado: grado,
+        accion: "inscribir_automatico",
+      },
+    );
     console.log("✅ Estudiantes inscritos automáticamente:", response.data);
     return response.data;
   } catch (error) {
@@ -118,7 +122,7 @@ export const fetchEstudiantesDisponibles = async (grado) => {
     console.log("=== OBTENIENDO ESTUDIANTES DISPONIBLES ===");
     console.log("Grado:", grado);
 
-    const response = await api.get(`/api/v1/profesores/estudiantes`);
+    const response = await api.get(`/api/v1/usuarios/estudiantes`);
     console.log("Respuesta HTTP:", response.status);
     console.log("Data cruda:", response.data);
     console.log("Data tipo:", typeof response.data);
