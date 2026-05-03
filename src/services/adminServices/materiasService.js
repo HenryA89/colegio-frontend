@@ -176,16 +176,66 @@ export const actualizarMateria = async (materiaId, materiaData, token) => {
 // Eliminar materia (admin)
 export const eliminarMateria = async (materiaId, token) => {
   try {
+    console.log("=== ELIMINAR MATERIA ===");
+    console.log("Materia ID recibido:", materiaId);
+    console.log("Tipo:", typeof materiaId);
+
+    // Validar y parsear el ID a número
+    const idNumerico = parseInt(materiaId);
+    if (isNaN(idNumerico) || idNumerico <= 0) {
+      throw new Error("ID de materia inválido: debe ser un número positivo");
+    }
+
+    console.log("ID numérico validado:", idNumerico);
+
     const tokenAdmin = token || localStorage.getItem("token_admin");
-    const res = await api.delete(`admin/materias/${materiaId}`, {
+    console.log("Token admin disponible:", !!tokenAdmin);
+
+    // DELETE /api/v1/admin/materias/:id
+    const res = await api.delete(`admin/materias/${idNumerico}`, {
       headers: {
         Authorization: `Bearer ${tokenAdmin}`,
+        "Content-Type": "application/json",
       },
     });
+
+    console.log("✅ Materia eliminada exitosamente:", res.status);
+    console.log("Respuesta:", res.data);
+
     return res.data;
   } catch (error) {
-    console.error("Error al eliminar materia:", error);
-    throw error;
+    console.error("=== ERROR ELIMINAR MATERIA ===");
+    console.error("Error completo:", error);
+    console.error("Respuesta del servidor:", error.response?.data);
+    console.error("Status:", error.response?.status);
+
+    // Manejo específico de errores
+    if (error.response?.status === 401) {
+      throw new Error(
+        "No autorizado. Verifique sus credenciales de administrador.",
+      );
+    }
+
+    if (error.response?.status === 403) {
+      throw new Error("No tiene permisos para eliminar materias.");
+    }
+
+    if (error.response?.status === 404) {
+      throw new Error("La materia no existe o ya fue eliminada.");
+    }
+
+    if (error.response?.status === 422) {
+      throw new Error(
+        "No se puede eliminar la materia. Puede tener clases o profesores asignados.",
+      );
+    }
+
+    // Error genérico
+    throw new Error(
+      error.response?.data?.message ||
+        error.message ||
+        "Error al eliminar materia",
+    );
   }
 };
 
