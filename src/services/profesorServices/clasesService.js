@@ -1,26 +1,18 @@
-import api from "../api";
+import api, { validarYParsearId } from "../api";
 
 // Obtener todas las clases del profesor
 export const fetchClases = async (token) => {
   try {
-    console.log("=== OBTENIENDO MATERIAS ===");
-    console.log("Token disponible:", !!token);
+    console.log("=== OBTENIENDO CLASES ===");
 
-    // Obtener ID del usuario desde el token o localStorage
+    // Obtener información del usuario
     const usuario = JSON.parse(localStorage.getItem("usuario"));
-    const tokenStorage = localStorage.getItem("token");
 
-    console.log("Usuario completo:", usuario);
-    console.log(
-      "Token en storage:",
-      tokenStorage ? "disponible" : "no disponible",
-    );
-
-    // Validar que tengamos el ID del profesor
     if (!usuario) {
       throw new Error("No hay información del usuario en localStorage");
     }
 
+    // Extraer ID del profesor con múltiples fallbacks
     const profesorId =
       usuario?.id || usuario?.usuario?.id || usuario?.profesor?.id;
 
@@ -28,69 +20,55 @@ export const fetchClases = async (token) => {
       throw new Error("No se pudo obtener el ID del profesor del usuario");
     }
 
-    console.log("ID del profesor:", profesorId);
-    console.log("Rol del usuario:", usuario?.rol || usuario?.usuario?.rol);
+    // Validar que el ID sea numérico
+    const idValidado = validarYParsearId(profesorId, "profesor_id");
 
-    // Usar directamente el endpoint general de materias
-    console.log("🔍 Obteniendo materias desde endpoint general...");
-    const res = await api.get("api/v1/materias");
-    const endpointUsed = "api/v1/materias";
+    console.log("👨‍🏫 Obteniendo clases para profesor:", idValidado);
 
-    console.log(
-      "✅ Respuesta del backend (endpoint: " + endpointUsed + "):",
-      res.status,
-    );
-    console.log("Estructura completa de la respuesta:", res.data);
-    console.log("res.data.materias:", res.data.materias);
-    console.log("Tipo de res.data.materias:", typeof res.data.materias);
-    console.log("Longitud de materias:", res.data.materias?.length);
+    // Obtener clases del profesor
+    const res = await api.get(`/profesores/${idValidado}/clases`);
+
+    console.log("✅ Respuesta del backend:", res.status);
+    console.log("Estructura de la respuesta:", res.data);
 
     // Verificar diferentes posibles estructuras de respuesta
-    let materias = [];
+    let clases = [];
 
     if (res.data.materias && Array.isArray(res.data.materias)) {
-      materias = res.data.materias;
-      console.log("✅ Usando res.data.materias:", materias.length, "materias");
+      clases = res.data.materias;
+      console.log("✅ Usando res.data.materias:", clases.length, "clases");
     } else if (res.data.data && Array.isArray(res.data.data)) {
-      materias = res.data.data;
-      console.log("✅ Usando res.data.data:", materias.length, "materias");
+      clases = res.data.data;
+      console.log("✅ Usando res.data.data:", clases.length, "clases");
+    } else if (res.data.clases && Array.isArray(res.data.clases)) {
+      clases = res.data.clases;
+      console.log("✅ Usando res.data.clases:", clases.length, "clases");
     } else if (Array.isArray(res.data)) {
-      materias = res.data;
-      console.log(
-        "✅ Usando res.data directamente:",
-        materias.length,
-        "materias",
-      );
+      clases = res.data;
+      console.log("✅ Usando res.data directamente:", clases.length, "clases");
     } else {
-      console.warn("⚠️ No se encontró un array de materias en la respuesta");
+      console.warn("⚠️ No se encontró un array de clases en la respuesta");
       console.warn("Estructura recibida:", Object.keys(res.data));
     }
 
-    // Filtrar materias por profesor
-    if (Array.isArray(materias)) {
-      const materiasFiltradas = materias.filter((materia) => {
-        const materiaProfesorId = materia.profesor_id || materia.profesorId;
-        const coincide = materiaProfesorId === profesorId;
+    // Filtrar clases por profesor
+    if (Array.isArray(clases)) {
+      const clasesFiltradas = clases.filter((clase) => {
+        const claseProfesorId = clase.profesor_id || clase.profesorId;
+        const coincide = claseProfesorId === idValidado;
         console.log(
-          `Materia ${materia.nombre}: profesor_id=${materiaProfesorId}, busca=${profesorId}, coincide=${coincide}`,
+          `Clase ${clase.nombre}: profesor_id=${claseProfesorId}, busca=${idValidado}, coincide=${coincide}`,
         );
         return coincide;
       });
 
       console.log(
-        `📊 Filtrado: ${materias.length} totales → ${materiasFiltradas.length} del profesor`,
+        `📊 Filtrado: ${clases.length} totales → ${clasesFiltradas.length} del profesor`,
       );
-      materias = materiasFiltradas;
+      return clasesFiltradas;
     }
 
-    console.log("📊 Materias finales:", materias.length);
-    materias.forEach((materia, index) => {
-      console.log(
-        `  ${index + 1}. ${materia.nombre} - ID: ${materia.id || materia._id} - Profesor: ${materia.profesor_id || materia.profesorId}`,
-      );
-    });
-
-    return materias;
+    return clases;
   } catch (error) {
     console.error("=== ERROR OBTENIENDO MATERIAS ===");
     console.error("Error completo:", error);
@@ -117,61 +95,82 @@ export const fetchClases = async (token) => {
     return [];
   }
 };
-// Subir material de clase (PDF o texto)
-export const subirClase = async ({ file }) => {
-  const pdf = file;
 
-  if (!pdf) {
-    throw new Error("Debe seleccionar un archivo PDF.");
-  }
-
-  if (pdf.type !== "application/pdf") {
-    throw new Error("El archivo debe ser un PDF.");
-  }
-
-  const token = localStorage.getItem("token");
-
-  if (!token) {
-    throw new Error("No hay sesión activa. Por favor, inicia sesión.");
-  }
-
-  const formData = new FormData();
-  // Enviar el archivo PDF directamente como archivo, no como array
-  formData.append("archivo_pdf", pdf);
-
+// Subir material PDF a una clase
+export const subirMaterial = async ({ file, titulo, claseId }) => {
   try {
-    const response = await api.post(
-      "/api/v1/profesores/subir_material",
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          // Forzar multipart — evita que Rails haga wrap_parameters
-          "Content-Type": "multipart/form-data",
-          // Desactiva el wrap de Rails en el frontend
-          "X-No-Wrap": "true",
-        },
-      },
-    );
+    // Validar archivo PDF
+    if (!file || file.type !== "application/pdf") {
+      throw new Error("Se requiere un archivo PDF válido");
+    }
 
+    // Validar tamaño máximo (10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      throw new Error("El archivo PDF no puede ser mayor a 10MB");
+    }
+
+    const formData = new FormData();
+    formData.append("archivo_pdf", file);
+    formData.append("titulo", titulo || file.name);
+
+    // Validar y agregar claseId si existe
+    if (claseId) {
+      const idValidado = validarYParsearId(claseId, "clase_id");
+      formData.append("clase_id", idValidado);
+    }
+
+    console.log("📤 Subiendo material:", {
+      fileName: file.name,
+      fileSize: file.size,
+      claseId: claseId || "sin clase",
+    });
+
+    const response = await api.post("/profesores/subir_material", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+    });
+
+    console.log("✅ Material subido exitosamente:", response.data);
     return response.data;
   } catch (error) {
-    const status = error.response?.status;
-
-    if (status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("usuario");
-      throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
-    }
-    if (status === 413) {
-      throw new Error("El archivo es demasiado grande.");
-    }
-
-    throw new Error(`No se pudo subir el material: ${error.message}`);
+    console.error("❌ Error subiendo material:", error);
+    throw error;
   }
 };
 
 // Crear nueva clase
-export const crearClase = async (form, token) => {
-  await api.post("api/v1/profesores/crear_clase", { ...form });
+export const crearClase = async (form) => {
+  try {
+    // Validar datos del formulario
+    if (!form.nombre || form.nombre.trim() === "") {
+      throw new Error("El nombre de la clase es obligatorio");
+    }
+
+    if (!form.materia_id) {
+      throw new Error("El ID de la materia es obligatorio");
+    }
+
+    // Validar ID de materia
+    const materiaId = validarYParsearId(form.materia_id, "materia_id");
+
+    const payload = {
+      nombre: form.nombre.trim(),
+      materia_id: materiaId,
+      descripcion: form.descripcion || "",
+      ...form,
+    };
+
+    console.log("🏫 Creando nueva clase:", payload);
+
+    const response = await api.post("/profesores/crear_clase", payload);
+
+    console.log("✅ Clase creada exitosamente:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error creando clase:", error);
+    throw error;
+  }
 };

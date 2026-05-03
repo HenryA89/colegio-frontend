@@ -245,18 +245,62 @@ src/
 
 ### Frontend
 
-- **React 19.1.1**: Framework principal
-- **React Router 7.8.2**: Gestión de rutas
-- **Vite 7.1.2**: Build tool y servidor de desarrollo
-- **Tailwind CSS 4.1.12**: Framework de estilos
-- **Lucide React 0.542.0**: Biblioteca de iconos
-- **Axios 1.11.0**: Cliente HTTP
+- **React 19.1.1** - Framework principal de UI
+- **Vite 7.1.2** - Build tool y desarrollo rápido
+- **React Router DOM 7.8.2** - Manejo de rutas
+- **TailwindCSS 4.1.12** - Framework de estilos
+- **Lucide React 0.542.0** - Iconos modernos
+- **Axios 1.11.0** - Cliente HTTP con interceptores
+- **React Hot Toast 2.6.0** - Notificaciones
 
-### Herramientas de Desarrollo
+### Backend
 
-- **ESLint**: Linting de código
-- **PostCSS**: Procesamiento de CSS
-- **Autoprefixer**: Prefijos CSS automáticos
+- **Ruby on Rails** - API RESTful
+- **Render** - Despliegue en producción
+- **PostgreSQL** - Base de datos
+
+### Desarrollo
+
+- **ESLint 9.33.0** - Linting y calidad de código
+- **PostCSS 8.5.6** - Procesamiento de CSS
+- **Autoprefixer 10.4.21** - Compatibilidad CSS
+
+## 🔧 Configuración y Optimización
+
+### 📡 Configuración de API
+
+- **URL Producción**: `https://colegio-backend-ia.onrender.com/api/v1`
+- **Timeout**: 30 segundos para producción
+- **Headers**: JSON + Bearer Token
+- **Interceptores**: Manejo automático de errores y autenticación
+
+### 🔢 Validación de IDs
+
+- **IDs Numéricos**: Todos los IDs se validan como enteros positivos
+- **Parseo Automático**: `validarYParsearId(id, nombreCampo)`
+- **Validaciones**: `!isNaN() && > 0`
+
+### 🛡️ Manejo de Errores
+
+- **401**: Logout automático y redirección
+- **403**: Mensaje de acceso denegado
+- **404**: Recurso no encontrado
+- **422**: Errores de validación detallados
+- **500**: Error del servidor genérico
+
+### 📁 Gestión de Archivos
+
+- **PDF**: Máximo 10MB, validación de tipo
+- **FormData**: Headers correctos para Rails
+- **Progress**: Indicadores de carga
+- **Error Handling**: Mensajes específicos por tipo
+
+### 🎯 Endpoints Optimizados
+
+- **Materiales**: Subida directa y gestión
+- **Quizzes**: Generación AI y respuestas
+- **Usuarios**: CRUD completo con validación
+- **Reportes**: Estadísticas y análisis automáticos
 
 ## 🔌 API Endpoints
 

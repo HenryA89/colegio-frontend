@@ -20,6 +20,8 @@ export default function AuthProvider({ children }) {
   // 🔐 Login real contra backend
   const login = async (correo, password, rol) => {
     try {
+      console.log("🔐 Iniciando sesión desde AuthContext:", { correo, rol });
+
       const response = await loginUsuario(correo, password, rol);
 
       if (!response) {
@@ -29,19 +31,26 @@ export default function AuthProvider({ children }) {
       const { token, usuario } = response;
 
       if (token && usuario) {
+        // Validar que el usuario tenga ID numérico
+        if (!usuario.id || typeof usuario.id !== "number") {
+          throw new Error(
+            "Respuesta de usuario inválida: ID no encontrado o no es numérico",
+          );
+        }
+
         // Crear objeto de usuario con token incluido
         const userData = {
           ...usuario,
           token: token,
-          rol: usuario.rol.toLowerCase(), // Asegurar que siempre haya un rol
+          rol: usuario.rol?.toLowerCase() || rol.toLowerCase(), // Asegurar que siempre haya un rol
         };
+
+        console.log("✅ Usuario autenticado:", userData);
 
         // Actualizar estado y almacenamiento local
         setUsuario(userData);
         localStorage.setItem("token", token);
         localStorage.setItem("usuario", JSON.stringify(userData));
-
-        // Configurar el token en los headers de axios
 
         return userData;
       } else {

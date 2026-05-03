@@ -31,6 +31,13 @@ import {
   extraerTemasPDF,
 } from "../../services/profesorServices/quizAiService";
 import { fetchClases } from "../../services/profesorServices/clasesService";
+import {
+  subirMaterial,
+  obtenerQuiz,
+  responderQuiz,
+  obtenerResultado,
+  obtenerTop,
+} from "../../services/materialesService";
 
 export default function QuizAi() {
   const { id } = useParams(); // id de la clase
@@ -200,29 +207,22 @@ export default function QuizAi() {
     try {
       console.log("📤 Subiendo PDF directo para generar quiz...");
 
-      // Crear FormData para enviar el PDF
-      const formData = new FormData();
-      formData.append("pdf", pdfDirecto);
-      formData.append("claseId", id);
-      formData.append("opciones", JSON.stringify(opcionesGeneracion));
+      // Subir material usando el servicio optimizado
+      const materialSubido = await subirMaterial({
+        file: pdfDirecto,
+        titulo: `Quiz IA - ${new Date().toLocaleDateString("es-ES")}`,
+        claseId: id,
+      });
 
-      // Enviar directamente al endpoint de crear quiz
-      const response = await fetch(
-        "https://colegio-backend-ia.onrender.com/api/v1/ai/crear_quiz",
-        {
-          method: "POST",
-          body: formData,
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        },
-      );
+      console.log("✅ Material subido:", materialSubido);
 
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
-      }
+      // Generar quiz usando el material subido
+      const quizGenerado = await generarQuizConIA(materialSubido.id, {
+        ...opcionesGeneracion,
+        usarMaterialPDF: true,
+        materialId: materialSubido.id,
+      });
 
-      const quizGenerado = await response.json();
       console.log(
         "🎉 Quiz generado con éxito desde PDF directo:",
         quizGenerado,

@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import Button from "../../components/iu/Button";
-import api from "../../services/api";
+import {
+  obtenerQuiz,
+  responderQuiz,
+  obtenerResultado,
+} from "../../services/materialesService";
 
 export default function QuizEstudiante() {
   const [quiz, setQuiz] = useState(null);
@@ -16,10 +20,11 @@ export default function QuizEstudiante() {
       setLoading(true);
       setError("");
       try {
-        const res = await api.get("/quiz-actual");
-        if (res.data.quiz) {
-          setQuiz(res.data.quiz);
-          setRespuestas(Array(res.data.quiz.preguntas.length).fill(""));
+        // Obtener quiz actual del estudiante
+        const quizData = await obtenerQuiz("actual");
+        if (quizData.quiz) {
+          setQuiz(quizData.quiz);
+          setRespuestas(Array(quizData.quiz.preguntas.length).fill(""));
         }
       } catch (err) {
         setError("No hay actividad disponible en este momento.");
@@ -40,8 +45,18 @@ export default function QuizEstudiante() {
     setLoading(true);
     setError("");
     try {
-      const res = await api.post("/responder-quiz", { respuestas });
-      setPuntaje(res.data.puntaje);
+      // Preparar respuestas en el formato esperado
+      const respuestasFormateadas = respuestas.map((respuesta, index) => ({
+        pregunta_id: quiz.preguntas[index].id,
+        opcion_seleccionada: respuesta,
+      }));
+
+      // Enviar respuestas usando el servicio optimizado
+      const resultado = await responderQuiz(
+        quiz.material_id,
+        respuestasFormateadas,
+      );
+      setPuntaje(resultado.puntaje);
       setEnviado(true);
     } catch (err) {
       setError("No se pudo enviar tus respuestas. Intenta nuevamente.");

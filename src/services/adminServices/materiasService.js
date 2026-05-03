@@ -169,3 +169,127 @@ export const eliminarMateria = async (materiaId, token) => {
     throw error;
   }
 };
+
+// Asignar materia a profesor (admin)
+export const asignarMateriaProfesor = async (materiaIds, profesorId) => {
+  try {
+    console.log("=== ASIGNANDO MATERIA A PROFESOR ===");
+    console.log("Materia IDs:", materia_ids);
+    console.log("Profesor ID:", profesor_id);
+
+    const res = await api.post(
+      "api/v1/admin/asignaciones/asignar_materias",
+      {
+        materia_ids: materiaIds,
+        profesor_id: profesorId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token_admin")}`,
+        },
+      },
+    );
+
+    console.log("✅ Respuesta del backend:", res.status);
+    console.log("Datos de respuesta:", res.data);
+
+    return res.data;
+  } catch (error) {
+    console.error("Error al asignar materia a profesor:", error);
+
+    // Manejo específico de errores
+    if (error.response?.status === 422) {
+      const errores = error.response.data?.error || [];
+      console.error("Errores de validación:", errores);
+
+      if (errores.includes("Profesor must exist")) {
+        throw new Error(
+          "El profesor seleccionado no existe en la base de datos. Verifique que el profesor esté registrado correctamente.",
+        );
+      }
+
+      if (errores.includes("Materia must exist")) {
+        throw new Error(
+          "La materia seleccionada no existe en la base de datos.",
+        );
+      }
+
+      if (errores.length > 0) {
+        throw new Error(`Error de validación: ${errores.join(", ")}`);
+      }
+    }
+
+    // Error 401
+    if (error.response?.status === 401) {
+      throw new Error(
+        "No autorizado. Verifique sus credenciales de administrador.",
+      );
+    }
+
+    // Error 403
+    if (error.response?.status === 403) {
+      throw new Error("No tiene permisos para realizar esta acción.");
+    }
+
+    // Error 404
+    if (error.response?.status === 404) {
+      throw new Error(
+        "El endpoint de asignación no está disponible. Contacte al administrador.",
+      );
+    }
+
+    // Error genérico
+    throw new Error(
+      error.response?.data?.message ||
+        error.message ||
+        "Error al asignar materia al profesor",
+    );
+  }
+};
+
+// Asignar todas las materias a todos los profesores (admin)
+export const asignarTodasMaterias = async () => {
+  try {
+    console.log("=== ASIGNANDO TODAS LAS MATERIAS A TODOS LOS PROFESORES ===");
+
+    const res = await api.post(
+      "api/v1/admin/asignaciones/asignar_todas_materias",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token_admin")}`,
+        },
+      },
+    );
+
+    console.log("✅ Respuesta del backend:", res.status);
+    console.log("Datos de respuesta:", res.data);
+
+    return res.data;
+  } catch (error) {
+    console.error("Error al asignar todas las materias:", error);
+
+    // Manejo específico de errores
+    if (error.response?.status === 401) {
+      throw new Error(
+        "No autorizado. Verifique sus credenciales de administrador.",
+      );
+    }
+
+    if (error.response?.status === 403) {
+      throw new Error("No tiene permisos para realizar esta acción.");
+    }
+
+    if (error.response?.status === 404) {
+      throw new Error(
+        "El endpoint de asignación masiva no está disponible. Contacte al administrador.",
+      );
+    }
+
+    throw new Error(
+      error.response?.data?.message ||
+        error.message ||
+        "Error al asignar todas las materias",
+    );
+  }
+};
