@@ -11,7 +11,7 @@ import {
 import { useAuth } from "../../hooks/UseAuth";
 import {
   fetchClases,
-  subirClase,
+  subirMaterial,
   crearClase,
 } from "../../services/profesorServices/clasesService";
 
@@ -135,8 +135,9 @@ export default function Clases() {
       console.log("  - pdf tipo:", pdf.type);
 
       // Enviar archivo directamente con el parámetro correcto
-      await subirClase({
+      await subirMaterial({
         file: pdf,
+        titulo: `Material - ${new Date().toLocaleDateString("es-ES")}`,
       });
 
       setMensaje("¡Material subido correctamente!");
