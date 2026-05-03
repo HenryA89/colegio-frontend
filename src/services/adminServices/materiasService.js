@@ -180,10 +180,14 @@ export const eliminarMateria = async (materiaId, token) => {
     console.log("Materia ID recibido:", materiaId);
     console.log("Tipo:", typeof materiaId);
 
-    // Validar y parsear el ID a número
-    const idNumerico = parseInt(materiaId);
-    if (isNaN(idNumerico) || idNumerico <= 0) {
-      throw new Error("ID de materia inválido: debe ser un número positivo");
+    if (!materiaId) {
+      throw new Error("No se recibió ID de materia");
+    }
+
+    const idNumerico = Number(materiaId);
+
+    if (!Number.isInteger(idNumerico) || idNumerico <= 0) {
+      throw new Error(`ID inválido: ${materiaId}`);
     }
 
     console.log("ID numérico validado:", idNumerico);
