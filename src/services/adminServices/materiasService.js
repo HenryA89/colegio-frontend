@@ -6,7 +6,15 @@ export const fetchMaterias = async (token) => {
     console.log("=== OBTENIENDO MATERIAS ===");
     console.log("Token disponible:", !!token);
 
-    const res = await api.get("api/v1/admin/materias");
+    // Para endpoints de admin, usar token_admin específico
+    const tokenAdmin = token || localStorage.getItem("token_admin");
+    console.log("Token admin usado:", !!tokenAdmin);
+
+    const res = await api.get("admin/materias", {
+      headers: {
+        Authorization: `Bearer ${tokenAdmin}`,
+      },
+    });
 
     console.log("✅ Respuesta del backend:", res.status);
     console.log("Estructura completa de la respuesta:", res.data);
@@ -57,7 +65,6 @@ export const crearMateria = async (materiaData, token) => {
   try {
     console.log("=== CREAR MATERIA ===");
     console.log("Datos recibidos:", materiaData);
-    console.log("Token disponible:", !!token);
 
     // Validación detallada del profesorId
     console.log("🔍 Analizando profesorId...");
@@ -88,12 +95,17 @@ export const crearMateria = async (materiaData, token) => {
     };
 
     console.log("✅ Validación pasada. Enviando al backend...");
-    console.log("Endpoint: POST api/v1/admin/materias");
+    console.log("Endpoint: POST admin/materias");
     console.log("Payload final:", JSON.stringify(payload, null, 2));
     console.log("profesor_id final:", payload.profesor_id);
     console.log("Tipo profesor_id final:", typeof payload.profesor_id);
 
-    const res = await api.post("api/v1/admin/materias", payload);
+    const tokenAdmin = token || localStorage.getItem("token_admin");
+    const res = await api.post("admin/materias", payload, {
+      headers: {
+        Authorization: `Bearer ${tokenAdmin}`,
+      },
+    });
 
     console.log("✅ Respuesta del backend:", res.status);
     console.log("Data:", res.data);
@@ -148,10 +160,12 @@ export const crearMateria = async (materiaData, token) => {
 // Actualizar materia (admin)
 export const actualizarMateria = async (materiaId, materiaData, token) => {
   try {
-    const res = await api.put(
-      `api/v1/admin/materias/${materiaId}`,
-      materiaData,
-    );
+    const tokenAdmin = token || localStorage.getItem("token_admin");
+    const res = await api.put(`admin/materias/${materiaId}`, materiaData, {
+      headers: {
+        Authorization: `Bearer ${tokenAdmin}`,
+      },
+    });
     return res.data;
   } catch (error) {
     console.error("Error al actualizar materia:", error);
@@ -162,7 +176,12 @@ export const actualizarMateria = async (materiaId, materiaData, token) => {
 // Eliminar materia (admin)
 export const eliminarMateria = async (materiaId, token) => {
   try {
-    const res = await api.delete(`api/v1/admin/materias/${materiaId}`);
+    const tokenAdmin = token || localStorage.getItem("token_admin");
+    const res = await api.delete(`admin/materias/${materiaId}`, {
+      headers: {
+        Authorization: `Bearer ${tokenAdmin}`,
+      },
+    });
     return res.data;
   } catch (error) {
     console.error("Error al eliminar materia:", error);
@@ -174,26 +193,27 @@ export const eliminarMateria = async (materiaId, token) => {
 export const asignarMateriaProfesor = async (materiaIds, profesorId) => {
   try {
     console.log("=== ASIGNANDO MATERIA A PROFESOR ===");
-    console.log("Materia IDs:", materia_ids);
-    console.log("Profesor ID:", profesor_id);
+    console.log("Materia IDs:", materiaIds);
+    console.log("Profesor ID:", profesorId);
 
-    const res = await api.post(
-      "api/v1/admin/asignaciones/asignar_materias",
+    const tokenAdmin = localStorage.getItem("token_admin");
+    const response = await api.post(
+      "/admin/asignaciones/asignar_materias",
       {
         materia_ids: materiaIds,
         profesor_id: profesorId,
       },
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token_admin")}`,
+          Authorization: `Bearer ${tokenAdmin}`,
         },
       },
     );
 
-    console.log("✅ Respuesta del backend:", res.status);
-    console.log("Datos de respuesta:", res.data);
+    console.log("✅ Respuesta del backend:", response.status);
+    console.log("Datos de respuesta:", response.data);
 
-    return res.data;
+    return response.data;
   } catch (error) {
     console.error("Error al asignar materia a profesor:", error);
 
@@ -252,20 +272,21 @@ export const asignarTodasMaterias = async () => {
   try {
     console.log("=== ASIGNANDO TODAS LAS MATERIAS A TODOS LOS PROFESORES ===");
 
-    const res = await api.post(
-      "api/v1/admin/asignaciones/asignar_todas_materias",
+    const tokenAdmin = localStorage.getItem("token_admin");
+    const response = await api.post(
+      "/admin/asignaciones/asignar_todas_materias",
       {},
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token_admin")}`,
+          Authorization: `Bearer ${tokenAdmin}`,
         },
       },
     );
 
-    console.log("✅ Respuesta del backend:", res.status);
-    console.log("Datos de respuesta:", res.data);
+    console.log("✅ Respuesta del backend:", response.status);
+    console.log("Datos de respuesta:", response.data);
 
-    return res.data;
+    return response.data;
   } catch (error) {
     console.error("Error al asignar todas las materias:", error);
 

@@ -7,7 +7,16 @@ export const fetchUsuarios = async (token) => {
     console.log("Token recibido:", !!token);
     console.log("Endpoint:", "api/v1/admin/usuarios");
 
-    const res = await api.get("api/v1/admin/usuarios");
+    // Para endpoints de admin, usar token_admin específico
+    const tokenAdmin = token || localStorage.getItem("token_admin");
+    console.log("Token admin usado:", !!tokenAdmin);
+
+    const res = await api.get("admin/usuarios", {
+      headers: {
+        Authorization: `Bearer ${tokenAdmin}`,
+      },
+    });
+
     console.log("Respuesta HTTP:", res.status);
     console.log("Headers:", res.headers);
     console.log("Data cruda:", res.data);
@@ -59,7 +68,12 @@ export const fetchUsuarios = async (token) => {
 // Crear usuario (admin)
 export const crearUsuario = async (usuarioData, token) => {
   try {
-    const res = await api.post("api/v1/admin/usuarios", usuarioData);
+    const tokenAdmin = token || localStorage.getItem("token_admin");
+    const res = await api.post("admin/usuarios", usuarioData, {
+      headers: {
+        Authorization: `Bearer ${tokenAdmin}`,
+      },
+    });
     return res.data;
   } catch (error) {
     console.error("Error al crear usuario:", error);
@@ -70,10 +84,12 @@ export const crearUsuario = async (usuarioData, token) => {
 // Actualizar usuario (admin)
 export const actualizarUsuario = async (usuarioId, usuarioData, token) => {
   try {
-    const res = await api.put(
-      `api/v1/admin/usuarios/${usuarioId}`,
-      usuarioData,
-    );
+    const tokenAdmin = token || localStorage.getItem("token_admin");
+    const res = await api.put(`admin/usuarios/${usuarioId}`, usuarioData, {
+      headers: {
+        Authorization: `Bearer ${tokenAdmin}`,
+      },
+    });
     return res.data;
   } catch (error) {
     console.error("Error al actualizar usuario:", error);
@@ -84,7 +100,12 @@ export const actualizarUsuario = async (usuarioId, usuarioData, token) => {
 // Eliminar usuario (admin)
 export const eliminarUsuario = async (usuarioId, token) => {
   try {
-    const res = await api.delete(`api/v1/admin/usuarios/${usuarioId}`);
+    const tokenAdmin = token || localStorage.getItem("token_admin");
+    const res = await api.delete(`admin/usuarios/${usuarioId}`, {
+      headers: {
+        Authorization: `Bearer ${tokenAdmin}`,
+      },
+    });
     return res.data;
   } catch (error) {
     console.error("Error al eliminar usuario:", error);
