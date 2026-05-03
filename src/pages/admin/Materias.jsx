@@ -4,6 +4,7 @@ import {
   crearMateria,
   actualizarMateria,
   eliminarMateria,
+  asignarMateriaProfesor,
 } from "../../services/adminServices/materiasService";
 import { fetchUsuarios } from "../../services/adminServices/usuariosService";
 
@@ -15,6 +16,8 @@ export default function Materias() {
   const [success, setSuccess] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [showAsignarModal, setShowAsignarModal] = useState(false);
+  const [materiaSeleccionada, setMateriaSeleccionada] = useState(null);
 
   // Formulario para crear/editar materia
   const [formData, setFormData] = useState({
@@ -212,6 +215,56 @@ export default function Materias() {
     setShowModal(false);
   };
 
+  // Abrir modal de asignación de profesor
+  const handleAsignarProfesor = (materia) => {
+    setMateriaSeleccionada(materia);
+    setShowAsignarModal(true);
+  };
+
+  // Cancelar asignación
+  const handleCancelarAsignacion = () => {
+    setMateriaSeleccionada(null);
+    setShowAsignarModal(false);
+  };
+
+  // Asignar profesor a materia
+  const handleConfirmarAsignacion = async (profesorId) => {
+    if (!materiaSeleccionada || !profesorId) {
+      setError("Seleccione un profesor para asignar");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+      setSuccess("");
+
+      console.log("🔗 Asignando profesor a materia:", {
+        materia: materiaSeleccionada.nombre,
+        materiaId: materiaSeleccionada.id || materiaSeleccionada._id,
+        profesorId: profesorId,
+      });
+
+      // Llamar a la función de asignación
+      await asignarMateriaProfesor(
+        [parseInt(materiaSeleccionada.id || materiaSeleccionada._id)],
+        parseInt(profesorId),
+      );
+
+      setSuccess("✅ Profesor asignado exitosamente a la materia");
+      setShowAsignarModal(false);
+      setMateriaSeleccionada(null);
+
+      // Recargar materias para mostrar el cambio
+      await loadMaterias();
+    } catch (error) {
+      console.error("❌ Error asignando profesor:", error);
+      setError(`❌ Error al asignar profesor: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Obtener nombre del profesor asignado
   const getProfesorNombre = (profesorId) => {
     const profesor = profesores.find((p) => p.id === parseInt(profesorId));
@@ -341,6 +394,12 @@ export default function Materias() {
                         className="mr-2 text-blue-600 hover:text-blue-900"
                       >
                         Editar
+                      </button>
+                      <button
+                        onClick={() => handleAsignarProfesor(materia)}
+                        className="mr-2 text-green-600 hover:text-green-900"
+                      >
+                        Asignar Profesor
                       </button>
                       <button
                         onClick={() => handleDelete(materia._id)}
@@ -480,6 +539,76 @@ export default function Materias() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para asignar profesor a materia */}
+      {showAsignarModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md mx-4 bg-white rounded-lg shadow-xl p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              Asignar Profesor a Materia
+            </h3>
+
+            {materiaSeleccionada && (
+              <div className="mb-4 p-3 bg-gray-50 rounded-md">
+                <p className="text-sm font-medium text-gray-700">
+                  Materia:{" "}
+                  <span className="text-blue-600">
+                    {materiaSeleccionada.nombre}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-500">
+                  {materiaSeleccionada.descripcion || "Sin descripción"}
+                </p>
+              </div>
+            )}
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Seleccionar Profesor
+              </label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                onChange={(e) => {
+                  if (e.target.value) {
+                    handleConfirmarAsignacion(e.target.value);
+                  }
+                }}
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  {profesores.length === 0
+                    ? "No hay profesores disponibles"
+                    : "Seleccionar profesor..."}
+                </option>
+                {profesores
+                  .filter((p) => p.rol === "profesor") // Solo mostrar profesores
+                  .map((profesor) => (
+                    <option key={profesor.id} value={profesor.id}>
+                      {profesor.nombre} {profesor.apellido || ""} - ID:{" "}
+                      {profesor.id}
+                    </option>
+                  ))}
+              </select>
+
+              {profesores.filter((p) => p.rol === "profesor").length === 0 && (
+                <p className="mt-2 text-sm text-red-600">
+                  ⚠️ No hay profesores disponibles. Primero cree profesores en
+                  la sección de Usuarios.
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancelarAsignacion}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
       )}
