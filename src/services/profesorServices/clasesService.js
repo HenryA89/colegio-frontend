@@ -5,69 +5,29 @@ export const fetchMateriasAsignadas = async (token) => {
   try {
     console.log("=== OBTENIENDO MATERIAS ASIGNADAS ===");
 
-    // Validar token y rol del usuario
-    const tokenValido = token || localStorage.getItem("token");
+    // Validar token específico de profesor
+    const tokenValido = token || localStorage.getItem("token_profesor");
+
     if (!tokenValido) {
-      throw new Error("No se proporcionó token de autenticación");
+      throw new Error("No autenticado");
     }
 
-    // Verificar que el usuario sea profesor
-    const usuario = JSON.parse(localStorage.getItem("usuario"));
-    if (!usuario) {
-      throw new Error("No hay información del usuario en localStorage");
-    }
+    console.log("🔑 Token presente");
 
-    const rolUsuario =
-      usuario?.rol || usuario?.usuario?.rol || usuario?.user?.rol;
-    if (rolUsuario !== "profesor") {
-      throw new Error("Acceso denegado: Esta función es solo para profesores");
-    }
-
-    console.log("🔑 Token disponible:", !!tokenValido);
-    console.log("👤 Rol del usuario:", rolUsuario);
-
-    // Validar ID del profesor
-    const profesorId =
-      usuario?.id || usuario?.usuario?.id || usuario?.profesor?.id;
-    if (!profesorId) {
-      throw new Error("No se pudo obtener el ID del profesor del usuario");
-    }
-
-    const idValidado = validarYParsearId(profesorId, "profesor_id");
-    console.log("👨‍🏫 ID del profesor validado:", idValidado);
-
-    // Obtener materias asignadas al profesor con headers correctos
-    const res = await api.get(`/profesores/materias_asignadas`, {
+    // Request directa (sin lógica innecesaria)
+    const res = await api.get("/profesores/materias_asignadas", {
       headers: {
         Authorization: `Bearer ${tokenValido}`,
-        "Content-Type": "application/json",
       },
     });
 
-    console.log("✅ Respuesta del backend:", res.status);
-    console.log("Estructura de la respuesta:", res.data);
+    console.log("✅ Status:", res.status);
+    console.log("📦 Response:", res.data);
 
-    // Verificar diferentes posibles estructuras de respuesta
-    let materias = [];
+    // Parsing consistente
+    const materias = res?.data?.data?.materias ?? [];
 
-    if (
-      res.data.data &&
-      res.data.data.materias &&
-      Array.isArray(res.data.data.materias)
-    ) {
-      materias = res.data.data.materias;
-    } else if (res.data.materias && Array.isArray(res.data.materias)) {
-      materias = res.data.materias;
-    } else if (res.data.data && Array.isArray(res.data.data)) {
-      materias = res.data.data;
-    } else if (Array.isArray(res.data)) {
-      materias = res.data;
-    } else {
-      materias = [];
-    }
-
-    console.log("📚 Materias asignadas procesadas:", materias.length);
-    console.log("📋 Detalle de materias:", materias);
+    console.log("📚 Materias:", materias.length);
 
     return materias;
   } catch (error) {
