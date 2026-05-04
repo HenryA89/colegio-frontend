@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchClases } from "../../services/profesorServices/clasesService";
+import {
+  fetchMateriasAsignadas,
+  crearClase,
+} from "../../services/profesorServices/clasesService";
 import {
   BookOpen,
   Users,
@@ -12,34 +15,63 @@ import {
 } from "lucide-react";
 
 export default function SeleccionMateria() {
-  const [clases, setClases] = useState([]);
+  const [materias, setMaterias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [creatingClass, setCreatingClass] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    cargarClases();
+    cargarMateriasAsignadas();
   }, []);
 
-  const cargarClases = async () => {
+  const cargarMateriasAsignadas = async () => {
     try {
       setLoading(true);
-      const clasesData = await fetchClases();
-      setClases(clasesData);
+      const materiasData = await fetchMateriasAsignadas();
+      setMaterias(materiasData);
     } catch (error) {
-      console.error("Error cargando clases:", error);
+      console.error("Error cargando materias asignadas:", error);
       setError("Error al cargar tus materias asignadas");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSeleccionarClase = (clase) => {
-    // Guardar clase seleccionada en localStorage para uso en otras páginas
-    localStorage.setItem("claseSeleccionada", JSON.stringify(clase));
+  const handleSeleccionarMateria = async (materia) => {
+    try {
+      setCreatingClass(true);
+      setError("");
 
-    // Navegar a la página de acciones de la clase
-    navigate(`/profesor/clases/${clase.id}/accionesClase`);
+      console.log("=== CREANDO CLASE PARA MATERIA ===");
+      console.log("Materia seleccionada:", materia);
+
+      // Crear clase para esta materia
+      const claseData = {
+        nombre:
+          materia.nombre || materia.materia || `Clase de ${materia.nombre}`,
+        materia_id: materia.id,
+        descripcion:
+          materia.descripcion ||
+          `Clase creada para la materia ${materia.nombre}`,
+        curso: materia.curso || "10°",
+        salon: materia.salon || "Aula 101",
+      };
+
+      const nuevaClase = await crearClase(claseData);
+      console.log("✅ Clase creada exitosamente:", nuevaClase);
+
+      // Guardar clase creada en localStorage
+      localStorage.setItem("claseSeleccionada", JSON.stringify(nuevaClase));
+
+      // Navegar a la página de acciones de la clase
+      navigate(`/profesor/clases/${nuevaClase.id}/accionesClase`);
+    } catch (error) {
+      console.error("Error creando clase:", error);
+      setError(error.message || "Error al crear la clase para esta materia");
+    } finally {
+      setCreatingClass(false);
+    }
   };
 
   if (loading) {
@@ -60,7 +92,7 @@ export default function SeleccionMateria() {
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <p className="text-red-600">{error}</p>
           <button
-            onClick={cargarClases}
+            onClick={cargarMateriasAsignadas}
             className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
           >
             Reintentar
@@ -70,7 +102,7 @@ export default function SeleccionMateria() {
     );
   }
 
-  if (clases.length === 0) {
+  if (materias.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md">
@@ -102,12 +134,22 @@ export default function SeleccionMateria() {
 
         {/* Grid de Materias */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {clases.map((clase) => (
+          {materias.map((materia) => (
             <div
-              key={clase.id}
-              onClick={() => handleSeleccionarClase(clase)}
-              className="bg-white rounded-2xl shadow-lg border-2 border-transparent hover:border-purple-300 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group"
+              key={materia.id}
+              onClick={() => handleSeleccionarMateria(materia)}
+              className="bg-white rounded-2xl shadow-lg border-2 border-transparent hover:border-purple-300 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group relative"
             >
+              {/* Overlay de carga */}
+              {creatingClass && (
+                <div className="absolute inset-0 bg-white bg-opacity-90 rounded-2xl flex items-center justify-center z-10">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">Creando clase...</p>
+                  </div>
+                </div>
+              )}
+
               {/* Cabecera de la tarjeta */}
               <div className="p-6 border-b border-gray-100">
                 <div className="flex items-center justify-between mb-4">
@@ -115,22 +157,18 @@ export default function SeleccionMateria() {
                     📚
                   </div>
                   <span className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded-full">
-                    {clase.grupo || "Grupo A"}
+                    {materia.curso || "10°"}
                   </span>
                 </div>
 
                 <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-purple-600 transition-colors">
-                  {clase.materia}
+                  {materia.nombre || materia.materia}
                 </h3>
 
                 <div className="flex items-center text-sm text-gray-600 space-x-4">
                   <span className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    {clase.curso || "10°"}
-                  </span>
-                  <span className="flex items-center gap-1">
                     <BookOpen className="w-4 h-4" />
-                    {clase.salon || "Aula 101"}
+                    {materia.descripcion || "Materia asignada"}
                   </span>
                 </div>
               </div>
@@ -171,7 +209,7 @@ export default function SeleccionMateria() {
               {/* Footer */}
               <div className="px-6 py-4 bg-gray-50 rounded-b-2xl">
                 <button className="w-full text-center text-sm font-medium text-purple-600 group-hover:text-purple-700 transition-colors">
-                  Gestionar {clase.materia} →
+                  Crear clase y gestionar {materia.nombre || materia.materia} →
                 </button>
               </div>
             </div>

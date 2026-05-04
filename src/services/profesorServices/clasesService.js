@@ -1,5 +1,90 @@
 import api, { validarYParsearId } from "../api";
 
+// Obtener materias asignadas al profesor
+export const fetchMateriasAsignadas = async (token) => {
+  try {
+    console.log("=== OBTENIENDO MATERIAS ASIGNADAS ===");
+
+    // Obtener información del usuario
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
+
+    if (!usuario) {
+      throw new Error("No hay información del usuario en localStorage");
+    }
+
+    // Extraer ID del profesor con múltiples fallbacks
+    const profesorId =
+      usuario?.id || usuario?.usuario?.id || usuario?.profesor?.id;
+
+    if (!profesorId) {
+      throw new Error("No se pudo obtener el ID del profesor del usuario");
+    }
+
+    // Validar que el ID sea numérico
+    const idValidado = validarYParsearId(profesorId, "profesor_id");
+
+    console.log("👨‍🏫 Obteniendo materias asignadas para profesor:", idValidado);
+
+    // Obtener materias asignadas al profesor
+    const res = await api.get(`/admin/materias`);
+
+    console.log("✅ Respuesta del backend:", res.status);
+    console.log("Estructura de la respuesta:", res.data);
+
+    // Verificar diferentes posibles estructuras de respuesta
+    let materias = [];
+
+    if (res.data.materias && Array.isArray(res.data.materias)) {
+      materias = res.data.materias;
+      console.log("✅ Usando res.data.materias:", materias.length, "materias");
+    } else if (res.data.data && Array.isArray(res.data.data)) {
+      materias = res.data.data;
+      console.log("✅ Usando res.data.data:", materias.length, "materias");
+    } else if (res.data.clases && Array.isArray(res.data.clases)) {
+      materias = res.data.clases;
+      console.log("✅ Usando res.data.clases:", materias.length, "materias");
+    } else if (Array.isArray(res.data)) {
+      materias = res.data;
+      console.log(
+        "✅ Usando res.data directamente:",
+        materias.length,
+        "materias",
+      );
+    } else {
+      console.warn("⚠️ No se encontró un array de materias en la respuesta");
+      materias = [];
+    }
+
+    console.log("📚 Materias asignadas procesadas:", materias.length);
+    console.log("📋 Detalle de materias:", materias);
+
+    return materias;
+  } catch (error) {
+    console.error("Error en fetchMateriasAsignadas:", error);
+
+    if (error.response) {
+      console.error("Status:", error.response.status);
+      console.error("Respuesta del servidor:", error.response.data);
+
+      if (error.response.status === 403) {
+        throw new Error(
+          "Acceso denegado: No tienes permisos para ver estas materias. Por favor, verifica tu rol o contacta al administrador.",
+        );
+      } else if (error.response.status === 401) {
+        throw new Error(
+          "No autorizado: Tu sesión ha expirado. Por favor, inicia sesión nuevamente.",
+        );
+      } else if (error.response.status === 404) {
+        throw new Error(
+          "Materias no encontradas: No se encontraron materias asignadas para este profesor.",
+        );
+      }
+    }
+
+    return [];
+  }
+};
+
 // Obtener todas las clases del profesor
 export const fetchClases = async (token) => {
   try {
