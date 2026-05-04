@@ -6,7 +6,7 @@ export const fetchMateriasAsignadas = async (token) => {
     console.log("=== OBTENIENDO MATERIAS ASIGNADAS ===");
 
     // Validar token específico de profesor
-    const tokenValido = token || localStorage.getItem("token_profesor");
+    const tokenValido = token || localStorage.getItem("usuario");
 
     if (!tokenValido) {
       throw new Error("No autenticado");
