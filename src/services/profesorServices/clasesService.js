@@ -236,10 +236,13 @@ export const subirMaterial = async ({ file, titulo, claseId }) => {
     formData.append("archivo_pdf", file);
     formData.append("titulo", titulo || file.name);
 
-    // Validar y agregar claseId si existe
+    // claseId es completamente opcional - no se requiere para subir material
     if (claseId) {
       const idValidado = validarYParsearId(claseId, "clase_id");
       formData.append("clase_id", idValidado);
+      console.log("📋 ClaseId incluido (opcional):", idValidado);
+    } else {
+      console.log("📋 Subiendo material sin clase específica (general)");
     }
 
     console.log("📤 Subiendo material:", {

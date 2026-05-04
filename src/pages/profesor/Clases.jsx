@@ -90,54 +90,33 @@ export default function Clases() {
     setError("");
 
     try {
-      // Validar que se tenga una clase disponible
-      console.log(" Verificando clases disponibles:");
-      console.log("  - Total de clases:", clases.length);
-      console.log(
-        "  - Lista de clases:",
-        clases.map((c, i) => ({
-          index: i,
-          id: c.id || c._id,
-          nombre: c.nombre || c.materia,
-          profesor: c.profesor_id || c.profesorId,
-        })),
-      );
+      console.log("📤 Iniciando subida de material");
 
-      const claseSeleccionada = clases[0];
-      if (!claseSeleccionada) {
-        console.error(" No hay clases disponibles");
-        setError("No hay clases disponibles. Crea una clase primero.");
-        return;
-      }
-
-      console.log(" Clase seleccionada:", {
-        id: claseSeleccionada.id || claseSeleccionada._id,
-        nombre: claseSeleccionada.nombre || claseSeleccionada.materia,
-        profesor: claseSeleccionada.profesor_id || claseSeleccionada.profesorId,
-        datos_completos: claseSeleccionada,
-      });
-
-      // Validar que se tenga un archivo PDF
+      // Validar que se tenga un archivo PDF (único requisito)
       if (!pdf) {
         console.error("❌ No se proporcionó archivo PDF");
         setError("Debes seleccionar un archivo PDF para subir.");
         return;
       }
 
-      // Obtener el ID de la clase
-      const claseId = claseSeleccionada.id || claseSeleccionada._id;
-
-      console.log("📋 Enviando material con los siguientes datos:");
-      console.log("  - claseId:", claseId);
-      console.log("  - claseId tipo:", typeof claseId);
+      console.log("📋 Enviando material:");
       console.log("  - pdf:", pdf.name);
       console.log("  - pdf tamaño:", pdf.size);
       console.log("  - pdf tipo:", pdf.type);
 
-      // Enviar archivo directamente con el parámetro correcto
+      // Obtener materia seleccionada para contexto (opcional)
+      const materiaSeleccionada = JSON.parse(
+        localStorage.getItem("materiaSeleccionada"),
+      );
+      console.log(
+        "📚 Materia contexto:",
+        materiaSeleccionada?.nombre || "Sin materia",
+      );
+
+      // Enviar archivo sin requerir clase específica
       await subirMaterial({
         file: pdf,
-        titulo: `Material - ${new Date().toLocaleDateString("es-ES")}`,
+        titulo: `Material - ${materiaSeleccionada?.nombre || "General"} - ${new Date().toLocaleDateString("es-ES")}`,
       });
 
       setMensaje("¡Material subido correctamente!");
@@ -145,7 +124,7 @@ export default function Clases() {
       setTexto("");
       setPdf(null);
       setTitulo("");
-      cargarClases();
+      // No recargar clases automáticamente para no depender de su funcionamiento
     } catch (err) {
       console.error("Error:", err);
       setError(`Error al subir el material: ${err.message}`);
@@ -371,19 +350,24 @@ export default function Clases() {
           </div>
         ) : (
           <>
-            {/* Debug info */}
-            <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
-              <h4 className="font-bold text-yellow-800 mb-2">🔍 Debug Info:</h4>
-              <div>
-                Estado loadingClases: {loadingClases ? "true" : "false"}
-              </div>
-              <div>Cantidad de clases en estado: {clases?.length || 0}</div>
-              <div>
-                Clases es array: {Array.isArray(clases) ? "true" : "false"}
-              </div>
-              <div>
-                Primera clase:{" "}
-                {clases[0] ? JSON.stringify(clases[0]) : "No hay clases"}
+            {/* Info de estado */}
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-bold text-blue-800 mb-2">� Información:</h4>
+              <div className="text-sm text-blue-700">
+                <p>
+                  • Puedes subir materiales PDF sin necesidad de tener clases
+                  creadas
+                </p>
+                <p>
+                  • Las clases se mostrarán si existen, pero no son requeridas
+                  para subir material
+                </p>
+                <p>
+                  • Estado:{" "}
+                  {loadingClases
+                    ? "Cargando clases..."
+                    : `Clases disponibles: ${clases?.length || 0}`}
+                </p>
               </div>
             </div>
 
