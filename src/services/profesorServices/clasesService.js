@@ -5,13 +5,36 @@ export const fetchMateriasAsignadas = async (token) => {
   try {
     console.log("=== OBTENIENDO MATERIAS ASIGNADAS ===");
 
-    // Validar token
+    // Validar token y rol del usuario
     const tokenValido = token || localStorage.getItem("token");
     if (!tokenValido) {
       throw new Error("No se proporcionó token de autenticación");
     }
 
-    console.log("� Token disponible:", !!tokenValido);
+    // Verificar que el usuario sea profesor
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
+    if (!usuario) {
+      throw new Error("No hay información del usuario en localStorage");
+    }
+
+    const rolUsuario =
+      usuario?.rol || usuario?.usuario?.rol || usuario?.user?.rol;
+    if (rolUsuario !== "profesor") {
+      throw new Error("Acceso denegado: Esta función es solo para profesores");
+    }
+
+    console.log("🔑 Token disponible:", !!tokenValido);
+    console.log("👤 Rol del usuario:", rolUsuario);
+
+    // Validar ID del profesor
+    const profesorId =
+      usuario?.id || usuario?.usuario?.id || usuario?.profesor?.id;
+    if (!profesorId) {
+      throw new Error("No se pudo obtener el ID del profesor del usuario");
+    }
+
+    const idValidado = validarYParsearId(profesorId, "profesor_id");
+    console.log("👨‍🏫 ID del profesor validado:", idValidado);
 
     // Obtener materias asignadas al profesor con headers correctos
     const res = await api.get(`/profesores/materias_asignadas`, {
