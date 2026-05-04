@@ -14,7 +14,7 @@ export const fetchMateriasAsignadas = async (token) => {
     console.log("� Token disponible:", !!tokenValido);
 
     // Obtener materias asignadas al profesor con headers correctos
-    const res = await api.get(`/profesor/materias_asignadas`, {
+    const res = await api.get(`/profesores/materias_asignadas`, {
       headers: {
         Authorization: `Bearer ${tokenValido}`,
         "Content-Type": "application/json",
