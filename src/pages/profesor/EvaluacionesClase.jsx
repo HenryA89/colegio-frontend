@@ -607,7 +607,7 @@ export default function EvaluacionesClase() {
             </h2>
             <div className="flex gap-3">
               <button
-                onClick={() => setMostrarModalGeneracion(true)}
+                onClick={() => navigate("/profesor/quiz-ai")}
                 className="px-6 py-3 text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors flex items-center space-x-2"
               >
                 <Sparkles className="w-4 h-4" />
