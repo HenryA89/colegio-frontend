@@ -159,29 +159,43 @@ export default function Clases() {
       console.log("=== CARGANDO CLASES EN COMPONENTE ===");
       console.log("Usuario actual:", usuario);
 
-      const clasesData = await fetchClases(usuario?.token);
+      // Obtener materia seleccionada desde localStorage
+      const materiaSeleccionada = JSON.parse(
+        localStorage.getItem("materiaSeleccionada"),
+      );
+      console.log("📚 Materia seleccionada:", materiaSeleccionada);
 
-      console.log(" Clases recibidas en componente:", clasesData);
-      console.log(" Tipo de datos:", typeof clasesData);
-      console.log(" Es array?:", Array.isArray(clasesData));
-      console.log(" Longitud:", clasesData?.length);
+      if (!materiaSeleccionada) {
+        console.warn(
+          "⚠️ No hay materia seleccionada, cargando todas las clases",
+        );
+        const clasesData = await fetchClases(usuario?.token);
+        setClases(clasesData || []);
+      } else {
+        console.log(
+          "📖 Cargando clases para la materia:",
+          materiaSeleccionada.nombre,
+        );
 
-      // Mostrar detalles de cada clase
-      if (Array.isArray(clasesData)) {
-        clasesData.forEach((clase, index) => {
-          console.log(
-            `  ${index + 1}. ${clase.nombre} - ID: ${clase.id || clase._id} - Profesor: ${clase.profesor_id || clase.profesorId}`,
-          );
-        });
+        // Aquí deberíamos llamar a un servicio que obtenga clases por materia_id
+        // Por ahora, usamos fetchClases como fallback
+        const clasesData = await fetchClases(usuario?.token);
+
+        // Filtrar clases por materia_id
+        const clasesDeMateria = clasesData.filter(
+          (clase) =>
+            clase.materia_id === materiaSeleccionada.id ||
+            clase.materia === materiaSeleccionada.nombre ||
+            clase.nombre === materiaSeleccionada.nombre,
+        );
+
+        console.log("✅ Clases filtradas por materia:", clasesDeMateria.length);
+        setClases(clasesDeMateria);
       }
 
-      setClases(clasesData || []);
-      console.log(
-        " Clases establecidas en el estado:",
-        clasesData?.length || 0,
-      );
+      console.log("📋 Clases establecidas en el estado:", clases.length);
     } catch (error) {
-      console.error(" Error cargando clases:", error);
+      console.error("❌ Error cargando clases:", error);
       setError(
         "Error cargando clases: " + (error.message || "Error desconocido"),
       );
@@ -326,9 +340,20 @@ export default function Clases() {
 
         {/* Encabezado de clases */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
-            📖 Mis Clases
-          </h1>
+          <div>
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
+              📖 Mis Clases
+            </h1>
+            {JSON.parse(localStorage.getItem("materiaSeleccionada")) && (
+              <p className="text-gray-600 mt-2">
+                Materia:{" "}
+                <span className="font-semibold text-purple-600">
+                  {JSON.parse(localStorage.getItem("materiaSeleccionada"))
+                    .nombre || "Sin nombre"}
+                </span>
+              </p>
+            )}
+          </div>
           <button
             onClick={() => setOpen(true)}
             className="px-6 py-3 text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors flex items-center space-x-2"
