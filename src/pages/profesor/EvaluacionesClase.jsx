@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   PlusCircle,
   Edit,
@@ -42,6 +42,7 @@ import { fetchClases } from "../../services/profesorServices/clasesService";
 
 export default function EvaluacionesClase() {
   const { id } = useParams(); // id de la clase
+  const navigate = useNavigate(); // hook de navegación
   const [evaluaciones, setEvaluaciones] = useState([]);
   const [quizzesIA, setQuizzesIA] = useState([]);
   const [evaluacionesIA, setEvaluacionesIA] = useState([]);
