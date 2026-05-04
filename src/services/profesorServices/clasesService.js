@@ -12,12 +12,20 @@ export const fetchMateriasAsignadas = async (token) => {
       throw new Error("No autenticado");
     }
 
-    console.log("🔑 Token presente");
+    // Validar formato del token
+    if (typeof tokenValido !== "string" || tokenValido.trim() === "") {
+      throw new Error("Token inválido: formato incorrecto");
+    }
 
-    // Request directa (sin lógica innecesaria)
+    console.log("🔑 Token presente");
+    console.log("🔍 Longitud del token:", tokenValido.length);
+    console.log("🔍 Tipo de token:", typeof tokenValido);
+
+    // Request directa con headers completos
     const res = await api.get("/profesores/materias_asignadas", {
       headers: {
-        Authorization: `Bearer ${tokenValido}`,
+        Authorization: `Bearer ${tokenValido.trim()}`,
+        "Content-Type": "application/json",
       },
     });
 
@@ -66,8 +74,20 @@ export const fetchMateriasAsignadas = async (token) => {
     if (error.response) {
       console.error("Status:", error.response.status);
       console.error("Respuesta del servidor:", error.response.data);
+      console.error("Headers:", error.response.headers);
 
-      if (error.response.status === 403) {
+      if (error.response.status === 500) {
+        // Error interno del servidor
+        console.error("🔥 Error 500 - Detalles completos:");
+        console.error("- URL:", error.config?.url);
+        console.error("- Método:", error.config?.method);
+        console.error("- Headers enviados:", error.config?.headers);
+        console.error("- Data enviada:", error.config?.data);
+
+        throw new Error(
+          "Error interno del servidor (500). El backend está experimentando problemas. Por favor, contacta al administrador.",
+        );
+      } else if (error.response.status === 403) {
         // Forbidden - No es profesor
         throw new Error(
           "Acceso denegado: Solo los profesores pueden consultar sus materias asignadas.",
@@ -80,7 +100,22 @@ export const fetchMateriasAsignadas = async (token) => {
         throw new Error(
           "Materias no encontradas: No se encontraron materias asignadas para este profesor.",
         );
+      } else {
+        // Otros errores HTTP
+        throw new Error(
+          `Error del servidor (${error.response.status}): ${error.response.data?.error || error.response.data?.message || "Error desconocido"}`,
+        );
       }
+    } else if (error.request) {
+      // Error de red o sin respuesta
+      console.error("🔌 Error de red:", error.message);
+      throw new Error(
+        "Error de conexión: No se pudo conectar con el servidor. Verifica tu conexión a internet.",
+      );
+    } else {
+      // Error de configuración u otros
+      console.error("⚙️ Error de configuración:", error.message);
+      throw new Error(`Error en la configuración: ${error.message}`);
     }
 
     return [];
