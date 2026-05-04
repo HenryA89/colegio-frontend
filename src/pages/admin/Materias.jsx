@@ -172,7 +172,7 @@ export default function Materias() {
       profesorId: materia.profesorId || "",
       horario: materia.horario || "",
     });
-    setEditId(materia._id);
+    setEditId(materia.id);
     setShowModal(true);
   };
 
@@ -402,7 +402,7 @@ export default function Materias() {
                         Asignar Profesor
                       </button>
                       <button
-                        onClick={() => handleDelete(materia._id)}
+                        onClick={() => handleDelete(materia.id)}
                         className="text-red-600 hover:text-red-900"
                       >
                         Eliminar
