@@ -27,24 +27,19 @@ export const fetchMateriasAsignadas = async (token) => {
     // Verificar diferentes posibles estructuras de respuesta
     let materias = [];
 
-    if (res.data.materias && Array.isArray(res.data.materias)) {
+    if (
+      res.data.data &&
+      res.data.data.materias &&
+      Array.isArray(res.data.data.materias)
+    ) {
+      materias = res.data.data.materias;
+    } else if (res.data.materias && Array.isArray(res.data.materias)) {
       materias = res.data.materias;
-      console.log("✅ Usando res.data.materias:", materias.length, "materias");
     } else if (res.data.data && Array.isArray(res.data.data)) {
       materias = res.data.data;
-      console.log("✅ Usando res.data.data:", materias.length, "materias");
-    } else if (res.data.clases && Array.isArray(res.data.clases)) {
-      materias = res.data.clases;
-      console.log("✅ Usando res.data.clases:", materias.length, "materias");
     } else if (Array.isArray(res.data)) {
       materias = res.data;
-      console.log(
-        "✅ Usando res.data directamente:",
-        materias.length,
-        "materias",
-      );
     } else {
-      console.warn("⚠️ No se encontró un array de materias en la respuesta");
       materias = [];
     }
 
