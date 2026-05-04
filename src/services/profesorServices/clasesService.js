@@ -24,10 +24,40 @@ export const fetchMateriasAsignadas = async (token) => {
     console.log("✅ Status:", res.status);
     console.log("📦 Response:", res.data);
 
-    // Parsing consistente
-    const materias = res?.data?.data?.materias ?? [];
+    // Parsing según estructura del backend
+    let materias = [];
 
-    console.log("📚 Materias:", materias.length);
+    if (res.data?.success && res.data?.data?.materias) {
+      // Estructura exitosa del backend
+      materias = res.data.data.materias;
+      console.log("✅ Materias obtenidas del backend:", materias.length);
+
+      // Log de resumen
+      const resumen = res.data.data.resumen;
+      if (resumen) {
+        console.log("📊 Resumen:", resumen);
+      }
+    } else if (res.data?.success === false && res.data?.data?.materias) {
+      // Estructura con error pero datos disponibles
+      materias = res.data.data.materias;
+      console.log("⚠️ Materias con error:", materias.length);
+      console.log("❌ Error:", res.data.error);
+    } else if (res.data?.success === false) {
+      // Error sin datos
+      console.log("❌ Error del backend:", res.data.error);
+      materias = [];
+    } else {
+      // Fallback para otras estructuras
+      materias = res?.data?.data?.materias ?? res?.data?.materias ?? [];
+      console.log("🔄 Usando fallback, materias:", materias.length);
+    }
+
+    console.log("📚 Materias finales:", materias.length);
+
+    // Validar estructura de materias
+    if (materias.length > 0) {
+      console.log("📋 Estructura de materia ejemplo:", materias[0]);
+    }
 
     return materias;
   } catch (error) {
@@ -38,8 +68,9 @@ export const fetchMateriasAsignadas = async (token) => {
       console.error("Respuesta del servidor:", error.response.data);
 
       if (error.response.status === 403) {
+        // Forbidden - No es profesor
         throw new Error(
-          "Acceso denegado: No tienes permisos para ver estas materias. Por favor, verifica tu rol o contacta al administrador.",
+          "Acceso denegado: Solo los profesores pueden consultar sus materias asignadas.",
         );
       } else if (error.response.status === 401) {
         throw new Error(
