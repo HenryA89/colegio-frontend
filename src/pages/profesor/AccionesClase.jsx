@@ -34,15 +34,15 @@ export default function AccionesClase() {
           setClase(claseData);
         } else {
           // Si no coincide, redirigir a selección
-          navigate("/profesor/seleccionar-materia");
+          navigate("/profesor/seleccionmateria");
         }
       } else {
         // Si no hay clase guardada, redirigir a selección
-        navigate("/profesor/seleccionar-materia");
+        navigate("/profesor/seleccionmateria");
       }
     } catch (error) {
       console.error("Error cargando clase:", error);
-      navigate("/profesor/seleccionar-materia");
+      navigate("/profesor/seleccionmateria");
     } finally {
       setLoading(false);
     }
@@ -69,7 +69,7 @@ export default function AccionesClase() {
       bgColor: "from-purple-50 to-purple-100",
       borderColor: "border-purple-200",
       hoverColor: "hover:border-purple-400",
-      ruta: `/profesor/quiz-ai/${id}`,
+      ruta: `/profesor/quizAi/${id}`,
     },
     {
       id: "actividades",
@@ -102,7 +102,7 @@ export default function AccionesClase() {
       bgColor: "from-red-50 to-red-100",
       borderColor: "border-red-200",
       hoverColor: "hover:border-red-400",
-      ruta: `/profesor/evaluaciones-clase/${id}`,
+      ruta: `/profesor/evaluacionesClase/${id}`,
     },
     {
       id: "estudiantes",
@@ -113,7 +113,7 @@ export default function AccionesClase() {
       bgColor: "from-indigo-50 to-indigo-100",
       borderColor: "border-indigo-200",
       hoverColor: "hover:border-indigo-400",
-      ruta: `/profesor/estudiantes-clases/${id}`,
+      ruta: `/profesor/estudiantesClases/${id}`,
     },
   ];
 

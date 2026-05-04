@@ -17,7 +17,7 @@ function ProfesorDashboard() {
 
       <div className="max-w-md mx-auto">
         <Link
-          to="/profesor/seleccionar-materia"
+          to="/profesor/seleccionmateria"
           className="block w-full p-6 shadow-lg border-2 border-transparent bg-linear-to-br from-purple-50 to-pink-50 hover:border-purple-300 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
         >
           <div className="flex items-center justify-center space-x-4">

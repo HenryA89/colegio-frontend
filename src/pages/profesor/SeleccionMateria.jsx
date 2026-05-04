@@ -39,7 +39,7 @@ export default function SeleccionMateria() {
     localStorage.setItem("claseSeleccionada", JSON.stringify(clase));
 
     // Navegar a la página de acciones de la clase
-    navigate(`/profesor/clase/${clase.id}/acciones`);
+    navigate(`/profesor/clases/${clase.id}/accionesClase`);
   };
 
   if (loading) {
