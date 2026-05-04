@@ -28,7 +28,8 @@ export default function SeleccionMateria() {
   const cargarMateriasAsignadas = async () => {
     try {
       setLoading(true);
-      const materiasData = await fetchMateriasAsignadas();
+      const token = localStorage.getItem("token");
+      const materiasData = await fetchMateriasAsignadas(token);
       setMaterias(materiasData);
     } catch (error) {
       console.error("Error cargando materias asignadas:", error);

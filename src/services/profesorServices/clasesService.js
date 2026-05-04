@@ -5,28 +5,21 @@ export const fetchMateriasAsignadas = async (token) => {
   try {
     console.log("=== OBTENIENDO MATERIAS ASIGNADAS ===");
 
-    // Obtener información del usuario
-    const usuario = JSON.parse(localStorage.getItem("usuario"));
-
-    if (!usuario) {
-      throw new Error("No hay información del usuario en localStorage");
+    // Validar token
+    const tokenValido = token || localStorage.getItem("token");
+    if (!tokenValido) {
+      throw new Error("No se proporcionó token de autenticación");
     }
 
-    // Extraer ID del profesor con múltiples fallbacks
-    const profesorId =
-      usuario?.id || usuario?.usuario?.id || usuario?.profesor?.id;
+    console.log("� Token disponible:", !!tokenValido);
 
-    if (!profesorId) {
-      throw new Error("No se pudo obtener el ID del profesor del usuario");
-    }
-
-    // Validar que el ID sea numérico
-    const idValidado = validarYParsearId(profesorId, "profesor_id");
-
-    console.log("👨‍🏫 Obteniendo materias asignadas para profesor:", idValidado);
-
-    // Obtener materias asignadas al profesor
-    const res = await api.get(`/admin/materias`);
+    // Obtener materias asignadas al profesor con headers correctos
+    const res = await api.get(`/profesor/materias_asignadas`, {
+      headers: {
+        Authorization: `Bearer ${tokenValido}`,
+        "Content-Type": "application/json",
+      },
+    });
 
     console.log("✅ Respuesta del backend:", res.status);
     console.log("Estructura de la respuesta:", res.data);
