@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  fetchMateriasAsignadas,
-  crearClase,
-} from "../../services/profesorServices/clasesService";
+import { fetchMateriasAsignadas } from "../../services/profesorServices/clasesService";
 import {
   BookOpen,
   Users,
@@ -18,7 +15,6 @@ export default function SeleccionMateria() {
   const [materias, setMaterias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [creatingClass, setCreatingClass] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,40 +35,15 @@ export default function SeleccionMateria() {
     }
   };
 
-  const handleSeleccionarMateria = async (materia) => {
-    try {
-      setCreatingClass(true);
-      setError("");
+  const handleSeleccionarMateria = (materia) => {
+    console.log("=== SELECCIONANDO MATERIA ===");
+    console.log("Materia seleccionada:", materia);
 
-      console.log("=== CREANDO CLASE PARA MATERIA ===");
-      console.log("Materia seleccionada:", materia);
+    // Guardar materia seleccionada en localStorage
+    localStorage.setItem("materiaSeleccionada", JSON.stringify(materia));
 
-      // Crear clase para esta materia
-      const claseData = {
-        nombre:
-          materia.nombre || materia.materia || `Clase de ${materia.nombre}`,
-        materia_id: materia.id,
-        descripcion:
-          materia.descripcion ||
-          `Clase creada para la materia ${materia.nombre}`,
-        curso: materia.curso || "10°",
-        salon: materia.salon || "Aula 101",
-      };
-
-      const nuevaClase = await crearClase(claseData);
-      console.log("✅ Clase creada exitosamente:", nuevaClase);
-
-      // Guardar clase creada en localStorage
-      localStorage.setItem("claseSeleccionada", JSON.stringify(nuevaClase));
-
-      // Navegar a la página de acciones de la clase
-      navigate(`/profesor/clases/${nuevaClase.id}/accionesClase`);
-    } catch (error) {
-      console.error("Error creando clase:", error);
-      setError(error.message || "Error al crear la clase para esta materia");
-    } finally {
-      setCreatingClass(false);
-    }
+    // Navegar a la página de clases para subir/crear clase
+    navigate(`/profesor/clases`);
   };
 
   if (loading) {
@@ -129,7 +100,8 @@ export default function SeleccionMateria() {
             Selecciona una Materia
           </h1>
           <p className="text-gray-600 mt-2">
-            Elige la materia para gestionar sus actividades y estudiantes
+            Elige la materia para crear o subir clases y gestionar sus
+            actividades
           </p>
         </div>
 
@@ -141,16 +113,6 @@ export default function SeleccionMateria() {
               onClick={() => handleSeleccionarMateria(materia)}
               className="bg-white rounded-2xl shadow-lg border-2 border-transparent hover:border-purple-300 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group relative"
             >
-              {/* Overlay de carga */}
-              {creatingClass && (
-                <div className="absolute inset-0 bg-white bg-opacity-90 rounded-2xl flex items-center justify-center z-10">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
-                    <p className="text-sm text-gray-600">Creando clase...</p>
-                  </div>
-                </div>
-              )}
-
               {/* Cabecera de la tarjeta */}
               <div className="p-6 border-b border-gray-100">
                 <div className="flex items-center justify-between mb-4">
@@ -210,7 +172,7 @@ export default function SeleccionMateria() {
               {/* Footer */}
               <div className="px-6 py-4 bg-gray-50 rounded-b-2xl">
                 <button className="w-full text-center text-sm font-medium text-purple-600 group-hover:text-purple-700 transition-colors">
-                  Crear clase y gestionar {materia.nombre || materia.materia} →
+                  Gestionar {materia.nombre || materia.materia} →
                 </button>
               </div>
             </div>
