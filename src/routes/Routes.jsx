@@ -17,6 +17,9 @@ const AsistenciaEstudiante = lazy(
 );
 
 const Clases = lazy(() => import("../pages/profesor/Clases"));
+const SeleccionMateria = lazy(
+  () => import("../pages/profesor/SeleccionMateria"),
+);
 const EstudiantesClases = lazy(
   () => import("../pages/profesor/EstudiantesClases"),
 );
@@ -114,6 +117,12 @@ export const routes = [
   },
 
   // Profesores
+  {
+    path: "/profesor/seleccionmateria",
+    element: <SeleccionMateria />,
+    isPrivate: true,
+    roles: ["profesor"],
+  },
   {
     path: "/profesor/clases",
     element: <Clases />,
