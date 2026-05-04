@@ -4,6 +4,9 @@ import {
   crearUsuario,
   actualizarUsuario,
   eliminarUsuario,
+  inscribirEstudianteMateria,
+  inscribirEstudiantesMasivo,
+  fetchMateriasDisponibles,
 } from "../../services/adminServices/usuariosService";
 import Button from "../../components/iu/Button";
 import Input from "../../components/iu/Input";
@@ -21,6 +24,12 @@ export default function Usuarios() {
     password: "",
   });
   const [editId, setEditId] = useState(null);
+  const [materias, setMaterias] = useState([]);
+  const [showInscribirModal, setShowInscribirModal] = useState(false);
+  const [showMasivoModal, setShowMasivoModal] = useState(false);
+  const [estudianteSeleccionado, setEstudianteSeleccionado] = useState(null);
+  const [materiaSeleccionada, setMateriaSeleccionada] = useState("");
+  const [estudiantesSeleccionados, setEstudiantesSeleccionados] = useState([]);
 
   // Obtener todos los usuarios
   const cargarUsuarios = async () => {
@@ -97,6 +106,7 @@ export default function Usuarios() {
 
   useEffect(() => {
     cargarUsuarios();
+    cargarMaterias();
   }, []);
 
   // Crear o actualizar usuario
@@ -137,6 +147,107 @@ export default function Usuarios() {
     } catch (err) {
       setError("Error al eliminar el usuario.");
     }
+  };
+
+  // Cargar materias disponibles
+  const cargarMaterias = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const materiasData = await fetchMateriasDisponibles(token);
+      setMaterias(materiasData);
+    } catch (err) {
+      console.error("Error cargando materias:", err);
+    }
+  };
+
+  // Abrir modal de inscripción individual
+  const handleInscribirEstudiante = (estudiante) => {
+    setEstudianteSeleccionado(estudiante);
+    setMateriaSeleccionada("");
+    setShowInscribirModal(true);
+  };
+
+  // Abrir modal de inscripción masiva
+  const handleInscripcionMasiva = () => {
+    setEstudiantesSeleccionados([]);
+    setMateriaSeleccionada("");
+    setShowMasivoModal(true);
+  };
+
+  // Confirmar inscripción individual
+  const handleConfirmarInscripcion = async () => {
+    if (!estudianteSeleccionado || !materiaSeleccionada) {
+      setError("Debe seleccionar un estudiante y una materia");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await inscribirEstudianteMateria(
+        estudianteSeleccionado.id,
+        materiaSeleccionada,
+        localStorage.getItem("token"),
+      );
+
+      setSuccess("✅ Estudiante inscrito exitosamente");
+      setShowInscribirModal(false);
+      setEstudianteSeleccionado(null);
+      setMateriaSeleccionada("");
+      cargarUsuarios();
+    } catch (err) {
+      setError(err.message || "Error al inscribir estudiante");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Confirmar inscripción masiva
+  const handleConfirmarInscripcionMasiva = async () => {
+    if (!materiaSeleccionada || estudiantesSeleccionados.length === 0) {
+      setError("Debe seleccionar una materia y al menos un estudiante");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await inscribirEstudiantesMasivo(
+        estudiantesSeleccionados,
+        materiaSeleccionada,
+        localStorage.getItem("token"),
+      );
+
+      setSuccess(
+        `✅ ${estudiantesSeleccionados.length} estudiantes inscritos exitosamente`,
+      );
+      setShowMasivoModal(false);
+      setMateriaSeleccionada("");
+      setEstudiantesSeleccionados([]);
+      cargarUsuarios();
+    } catch (err) {
+      setError(err.message || "Error en inscripción masiva");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Toggle selección de estudiante para inscripción masiva
+  const toggleSeleccionEstudiante = (estudianteId) => {
+    setEstudiantesSeleccionados((prev) => {
+      if (prev.includes(estudianteId)) {
+        return prev.filter((id) => id !== estudianteId);
+      } else {
+        return [...prev, estudianteId];
+      }
+    });
+  };
+
+  // Cancelar inscripciones
+  const handleCancelarInscripcion = () => {
+    setShowInscribirModal(false);
+    setShowMasivoModal(false);
+    setEstudianteSeleccionado(null);
+    setMateriaSeleccionada("");
+    setEstudiantesSeleccionados([]);
   };
 
   return (
@@ -244,6 +355,27 @@ export default function Usuarios() {
           <div className="p-2 text-red-600 bg-red-100 rounded">{error}</div>
         )}
       </form>
+
+      {/* Botón de inscripción masiva */}
+      <div className="mb-4 flex justify-end">
+        <button
+          type="button"
+          onClick={handleInscripcionMasiva}
+          className="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors"
+          style={{
+            backgroundColor: "#7c3aed",
+            color: "#ffffff",
+            padding: "8px 16px",
+            borderRadius: "8px",
+            border: "none",
+            cursor: "pointer",
+            fontWeight: "500",
+          }}
+        >
+          📚 Inscripción Masiva de Estudiantes
+        </button>
+      </div>
+
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm bg-white rounded-lg shadow">
           <thead className="bg-blue-50">
@@ -269,6 +401,23 @@ export default function Usuarios() {
                 <td className="px-4 py-2">{usuario.email}</td>
                 <td className="px-4 py-2 capitalize">{usuario.rol}</td>
                 <td className="flex gap-2 px-4 py-2">
+                  {usuario.rol === "estudiante" && (
+                    <button
+                      type="button"
+                      onClick={() => handleInscribirEstudiante(usuario)}
+                      className="px-3 py-1 text-white bg-green-600 rounded hover:bg-green-700 transition-colors"
+                      style={{
+                        backgroundColor: "#16a34a",
+                        color: "#ffffff",
+                        padding: "4px 12px",
+                        borderRadius: "4px",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Inscribir
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => handleEdit(usuario)}
@@ -311,6 +460,174 @@ export default function Usuarios() {
           <div className="mt-4 text-gray-500">No hay usuarios registrados.</div>
         )}
       </div>
+
+      {/* Modal de inscripción individual */}
+      {showInscribirModal && estudianteSeleccionado && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md mx-4 bg-white rounded-lg shadow-xl p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              Inscribir Estudiante en Materia
+            </h3>
+
+            <div className="mb-4 p-3 bg-gray-50 rounded-md">
+              <p className="text-sm font-medium text-gray-700">
+                Estudiante:{" "}
+                <span className="text-blue-600">
+                  {estudianteSeleccionado.nombre}
+                </span>
+              </p>
+              <p className="text-sm text-gray-500">
+                Email: {estudianteSeleccionado.email}
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Seleccionar Materia
+              </label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={materiaSeleccionada}
+                onChange={(e) => setMateriaSeleccionada(e.target.value)}
+              >
+                <option value="">Seleccionar materia...</option>
+                {materias.map((materia) => (
+                  <option key={materia.id} value={materia.id}>
+                    {materia.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancelarInscripcion}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmarInscripcion}
+                disabled={loading || !materiaSeleccionada}
+                className="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-green-400 transition-colors"
+              >
+                {loading ? "Inscribiendo..." : "Incribir"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de inscripción masiva */}
+      {showMasivoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-2xl mx-4 bg-white rounded-lg shadow-xl p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              📚 Inscripción Masiva de Estudiantes
+            </h3>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Seleccionar Materia
+              </label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                value={materiaSeleccionada}
+                onChange={(e) => setMateriaSeleccionada(e.target.value)}
+              >
+                <option value="">Seleccionar materia...</option>
+                {materias.map((materia) => (
+                  <option key={materia.id} value={materia.id}>
+                    {materia.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Seleccionar Estudiantes
+              </label>
+              <div className="max-h-60 overflow-y-auto border border-gray-300 rounded-md">
+                <div className="p-2">
+                  <div className="mb-2">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={
+                          estudiantesSeleccionados.length ===
+                          usuarios.filter((u) => u.rol === "estudiante").length
+                        }
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            const estudiantesIds = usuarios
+                              .filter((u) => u.rol === "estudiante")
+                              .map((u) => u.id);
+                            setEstudiantesSeleccionados(estudiantesIds);
+                          } else {
+                            setEstudiantesSeleccionados([]);
+                          }
+                        }}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">
+                        Seleccionar todos los estudiantes
+                      </span>
+                    </label>
+                  </div>
+                  {usuarios
+                    .filter((u) => u.rol === "estudiante")
+                    .map((estudiante) => (
+                      <label
+                        key={estudiante.id}
+                        className="flex items-center mb-1"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={estudiantesSeleccionados.includes(
+                            estudiante.id,
+                          )}
+                          onChange={() =>
+                            toggleSeleccionEstudiante(estudiante.id)
+                          }
+                          className="mr-2"
+                        />
+                        <span className="text-sm">
+                          {estudiante.nombre} ({estudiante.email})
+                        </span>
+                      </label>
+                    ))}
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                Estudiantes seleccionados: {estudiantesSeleccionados.length}
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancelarInscripcion}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmarInscripcionMasiva}
+                disabled={
+                  loading ||
+                  !materiaSeleccionada ||
+                  estudiantesSeleccionados.length === 0
+                }
+                className="px-4 py-2 text-white bg-purple-600 rounded-md hover:bg-purple-700 disabled:bg-purple-400 transition-colors"
+              >
+                {loading
+                  ? "Incribiendo..."
+                  : `Inscribir ${estudiantesSeleccionados.length} estudiante${estudiantesSeleccionados.length !== 1 ? "s" : ""}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
