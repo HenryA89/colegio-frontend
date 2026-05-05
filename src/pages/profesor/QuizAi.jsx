@@ -40,12 +40,38 @@ import {
 } from "../../services/materialesService";
 
 export default function QuizAi() {
-  const { id } = useParams(); // id de la clase
+  const { id } = useParams(); // id de la clase (opcional)
   const navigate = useNavigate();
 
   // Estados principales
   const [clase, setClase] = useState(null);
   const [materialReciente, setMaterialReciente] = useState(null);
+
+  // Verificar si hay un ID de clase válido
+  const claseId = id && id !== "undefined" ? id : null;
+  console.log("🎯 QuizAi - ID de clase:", claseId);
+
+  // Manejo de errores general
+  const [componentError, setComponentError] = useState(null);
+
+  if (componentError) {
+    return (
+      <div className="min-h-screen p-6 bg-red-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-xl shadow-lg border-2 border-red-200">
+          <h2 className="text-xl font-bold text-red-800 mb-4">
+            Error en Quiz AI
+          </h2>
+          <p className="text-red-600 mb-4">{componentError}</p>
+          <button
+            onClick={() => setComponentError(null)}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
   const [quizzes, setQuizzes] = useState([]);
   const [clases, setClases] = useState([]);
   const [editingQuiz, setEditingQuiz] = useState(false);
@@ -118,13 +144,17 @@ export default function QuizAi() {
   // Cargar información inicial
   useEffect(() => {
     const cargarInformacion = async () => {
-      setLoading(true);
       try {
+        setLoading(true);
+        console.log("🚀 Iniciando carga de información en QuizAi");
+
         // Cargar las clases del profesor siempre para poder seleccionar una clase
         const clasesData = await fetchClases();
         setClases(clasesData);
+        console.log("✅ Clases cargadas:", clasesData.length);
 
         if (!id) {
+          console.log("ℹ️ No hay ID de clase, mostrando vista general");
           setClase(null);
           setMaterialReciente(null);
           setQuizzes([]);
@@ -133,6 +163,7 @@ export default function QuizAi() {
 
         const claseInfo = clasesData.find((c) => String(c.id) === String(id));
         setClase(claseInfo);
+        console.log("✅ Clase seleccionada:", claseInfo);
 
         // Cargar material reciente
         await cargarMaterialReciente();
@@ -140,8 +171,8 @@ export default function QuizAi() {
         // Cargar quizzes existentes
         await cargarQuizzes();
       } catch (error) {
-        setError("Error cargando información inicial");
-        console.error("Error:", error);
+        console.error("❌ Error en useEffect de QuizAi:", error);
+        setComponentError(`Error cargando información: ${error.message}`);
       } finally {
         setLoading(false);
       }
@@ -211,7 +242,7 @@ export default function QuizAi() {
       const materialSubido = await subirMaterial({
         file: pdfDirecto,
         titulo: `Quiz IA - ${new Date().toLocaleDateString("es-ES")}`,
-        claseId: id,
+        claseId: claseId, // Usar claseId que puede ser null
       });
 
       console.log("✅ Material subido:", materialSubido);
