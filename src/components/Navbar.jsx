@@ -83,9 +83,10 @@ export default function Navbar({ toggleSidebar }) {
                       icon="📝"
                       text="Evaluaciones"
                     />
+                    <NavLink to="/profesor/quiz-ai" icon="🤖" text="Quiz IA" />
                     <NavLink
                       to="/profesor/estudiantes-clases"
-                      icon="📝"
+                      icon="�"
                       text="Estudiantes"
                     />
                     <NavLink
@@ -177,6 +178,12 @@ export default function Navbar({ toggleSidebar }) {
                     to="/profesor/evaluaciones-clase"
                     icon="📝"
                     text="Evaluaciones"
+                    onClick={() => setIsMenuOpen(false)}
+                  />
+                  <MobileNavLink
+                    to="/profesor/quiz-ai"
+                    icon="🤖"
+                    text="Quiz IA"
                     onClick={() => setIsMenuOpen(false)}
                   />
                   <MobileNavLink

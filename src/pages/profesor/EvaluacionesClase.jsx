@@ -590,13 +590,12 @@ export default function EvaluacionesClase() {
       <div className="max-w-7xl mx-auto">
         {/* Encabezado */}
         <div className="text-center mb-8">
-          <div className="text-4xl mb-2 animate-bounce">Evaluaciones</div>
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-purple-600 to-pink-600">
-            Evaluaciones y Quiz con IA
+          <div className="text-4xl mb-2 animate-bounce">📝</div>
+          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
+            Evaluaciones Manuales
           </h1>
           <p className="text-gray-600">
-            Gestiona evaluaciones manuales, quizzes automáticos (1 clase) y
-            evaluaciones IA (múltiples clases)
+            Crea y gestiona evaluaciones manuales para tus clases
           </p>
         </div>
 
@@ -608,18 +607,11 @@ export default function EvaluacionesClase() {
             </h2>
             <div className="flex gap-3">
               <button
-                onClick={() => navigate("/profesor/quiz-ai")}
-                className="px-6 py-3 text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-colors flex items-center space-x-2"
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Generar Quiz con IA</span>
-              </button>
-              <button
                 onClick={() => setMostrarModalEvaluacion(true)}
                 className="px-6 py-3 text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors flex items-center space-x-2"
               >
                 <Brain className="w-4 h-4" />
-                <span>Generar Evaluación IA</span>
+                <span>Generar Evaluación</span>
               </button>
             </div>
           </div>
