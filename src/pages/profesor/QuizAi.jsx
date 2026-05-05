@@ -14,7 +14,7 @@ import {
 } from "../../services/profesorServices/quizAiService";
 
 export default function QuizAi() {
-  const { id } = useParams(); // id de la clase (opcional)
+  const { id } = useParams(); // id del quiz
 
   // Estados principales
   const [quiz, setQuiz] = useState(null);
