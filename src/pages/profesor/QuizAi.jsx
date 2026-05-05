@@ -20,15 +20,32 @@ import {
   Upload,
   Play,
   BarChart3,
+  Trophy,
+  Target,
+  Flame,
+  Medal,
+  Crown,
+  Star,
+  Award,
+  Rocket,
+  Swords,
+  Shield,
+  Lightning,
+  Fire,
+  Gem,
+  Dragon,
+  SwordsCrossed,
 } from "lucide-react";
 import { fetchClases } from "../../services/profesorServices/clasesService";
-import {
-  subirMaterial,
-} from "../../services/profesorServices/clasesService";
+import { subirMaterial } from "../../services/profesorServices/clasesService";
 import {
   getQuiz,
   submitQuiz,
   getRanking,
+  generarQuizIA,
+  getResultadosQuiz,
+  getPodium,
+  publicarQuiz,
 } from "../../services/profesorServices/quizAiService";
 
 export default function QuizAi() {
@@ -46,7 +63,13 @@ export default function QuizAi() {
   // Estados para modales
   const [mostrarModalCrear, setMostrarModalCrear] = useState(false);
   const [mostrarModalDetalles, setMostrarModalDetalles] = useState(false);
+  const [mostrarModalResultados, setMostrarModalResultados] = useState(false);
+  const [mostrarModalPodium, setMostrarModalPodium] = useState(false);
   const [quizSeleccionado, setQuizSeleccionado] = useState(null);
+
+  // Estados para datos
+  const [resultados, setResultados] = useState([]);
+  const [podium, setPodium] = useState([]);
 
   // Estados para formulario
   const [formularioQuiz, setFormularioQuiz] = useState({
@@ -56,11 +79,13 @@ export default function QuizAi() {
     duracion: 30,
     numeroPreguntas: 10,
     dificultad: "media",
+    tema: "",
   });
 
   // Estados para subida de PDF
   const [archivoPDF, setArchivoPDF] = useState(null);
   const [subiendoPDF, setSubiendoPDF] = useState(false);
+  const [generandoQuiz, setGenerandoQuiz] = useState(false);
 
   // Verificar si hay un ID de clase válido
   const claseId = id && id !== "undefined" ? id : null;
@@ -114,6 +139,7 @@ export default function QuizAi() {
           publicado: true,
           participantes: 15,
           promedio: 85,
+          tema: "Aritmética",
         },
         {
           id: 2,
@@ -126,6 +152,20 @@ export default function QuizAi() {
           publicado: false,
           participantes: 0,
           promedio: 0,
+          tema: "Historia",
+        },
+        {
+          id: 3,
+          titulo: "Quiz de Ciencias Naturales",
+          descripcion: "Explorando el mundo natural",
+          duracion: 25,
+          numeroPreguntas: 8,
+          dificultad: "fácil",
+          creado: new Date().toISOString(),
+          publicado: true,
+          participantes: 12,
+          promedio: 92,
+          tema: "Biología",
         },
       ];
       setQuizzes(quizzesSimulados);
@@ -184,7 +224,6 @@ export default function QuizAi() {
       document.getElementById("pdf-upload").value = "";
       setError(null);
       
-      // Aquí podrías mostrar un mensaje de éxito
       console.log("✅ PDF subido exitosamente");
     } catch (error) {
       console.error("❌ Error subiendo PDF:", error);
@@ -194,19 +233,25 @@ export default function QuizAi() {
     }
   };
 
-  // Crear quiz
-  const crearQuiz = async () => {
-    if (!formularioQuiz.titulo || !formularioQuiz.descripcion) {
+  // Generar Quiz con IA
+  const generarQuizConIA = async () => {
+    if (!formularioQuiz.titulo || !formularioQuiz.descripcion || !formularioQuiz.tema) {
       setError("Por favor completa todos los campos requeridos");
       return;
     }
 
-    setLoading(true);
+    setGenerandoQuiz(true);
     try {
-      // Aquí iría la llamada al backend para crear el quiz
-      console.log("📝 Creando quiz:", formularioQuiz);
+      console.log("🤖 Generando quiz con IA:", formularioQuiz);
       
-      // Simulación de creación
+      // Llamar al servicio para generar quiz
+      const quizGenerado = await generarQuizIA({
+        ...formularioQuiz,
+        claseId: claseId,
+        archivoPDF: archivoPDF,
+      });
+
+      // Simulación de generación (mientras el backend no esté listo)
       const nuevoQuiz = {
         id: Date.now(),
         ...formularioQuiz,
@@ -214,6 +259,7 @@ export default function QuizAi() {
         publicado: false,
         participantes: 0,
         promedio: 0,
+        preguntas: quizGenerado?.preguntas || [],
       };
       
       setQuizzes(prev => [...prev, nuevoQuiz]);
@@ -225,11 +271,143 @@ export default function QuizAi() {
         duracion: 30,
         numeroPreguntas: 10,
         dificultad: "media",
+        tema: "",
       });
+      setArchivoPDF(null);
       setError(null);
+      
+      console.log("✅ Quiz generado con IA exitosamente");
     } catch (error) {
-      console.error("❌ Error creando quiz:", error);
-      setError("Error al crear el quiz. Por favor intenta nuevamente.");
+      console.error("❌ Error generando quiz con IA:", error);
+      setError("Error al generar el quiz con IA. Por favor intenta nuevamente.");
+    } finally {
+      setGenerandoQuiz(false);
+    }
+  };
+
+  // Obtener resultados del quiz
+  const obtenerResultadosQuiz = async (quiz) => {
+    try {
+      setLoading(true);
+      setQuizSeleccionado(quiz);
+      
+      console.log("📊 Obteniendo resultados del quiz:", quiz.id);
+      
+      // Simulación de resultados (mientras el backend no esté listo)
+      const resultadosSimulados = [
+        {
+          id: 1,
+          nombre: "Ana García",
+          puntaje: 95,
+          porcentaje: 95,
+          tiempo: "28:45",
+          fecha: new Date().toISOString(),
+          correctas: 19,
+          incorrectas: 1,
+        },
+        {
+          id: 2,
+          nombre: "Carlos Rodríguez",
+          puntaje: 88,
+          porcentaje: 88,
+          tiempo: "30:12",
+          fecha: new Date().toISOString(),
+          correctas: 17,
+          incorrectas: 3,
+        },
+        {
+          id: 3,
+          nombre: "María López",
+          puntaje: 92,
+          porcentaje: 92,
+          tiempo: "25:30",
+          fecha: new Date().toISOString(),
+          correctas: 18,
+          incorrectas: 2,
+        },
+        {
+          id: 4,
+          nombre: "Juan Martínez",
+          puntaje: 78,
+          porcentaje: 78,
+          tiempo: "32:15",
+          fecha: new Date().toISOString(),
+          correctas: 15,
+          incorrectas: 5,
+        },
+        {
+          id: 5,
+          nombre: "Laura Sánchez",
+          puntaje: 85,
+          porcentaje: 85,
+          tiempo: "29:20",
+          fecha: new Date().toISOString(),
+          correctas: 17,
+          incorrectas: 3,
+        },
+      ];
+      
+      setResultados(resultadosSimulados);
+      setMostrarModalResultados(true);
+      
+      // Cuando el backend esté listo, usar:
+      // const resultadosData = await getResultadosQuiz(quiz.id);
+      // setResultados(resultadosData);
+      
+    } catch (error) {
+      console.error("❌ Error obteniendo resultados:", error);
+      setError("Error al obtener los resultados del quiz");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Obtener podium del quiz
+  const obtenerPodiumQuiz = async (quiz) => {
+    try {
+      setLoading(true);
+      setQuizSeleccionado(quiz);
+      
+      console.log("🏆 Obteniendo podium del quiz:", quiz.id);
+      
+      // Simulación de podium (mientras el backend no esté listo)
+      const podiumSimulado = [
+        {
+          posicion: 1,
+          nombre: "Ana García",
+          puntaje: 95,
+          porcentaje: 95,
+          tiempo: "28:45",
+          medalla: "🥇",
+        },
+        {
+          posicion: 2,
+          nombre: "María López",
+          puntaje: 92,
+          porcentaje: 92,
+          tiempo: "25:30",
+          medalla: "🥈",
+        },
+        {
+          posicion: 3,
+          nombre: "Carlos Rodríguez",
+          puntaje: 88,
+          porcentaje: 88,
+          tiempo: "30:12",
+          medalla: "🥉",
+        },
+      ];
+      
+      setPodium(podiumSimulado);
+      setMostrarModalPodium(true);
+      
+      // Cuando el backend esté listo, usar:
+      // const podiumData = await getPodium(quiz.id);
+      // setPodium(podiumData);
+      
+    } catch (error) {
+      console.error("❌ Error obteniendo podium:", error);
+      setError("Error al obtener el podium del quiz");
     } finally {
       setLoading(false);
     }
@@ -259,6 +437,7 @@ export default function QuizAi() {
       duracion: quiz.duracion,
       numeroPreguntas: quiz.numeroPreguntas,
       dificultad: quiz.dificultad,
+      tema: quiz.tema || "",
     });
     setMostrarModalCrear(true);
   };
@@ -270,7 +449,6 @@ export default function QuizAi() {
     }
 
     try {
-      // Aquí iría la llamada al backend para eliminar
       setQuizzes(prev => prev.filter(q => q.id !== quizId));
       setError(null);
     } catch (error) {
@@ -280,9 +458,9 @@ export default function QuizAi() {
   };
 
   // Publicar quiz
-  const publicarQuiz = async (quizId) => {
+  const publicarQuizAction = async (quizId) => {
     try {
-      // Aquí iría la llamada al backend para publicar
+      await publicarQuiz(quizId);
       setQuizzes(prev => prev.map(q => 
         q.id === quizId ? { ...q, publicado: true } : q
       ));
@@ -319,51 +497,88 @@ export default function QuizAi() {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-linear-to-br from-indigo-50 via-purple-50 to-pink-50">
-      <div className="max-w-7xl mx-auto">
-        {/* Encabezado */}
-        <div className="text-center mb-8">
-          <div className="text-4xl mb-2 animate-bounce">🤖</div>
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-linear-to-r from-indigo-600 to-purple-600">
-            Quiz con Inteligencia Artificial
-          </h1>
-          <p className="text-gray-600">
-            {clase ? `Gestionando quizzes para ${clase.materia} - ${clase.grupo}` : "Gestiona quizzes automáticos con IA"}
+    <div className="min-h-screen p-6 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative overflow-hidden">
+      {/* Background animado */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-pink-900/20">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
+        <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-4000"></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
+        {/* Encabezado con diseño competitivo */}
+        <div className="text-center mb-12">
+          <div className="flex justify-center items-center gap-4 mb-4">
+            <div className="relative">
+              <Dragon className="w-16 h-16 text-yellow-400 animate-bounce" />
+              <div className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 rounded-full animate-ping"></div>
+            </div>
+            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 drop-shadow-lg">
+              QUIZ COMPETITION
+            </h1>
+            <div className="relative">
+              <Swords className="w-16 h-16 text-yellow-400 animate-pulse" />
+              <div className="absolute -top-2 -left-2 w-4 h-4 bg-orange-500 rounded-full animate-ping"></div>
+            </div>
+          </div>
+          <p className="text-xl text-gray-300 mb-2">
+            {clase ? `Batalla de Quizzes - ${clase.materia} - ${clase.grupo}` : "Arena de Quizzes con IA"}
           </p>
+          <div className="flex justify-center items-center gap-6 text-gray-400">
+            <div className="flex items-center gap-2">
+              <Flame className="w-5 h-5 text-orange-500" />
+              <span>Competencia Activa</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-yellow-500" />
+              <span>Campeonato en Curso</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Lightning className="w-5 h-5 text-blue-500" />
+              <span>Modo Batalla</span>
+            </div>
+          </div>
         </div>
 
-        {/* Sección de subida de PDF */}
-        <div className="mb-8 p-6 bg-white rounded-2xl border-2 border-indigo-200 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-              <Upload className="w-5 h-5" />
-              Subir Material para Quiz
-            </h2>
+        {/* Sección de generación de quiz */}
+        <div className="mb-12 p-8 bg-gradient-to-r from-purple-800/50 to-indigo-800/50 backdrop-blur-lg rounded-3xl border-2 border-purple-500/50 shadow-2xl shadow-purple-500/25">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl">
+                <Rocket className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Generador de Quiz IA</h2>
+                <p className="text-gray-300">Crea quizzes automáticos con inteligencia artificial</p>
+              </div>
+            </div>
             <button
               onClick={() => setMostrarModalCrear(true)}
-              className="px-6 py-3 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors flex items-center space-x-2"
+              className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all transform hover:scale-105 flex items-center space-x-3 font-bold shadow-lg shadow-green-500/25"
             >
-              <PlusCircle className="w-4 h-4" />
-              <span>Crear Quiz</span>
+              <Brain className="w-6 h-6" />
+              <span>Generar Quiz IA</span>
+              <Zap className="w-6 h-6" />
             </button>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Archivo PDF (opcional)
+              <label className="block mb-2 text-sm font-medium text-gray-300">
+                Material PDF (opcional)
               </label>
               <input
                 id="pdf-upload"
                 type="file"
                 accept=".pdf"
                 onChange={handleArchivoPDF}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white/10 border border-purple-500/50 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
               />
               {archivoPDF && (
-                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-700">
-                    ✅ Archivo seleccionado: {archivoPDF.name}
+                <div className="mt-2 p-3 bg-green-500/20 border border-green-500/50 rounded-lg">
+                  <p className="text-sm text-green-300 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    Archivo listo: {archivoPDF.name}
                   </p>
                 </div>
               )}
@@ -373,7 +588,7 @@ export default function QuizAi() {
               <button
                 onClick={subirPDFDirecto}
                 disabled={subiendoPDF || !archivoPDF}
-                className="w-full px-6 py-3 text-white bg-purple-600 rounded-xl hover:bg-purple-700 disabled:bg-gray-400 transition-colors flex items-center justify-center space-x-2"
+                className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 transition-all transform hover:scale-105 flex items-center justify-center space-x-2 font-semibold"
               >
                 {subiendoPDF ? (
                   <>
@@ -391,133 +606,180 @@ export default function QuizAi() {
           </div>
         </div>
 
-        {/* Listado de quizzes */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              <Brain className="w-6 h-6" />
-              Quizzes Generados
-            </h2>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>{quizzes.length} quizzes</span>
+        {/* Arena de Quizzes */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl">
+                <SwordsCrossed className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-white">Arena de Quizzes</h2>
+                <p className="text-gray-300">Batallas en curso y resultados</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 text-white">
+              <div className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg font-bold">
+                <Flame className="w-4 h-4 inline mr-2" />
+                {quizzes.length} Quizzes Activos
+              </div>
             </div>
           </div>
 
           {loading ? (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-              <p className="mt-2 text-indigo-600">Cargando quizzes...</p>
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-purple-500"></div>
+              <p className="mt-4 text-purple-400 text-lg">Cargando arena de batalla...</p>
             </div>
           ) : quizzes.length === 0 ? (
             <div className="text-center py-12">
-              <FileText className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-lg font-semibold text-gray-600 mb-2">No hay quizzes creados</h3>
-              <p className="text-gray-500 mb-4">Comienza creando tu primer quiz con IA</p>
+              <Shield className="w-24 h-24 mx-auto mb-6 text-gray-600" />
+              <h3 className="text-2xl font-bold text-gray-400 mb-4">No hay batallas activas</h3>
+              <p className="text-gray-500 mb-6">Inicia la primera competencia generando un quiz</p>
               <button
                 onClick={() => setMostrarModalCrear(true)}
-                className="px-6 py-3 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors flex items-center space-x-2 mx-auto"
+                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-105 flex items-center space-x-3 font-bold mx-auto"
               >
-                <PlusCircle className="w-4 h-4" />
-                <span>Crear Primer Quiz</span>
+                <PlusCircle className="w-6 h-6" />
+                <span>Iniciar Primera Batalla</span>
+                <Flame className="w-6 h-6" />
               </button>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {quizzes.map((quiz) => (
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {quizzes.map((quiz, index) => (
                 <div
                   key={quiz.id}
-                  className="p-6 bg-white rounded-2xl border-2 border-indigo-100 hover:border-indigo-300 hover:shadow-xl hover:scale-105 transition-all duration-300"
+                  className="group relative"
                 >
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-bold text-gray-800">
-                        {quiz.titulo}
-                      </h3>
-                      <span
-                        className={`px-3 py-1 text-sm font-semibold rounded-full ${
-                          quiz.publicado
-                            ? "bg-green-100 text-green-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
-                      >
-                        {quiz.publicado ? "Publicado" : "Borrador"}
-                      </span>
+                  {/* Card principal con diseño competitivo */}
+                  <div className="relative p-6 bg-gradient-to-br from-purple-800/60 to-indigo-800/60 backdrop-blur-lg rounded-2xl border-2 border-purple-500/50 hover:border-purple-400 hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 transform hover:scale-105">
+                    {/* Efecto de brillo */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    {/* Header del quiz */}
+                    <div className="relative mb-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${
+                            quiz.publicado 
+                              ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                              : 'bg-gradient-to-r from-yellow-500 to-orange-500'
+                          }`}>
+                            {quiz.publicado ? (
+                              <Play className="w-5 h-5 text-white" />
+                            ) : (
+                              <Clock className="w-5 h-5 text-white" />
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-white">{quiz.titulo}</h3>
+                            <p className="text-sm text-gray-300">{quiz.tema || quiz.descripcion}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {[...Array(3)].map((_, i) => (
+                            <Star 
+                              key={i} 
+                              className={`w-4 h-4 ${
+                                i < (quiz.dificultad === 'fácil' ? 1 : quiz.dificultad === 'media' ? 2 : 3)
+                                  ? 'text-yellow-400 fill-current'
+                                  : 'text-gray-600'
+                              }`} 
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Stats del quiz */}
+                      <div className="grid grid-cols-3 gap-3 mb-4">
+                        <div className="text-center p-2 bg-white/10 rounded-lg">
+                          <Target className="w-4 h-4 mx-auto mb-1 text-blue-400" />
+                          <p className="text-xs text-gray-300">Preguntas</p>
+                          <p className="text-sm font-bold text-white">{quiz.numeroPreguntas}</p>
+                        </div>
+                        <div className="text-center p-2 bg-white/10 rounded-lg">
+                          <Clock className="w-4 h-4 mx-auto mb-1 text-green-400" />
+                          <p className="text-xs text-gray-300">Tiempo</p>
+                          <p className="text-sm font-bold text-white">{quiz.duracion}m</p>
+                        </div>
+                        <div className="text-center p-2 bg-white/10 rounded-lg">
+                          <Users className="w-4 h-4 mx-auto mb-1 text-purple-400" />
+                          <p className="text-xs text-gray-300">Guerreros</p>
+                          <p className="text-sm font-bold text-white">{quiz.participantes}</p>
+                        </div>
+                      </div>
+
+                      {/* Barra de progreso */}
+                      <div className="mb-4">
+                        <div className="flex justify-between text-xs text-gray-400 mb-1">
+                          <span>Progreso de la batalla</span>
+                          <span>{quiz.promedio}%</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2">
+                          <div 
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${quiz.promedio}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Botones de acción */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          onClick={() => obtenerResultadosQuiz(quiz)}
+                          className="px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all transform hover:scale-105 flex flex-col items-center gap-1 text-xs font-semibold"
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                          <span>Resultados</span>
+                        </button>
+                        <button
+                          onClick={() => obtenerPodiumQuiz(quiz)}
+                          className="px-3 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all transform hover:scale-105 flex flex-col items-center gap-1 text-xs font-semibold"
+                        >
+                          <Trophy className="w-4 h-4" />
+                          <span>Podium</span>
+                        </button>
+                        <button
+                          onClick={() => verDetallesQuiz(quiz)}
+                          className="px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-105 flex flex-col items-center gap-1 text-xs font-semibold"
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span>Ver</span>
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                      <Clock className="w-4 h-4" />
-                      <span>{quiz.duracion} min</span>
-                      <span className="text-gray-400">•</span>
-                      <span>{quiz.numeroPreguntas} preguntas</span>
-                    </div>
+
+                    {/* Efecto de fuego animado */}
+                    {quiz.publicado && (
+                      <div className="absolute -top-2 -right-2">
+                        <div className="relative">
+                          <Flame className="w-8 h-8 text-orange-500 animate-pulse" />
+                          <div className="absolute inset-0 w-8 h-8 bg-orange-500 rounded-full animate-ping opacity-75"></div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-
-                  <p className="text-gray-600 mb-4 line-clamp-2">
-                    {quiz.descripcion}
-                  </p>
-
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Users className="w-4 h-4" />
-                      <span className="text-sm">
-                        {quiz.participantes} estudiantes
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <TrendingUp className="w-4 h-4" />
-                      <span className="text-sm">
-                        {quiz.promedio}% promedio
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Acciones */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => verDetallesQuiz(quiz)}
-                      className="flex-1 px-3 py-2 text-indigo-600 border-2 border-indigo-200 rounded-lg hover:bg-indigo-50 hover:border-indigo-300 transition-all flex items-center justify-center gap-1"
-                    >
-                      <Eye className="w-4 h-4" />
-                      <span className="text-xs">Ver</span>
-                    </button>
-                    <button
-                      onClick={() => editarQuiz(quiz)}
-                      className="flex-1 px-3 py-2 text-yellow-600 border-2 border-yellow-200 rounded-lg hover:bg-yellow-50 hover:border-yellow-300 transition-all flex items-center justify-center gap-1"
-                    >
-                      <Edit className="w-4 h-4" />
-                      <span className="text-xs">Editar</span>
-                    </button>
-                    <button
-                      onClick={() => eliminarQuiz(quiz.id)}
-                      className="flex-1 px-3 py-2 text-red-600 border-2 border-red-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-all flex items-center justify-center gap-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span className="text-xs">Eliminar</span>
-                    </button>
-                  </div>
-
-                  {!quiz.publicado && (
-                    <button
-                      onClick={() => publicarQuiz(quiz.id)}
-                      className="w-full mt-2 px-3 py-2 text-green-600 border-2 border-green-200 rounded-lg hover:bg-green-50 hover:border-green-300 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Play className="w-4 h-4" />
-                      <span className="text-sm">Publicar Quiz</span>
-                    </button>
-                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Modal para crear/editar quiz */}
+        {/* Modal para generar quiz con IA */}
         {mostrarModalCrear && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-gradient-to-br from-purple-900 to-indigo-900 rounded-3xl p-8 max-w-4xl w-full mx-4 max-h-screen overflow-y-auto border-2 border-purple-500/50 shadow-2xl shadow-purple-500/25">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-gray-800">
-                  {quizSeleccionado ? "Editar Quiz" : "Crear Nuevo Quiz"}
-                </h3>
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl">
+                    <Brain className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Generador de Quiz IA</h3>
+                    <p className="text-gray-300">Crea un quiz automático con inteligencia artificial</p>
+                  </div>
+                </div>
                 <button
                   onClick={() => {
                     setMostrarModalCrear(false);
@@ -529,18 +791,20 @@ export default function QuizAi() {
                       duracion: 30,
                       numeroPreguntas: 10,
                       dificultad: "media",
+                      tema: "",
                     });
+                    setArchivoPDF(null);
                   }}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-400 hover:text-white transition-colors"
                 >
                   ✕
                 </button>
               </div>
 
-              <form onSubmit={(e) => { e.preventDefault(); crearQuiz(); }}>
+              <form onSubmit={(e) => { e.preventDefault(); generarQuizConIA(); }}>
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="md:col-span-2">
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
+                    <label className="block mb-2 text-sm font-medium text-gray-300">
                       Título del Quiz *
                     </label>
                     <input
@@ -548,13 +812,29 @@ export default function QuizAi() {
                       name="titulo"
                       value={formularioQuiz.titulo}
                       onChange={handleFormularioChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-white/10 border border-purple-500/50 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                      placeholder="Ej: Quiz de Matemáticas Básicas"
                       required
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
+                    <label className="block mb-2 text-sm font-medium text-gray-300">
+                      Tema del Quiz *
+                    </label>
+                    <input
+                      type="text"
+                      name="tema"
+                      value={formularioQuiz.tema}
+                      onChange={handleFormularioChange}
+                      className="w-full px-4 py-3 bg-white/10 border border-purple-500/50 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                      placeholder="Ej: Aritmética, Álgebra, Geometría"
+                      required
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block mb-2 text-sm font-medium text-gray-300">
                       Descripción *
                     </label>
                     <textarea
@@ -562,27 +842,28 @@ export default function QuizAi() {
                       value={formularioQuiz.descripcion}
                       onChange={handleFormularioChange}
                       rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-white/10 border border-purple-500/50 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                      placeholder="Describe el contenido y objetivos del quiz"
                       required
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
-                      Instrucciones
+                    <label className="block mb-2 text-sm font-medium text-gray-300">
+                      Instrucciones para los estudiantes
                     </label>
                     <textarea
                       name="instrucciones"
                       value={formularioQuiz.instrucciones}
                       onChange={handleFormularioChange}
                       rows={2}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      placeholder="Instrucciones para los estudiantes..."
+                      className="w-full px-4 py-3 bg-white/10 border border-purple-500/50 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                      placeholder="Instrucciones específicas para resolver el quiz"
                     />
                   </div>
 
                   <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
+                    <label className="block mb-2 text-sm font-medium text-gray-300">
                       Duración (minutos)
                     </label>
                     <input
@@ -592,12 +873,12 @@ export default function QuizAi() {
                       onChange={handleFormularioChange}
                       min="5"
                       max="120"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-white/10 border border-purple-500/50 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white"
                     />
                   </div>
 
                   <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
+                    <label className="block mb-2 text-sm font-medium text-gray-300">
                       Número de Preguntas
                     </label>
                     <input
@@ -607,28 +888,28 @@ export default function QuizAi() {
                       onChange={handleFormularioChange}
                       min="1"
                       max="50"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-white/10 border border-purple-500/50 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white"
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
+                    <label className="block mb-2 text-sm font-medium text-gray-300">
                       Dificultad
                     </label>
                     <select
                       name="dificultad"
                       value={formularioQuiz.dificultad}
                       onChange={handleFormularioChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-white/10 border border-purple-500/50 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white"
                     >
-                      <option value="fácil">Fácil</option>
-                      <option value="media">Media</option>
-                      <option value="difícil">Difícil</option>
+                      <option value="fácil" className="bg-purple-900">Fácil</option>
+                      <option value="media" className="bg-purple-900">Media</option>
+                      <option value="difícil" className="bg-purple-900">Difícil</option>
                     </select>
                   </div>
                 </div>
 
-                <div className="mt-6 flex justify-end space-x-4">
+                <div className="mt-8 flex justify-end space-x-4">
                   <button
                     type="button"
                     onClick={() => {
@@ -641,28 +922,29 @@ export default function QuizAi() {
                         duracion: 30,
                         numeroPreguntas: 10,
                         dificultad: "media",
+                        tema: "",
                       });
+                      setArchivoPDF(null);
                     }}
-                    className="px-6 py-3 text-gray-600 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                    className="px-6 py-3 text-gray-300 border-2 border-gray-600 rounded-xl hover:bg-gray-800 transition-colors"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    disabled={loading}
-                    className="px-6 py-3 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors flex items-center space-x-2"
+                    disabled={generandoQuiz}
+                    className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 transition-all transform hover:scale-105 flex items-center space-x-3 font-bold shadow-lg shadow-green-500/25"
                   >
-                    {loading ? (
+                    {generandoQuiz ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        <span>Guardando...</span>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <span>Generando con IA...</span>
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4" />
-                        <span>
-                          {quizSeleccionado ? "Actualizar Quiz" : "Crear Quiz"}
-                        </span>
+                        <Brain className="w-5 h-5" />
+                        <span>Generar Quiz con IA</span>
+                        <Zap className="w-5 h-5" />
                       </>
                     )}
                   </button>
@@ -672,53 +954,311 @@ export default function QuizAi() {
           </div>
         )}
 
+        {/* Modal de resultados */}
+        {mostrarModalResultados && quizSeleccionado && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-gradient-to-br from-purple-900 to-indigo-900 rounded-3xl p-8 max-w-6xl w-full mx-4 max-h-screen overflow-y-auto border-2 border-purple-500/50 shadow-2xl shadow-purple-500/25">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl">
+                    <BarChart3 className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Resultados del Quiz</h3>
+                    <p className="text-gray-300">{quizSeleccionado.titulo} - Estadísticas completas</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setMostrarModalResultados(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {resultados.map((resultado, index) => (
+                  <div key={resultado.id} className="p-4 bg-white/10 rounded-xl border border-purple-500/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="text-lg font-semibold text-white">{resultado.nombre}</p>
+                          <p className="text-sm text-gray-400">Tiempo: {resultado.tiempo}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-green-400">{resultado.puntaje} pts</p>
+                        <p className="text-sm text-gray-400">{resultado.porcentaje}%</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                        <span className="text-green-400">{resultado.correctas} correctas</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-red-400" />
+                        <span className="text-red-400">{resultado.incorrectas} incorrectas</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setMostrarModalResultados(false)}
+                  className="px-6 py-3 text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de podium */}
+        {mostrarModalPodium && quizSeleccionado && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-gradient-to-br from-purple-900 to-indigo-900 rounded-3xl p-8 max-w-4xl w-full mx-4 border-2 border-purple-500/50 shadow-2xl shadow-purple-500/25">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl">
+                    <Trophy className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
+                      PODIUM DE CAMPEONES
+                    </h3>
+                    <p className="text-gray-300">{quizSeleccionado.titulo} - Top 3 Guerreros</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setMostrarModalPodium(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="relative">
+                {/* Efecto de celebración */}
+                <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+                  <div className="text-6xl animate-bounce">🎉</div>
+                </div>
+
+                {/* Podium */}
+                <div className="flex items-end justify-center gap-8 mb-8">
+                  {/* Segundo lugar */}
+                  <div className="text-center">
+                    <div className="relative">
+                      <div className="w-32 h-40 bg-gradient-to-b from-gray-400 to-gray-600 rounded-t-lg flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="w-20 h-20 bg-gradient-to-r from-gray-300 to-gray-500 rounded-full flex items-center justify-center mb-2 mx-auto">
+                            <span className="text-3xl">🥈</span>
+                          </div>
+                          <p className="text-white font-bold">{podium[1]?.nombre}</p>
+                          <p className="text-gray-300 text-sm">{podium[1]?.puntaje} pts</p>
+                        </div>
+                      </div>
+                      <div className="text-center mt-2">
+                        <p className="text-2xl font-black text-gray-400">2°</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Primer lugar */}
+                  <div className="text-center transform scale-110">
+                    <div className="relative">
+                      <div className="w-32 h-48 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-t-lg flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="w-24 h-24 bg-gradient-to-r from-yellow-300 to-yellow-500 rounded-full flex items-center justify-center mb-2 mx-auto animate-pulse">
+                            <span className="text-4xl">🥇</span>
+                          </div>
+                          <p className="text-white font-bold text-lg">{podium[0]?.nombre}</p>
+                          <p className="text-yellow-200 font-semibold">{podium[0]?.puntaje} pts</p>
+                        </div>
+                      </div>
+                      <div className="text-center mt-2">
+                        <p className="text-3xl font-black text-yellow-400">1°</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tercer lugar */}
+                  <div className="text-center">
+                    <div className="relative">
+                      <div className="w-32 h-32 bg-gradient-to-b from-orange-600 to-orange-800 rounded-t-lg flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="w-20 h-20 bg-gradient-to-r from-orange-500 to-orange-700 rounded-full flex items-center justify-center mb-2 mx-auto">
+                            <span className="text-3xl">🥉</span>
+                          </div>
+                          <p className="text-white font-bold">{podium[2]?.nombre}</p>
+                          <p className="text-gray-300 text-sm">{podium[2]?.puntaje} pts</p>
+                        </div>
+                      </div>
+                      <div className="text-center mt-2">
+                        <p className="text-2xl font-black text-orange-400">3°</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Estadísticas adicionales */}
+                <div className="grid grid-cols-3 gap-4 p-4 bg-white/10 rounded-xl">
+                  {podium.map((participante, index) => (
+                    <div key={participante.posicion} className="text-center">
+                      <p className="text-sm text-gray-400 mb-1">Tiempo</p>
+                      <p className="text-lg font-semibold text-white">{participante.tiempo}</p>
+                      <p className="text-sm text-gray-400 mt-1">Porcentaje</p>
+                      <p className="text-lg font-semibold text-green-400">{participante.porcentaje}%</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-center">
+                <button
+                  onClick={() => setMostrarModalPodium(false)}
+                  className="px-8 py-3 text-white bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all transform hover:scale-105 font-bold"
+                >
+                  Cerrar Podium
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Modal de detalles */}
         {mostrarModalDetalles && quizSeleccionado && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl p-8 max-w-4xl w-full mx-4 max-h-screen overflow-y-auto">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-gradient-to-br from-purple-900 to-indigo-900 rounded-3xl p-8 max-w-4xl w-full mx-4 max-h-screen overflow-y-auto border-2 border-purple-500/50 shadow-2xl shadow-purple-500/25">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-gray-800">
-                  Detalles del Quiz
-                </h3>
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl">
+                    <Eye className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Detalles del Quiz</h3>
+                    <p className="text-gray-300">{quizSeleccionado.titulo}</p>
+                  </div>
+                </div>
                 <button
                   onClick={() => setMostrarModalDetalles(false)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-400 hover:text-white transition-colors"
                 >
                   ✕
                 </button>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2 mb-6">
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-semibold text-gray-800 mb-2">Información General</h4>
-                  <div className="space-y-2">
-                    <p><strong>Título:</strong> {quizSeleccionado.titulo}</p>
-                    <p><strong>Descripción:</strong> {quizSeleccionado.descripcion}</p>
-                    <p><strong>Duración:</strong> {quizSeleccionado.duracion} minutos</p>
-                    <p><strong>Preguntas:</strong> {quizSeleccionado.numeroPreguntas}</p>
-                    <p><strong>Dificultad:</strong> {quizSeleccionado.dificultad}</p>
-                    <p><strong>Creado:</strong> {new Date(quizSeleccionado.creado).toLocaleDateString("es-ES")}</p>
+                <div className="p-6 bg-white/10 rounded-xl">
+                  <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
+                    <Target className="w-5 h-5" />
+                    Información General
+                  </h4>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-400">Título</p>
+                      <p className="text-white font-semibold">{quizSeleccionado.titulo}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Descripción</p>
+                      <p className="text-white">{quizSeleccionado.descripcion}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Tema</p>
+                      <p className="text-white">{quizSeleccionado.tema || "No especificado"}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-sm text-gray-400">Duración</p>
+                        <p className="text-white font-semibold">{quizSeleccionado.duracion} min</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-400">Preguntas</p>
+                        <p className="text-white font-semibold">{quizSeleccionado.numeroPreguntas}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Dificultad</p>
+                      <div className="flex items-center gap-1">
+                        {[...Array(3)].map((_, i) => (
+                          <Star 
+                            key={i} 
+                            className={`w-4 h-4 ${
+                              i < (quizSeleccionado.dificultad === 'fácil' ? 1 : quizSeleccionado.dificultad === 'media' ? 2 : 3)
+                                ? 'text-yellow-400 fill-current'
+                                : 'text-gray-600'
+                            }`} 
+                          />
+                        ))}
+                        <span className="ml-2 text-white capitalize">{quizSeleccionado.dificultad}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-4 bg-indigo-50 rounded-lg">
-                  <h4 className="font-semibold text-gray-800 mb-2">Estadísticas</h4>
-                  <div className="space-y-2">
-                    <p><strong>Estado:</strong> {quizSeleccionado.publicado ? "Publicado" : "Borrador"}</p>
-                    <p><strong>Participantes:</strong> {quizSeleccionado.participantes}</p>
-                    <p><strong>Promedio:</strong> {quizSeleccionado.promedio}%</p>
-                    <div className="flex items-center gap-2 mt-4">
-                      <BarChart3 className="w-4 h-4" />
-                      <span className="text-sm text-gray-600">Ver análisis detallado</span>
+                <div className="p-6 bg-white/10 rounded-xl">
+                  <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Estadísticas de Batalla
+                  </h4>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-400">Estado</p>
+                      <p className={`font-semibold ${
+                        quizSeleccionado.publicado ? 'text-green-400' : 'text-yellow-400'
+                      }`}>
+                        {quizSeleccionado.publicado ? '🔥 Activo' : '⚡ En preparación'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Participantes</p>
+                      <p className="text-white font-semibold">{quizSeleccionado.participantes} guerreros</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Promedio</p>
+                      <p className="text-white font-semibold">{quizSeleccionado.promedio}%</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Fecha de creación</p>
+                      <p className="text-white">{new Date(quizSeleccionado.creado).toLocaleDateString("es-ES")}</p>
+                    </div>
+                    <div className="pt-3">
+                      <button
+                        onClick={() => publicarQuizAction(quizSeleccionado.id)}
+                        disabled={quizSeleccionado.publicado}
+                        className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 transition-all font-semibold"
+                      >
+                        {quizSeleccionado.publicado ? '✅ Ya publicado' : '🚀 Publicar Batalla'}
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-4">
+                <button
+                  onClick={() => editarQuiz(quizSeleccionado)}
+                  className="px-6 py-3 text-yellow-400 border-2 border-yellow-500/50 rounded-xl hover:bg-yellow-500/20 transition-all"
+                >
+                  <Edit className="w-4 h-4 inline mr-2" />
+                  Editar
+                </button>
+                <button
+                  onClick={() => eliminarQuiz(quizSeleccionado.id)}
+                  className="px-6 py-3 text-red-400 border-2 border-red-500/50 rounded-xl hover:bg-red-500/20 transition-all"
+                >
+                  <Trash2 className="w-4 h-4 inline mr-2" />
+                  Eliminar
+                </button>
                 <button
                   onClick={() => setMostrarModalDetalles(false)}
-                  className="px-6 py-3 text-gray-600 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="px-6 py-3 text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all"
                 >
                   Cerrar
                 </button>
@@ -729,8 +1269,8 @@ export default function QuizAi() {
 
         {/* Mensajes de estado */}
         {error && (
-          <div className="fixed bottom-4 right-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg shadow-lg z-50">
-            <div className="flex items-center gap-2">
+          <div className="fixed bottom-4 right-4 p-4 bg-red-500/90 backdrop-blur-sm border border-red-500/50 text-white rounded-lg shadow-xl z-50">
+            <div className="flex items-center gap-3">
               <AlertCircle className="w-5 h-5" />
               <span>{error}</span>
             </div>
