@@ -34,3 +34,14 @@ export const getRanking = async (quizId) => {
     throw new Error("No se pudo obtener el ranking");
   }
 };
+
+// Obtener resultados de todos los estudiantes
+export const getResultados = async (quizId) => {
+  try {
+    const response = await api.get(`/api/v1/quizzes/${quizId}/resultados`);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error obteniendo resultados:", error);
+    throw new Error("No se pudo obtener los resultados");
+  }
+};
