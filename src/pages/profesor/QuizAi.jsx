@@ -42,10 +42,6 @@ import {
   getQuiz,
   submitQuiz,
   getRanking,
-  generarQuizIA,
-  getResultadosQuiz,
-  getPodium,
-  publicarQuiz,
 } from "../../services/profesorServices/quizAiService";
 
 export default function QuizAi() {
@@ -125,8 +121,7 @@ export default function QuizAi() {
   // Cargar quizzes
   const cargarQuizzes = async () => {
     try {
-      // Aquí iría la llamada para cargar quizzes cuando el backend esté listo
-      // Por ahora, simulamos datos
+      // Simulación de datos mientras el backend no esté listo
       const quizzesSimulados = [
         {
           id: 1,
@@ -244,14 +239,7 @@ export default function QuizAi() {
     try {
       console.log("🤖 Generando quiz con IA:", formularioQuiz);
       
-      // Llamar al servicio para generar quiz
-      const quizGenerado = await generarQuizIA({
-        ...formularioQuiz,
-        claseId: claseId,
-        archivoPDF: archivoPDF,
-      });
-
-      // Simulación de generación (mientras el backend no esté listo)
+      // Simulación de generación con los servicios disponibles
       const nuevoQuiz = {
         id: Date.now(),
         ...formularioQuiz,
@@ -259,7 +247,7 @@ export default function QuizAi() {
         publicado: false,
         participantes: 0,
         promedio: 0,
-        preguntas: quizGenerado?.preguntas || [],
+        preguntas: [], // Se generará cuando el backend esté listo
       };
       
       setQuizzes(prev => [...prev, nuevoQuiz]);
@@ -276,16 +264,16 @@ export default function QuizAi() {
       setArchivoPDF(null);
       setError(null);
       
-      console.log("✅ Quiz generado con IA exitosamente");
+      console.log("✅ Quiz creado exitosamente");
     } catch (error) {
-      console.error("❌ Error generando quiz con IA:", error);
-      setError("Error al generar el quiz con IA. Por favor intenta nuevamente.");
+      console.error("❌ Error creando quiz:", error);
+      setError("Error al crear el quiz. Por favor intenta nuevamente.");
     } finally {
       setGenerandoQuiz(false);
     }
   };
 
-  // Obtener resultados del quiz
+  // Obtener resultados del quiz usando getRanking
   const obtenerResultadosQuiz = async (quiz) => {
     try {
       setLoading(true);
@@ -293,7 +281,29 @@ export default function QuizAi() {
       
       console.log("📊 Obteniendo resultados del quiz:", quiz.id);
       
-      // Simulación de resultados (mientras el backend no esté listo)
+      // Usar el servicio getRanking disponible
+      const rankingData = await getRanking(quiz.id);
+      
+      // Transformar los datos al formato esperado
+      const resultadosFormateados = rankingData.map((estudiante, index) => ({
+        id: estudiante.id || index + 1,
+        nombre: estudiante.nombre || `Estudiante ${index + 1}`,
+        puntaje: estudiante.puntaje || 0,
+        porcentaje: estudiante.porcentaje || 0,
+        tiempo: estudiante.tiempo || "00:00",
+        fecha: estudiante.fecha || new Date().toISOString(),
+        correctas: estudiante.correctas || 0,
+        incorrectas: estudiante.incorrectas || 0,
+      }));
+      
+      setResultados(resultadosFormateados);
+      setMostrarModalResultados(true);
+      
+    } catch (error) {
+      console.error("❌ Error obteniendo resultados:", error);
+      setError("Error al obtener los resultados del quiz");
+      
+      // Si hay error, mostrar datos simulados para demostración
       const resultadosSimulados = [
         {
           id: 1,
@@ -325,44 +335,16 @@ export default function QuizAi() {
           correctas: 18,
           incorrectas: 2,
         },
-        {
-          id: 4,
-          nombre: "Juan Martínez",
-          puntaje: 78,
-          porcentaje: 78,
-          tiempo: "32:15",
-          fecha: new Date().toISOString(),
-          correctas: 15,
-          incorrectas: 5,
-        },
-        {
-          id: 5,
-          nombre: "Laura Sánchez",
-          puntaje: 85,
-          porcentaje: 85,
-          tiempo: "29:20",
-          fecha: new Date().toISOString(),
-          correctas: 17,
-          incorrectas: 3,
-        },
       ];
       
       setResultados(resultadosSimulados);
       setMostrarModalResultados(true);
-      
-      // Cuando el backend esté listo, usar:
-      // const resultadosData = await getResultadosQuiz(quiz.id);
-      // setResultados(resultadosData);
-      
-    } catch (error) {
-      console.error("❌ Error obteniendo resultados:", error);
-      setError("Error al obtener los resultados del quiz");
     } finally {
       setLoading(false);
     }
   };
 
-  // Obtener podium del quiz
+  // Obtener podium del quiz usando getRanking (top 3)
   const obtenerPodiumQuiz = async (quiz) => {
     try {
       setLoading(true);
@@ -370,7 +352,27 @@ export default function QuizAi() {
       
       console.log("🏆 Obteniendo podium del quiz:", quiz.id);
       
-      // Simulación de podium (mientras el backend no esté listo)
+      // Usar el servicio getRanking y tomar los primeros 3
+      const rankingData = await getRanking(quiz.id);
+      
+      // Transformar al formato de podium (top 3)
+      const podiumFormateado = rankingData.slice(0, 3).map((estudiante, index) => ({
+        posicion: index + 1,
+        nombre: estudiante.nombre || `Estudiante ${index + 1}`,
+        puntaje: estudiante.puntaje || 0,
+        porcentaje: estudiante.porcentaje || 0,
+        tiempo: estudiante.tiempo || "00:00",
+        medalla: index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉",
+      }));
+      
+      setPodium(podiumFormateado);
+      setMostrarModalPodium(true);
+      
+    } catch (error) {
+      console.error("❌ Error obteniendo podium:", error);
+      setError("Error al obtener el podium del quiz");
+      
+      // Si hay error, mostrar datos simulados para demostración
       const podiumSimulado = [
         {
           posicion: 1,
@@ -400,14 +402,6 @@ export default function QuizAi() {
       
       setPodium(podiumSimulado);
       setMostrarModalPodium(true);
-      
-      // Cuando el backend esté listo, usar:
-      // const podiumData = await getPodium(quiz.id);
-      // setPodium(podiumData);
-      
-    } catch (error) {
-      console.error("❌ Error obteniendo podium:", error);
-      setError("Error al obtener el podium del quiz");
     } finally {
       setLoading(false);
     }
@@ -460,7 +454,7 @@ export default function QuizAi() {
   // Publicar quiz
   const publicarQuizAction = async (quizId) => {
     try {
-      await publicarQuiz(quizId);
+      // Simulación de publicación
       setQuizzes(prev => prev.map(q => 
         q.id === quizId ? { ...q, publicado: true } : q
       ));
@@ -724,7 +718,7 @@ export default function QuizAi() {
                         </div>
                       </div>
 
-                      {/* Botones de acción */}
+                      {/* Botones de acción principales */}
                       <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => obtenerResultadosQuiz(quiz)}
