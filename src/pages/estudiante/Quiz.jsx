@@ -969,54 +969,86 @@ export default function QuizEstudiante() {
                   {/* Texto de la pregunta */}
                   <div className="mb-6 p-4 bg-white/10 rounded-xl border border-purple-500/30">
                     <p className="text-lg text-white font-medium">
-                      {pregunta.texto}
+                      {pregunta.enunciado || pregunta.texto}
                     </p>
                   </div>
 
                   {/* Opciones */}
                   <div className="space-y-3">
-                    {pregunta.opciones?.map((opcion, opcionIndex) => (
-                      <label
-                        key={opcionIndex}
-                        className={`group flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 ${
-                          respuestas[index] === opcion
-                            ? "border-green-500 bg-green-500/20 hover:bg-green-500/30"
-                            : "border-purple-500/50 bg-purple-500/10 hover:border-purple-400 hover:bg-purple-500/20"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name={`pregunta-${index}`}
-                          value={opcion}
-                          checked={respuestas[index] === opcion}
-                          onChange={(e) => handleChange(index, e.target.value)}
-                          className="sr-only"
-                        />
-                        <div
-                          className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center transition-all ${
-                            respuestas[index] === opcion
-                              ? "border-green-500 bg-green-500"
-                              : "border-purple-400 bg-purple-400/50"
-                          }`}
-                        >
-                          {respuestas[index] === opcion && (
-                            <div className="w-3 h-3 bg-white rounded-full"></div>
-                          )}
-                        </div>
-                        <span
-                          className={`text-lg font-medium ${
-                            respuestas[index] === opcion
-                              ? "text-green-400"
-                              : "text-gray-300"
-                          }`}
-                        >
-                          {opcion}
-                        </span>
-                        {respuestas[index] === opcion && (
-                          <CheckCircle className="w-5 h-5 text-green-400 ml-auto animate-bounce" />
-                        )}
-                      </label>
-                    ))}
+                    {pregunta.opciones && typeof pregunta.opciones === 'object' 
+                      ? Object.entries(pregunta.opciones).map(([key, value]) => (
+                          <label
+                            key={key}
+                            className={`group flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 ${
+                              respuestas[index] === value
+                                ? 'border-green-500 bg-green-500/20 hover:bg-green-500/30'
+                                : 'border-purple-500/50 bg-purple-500/10 hover:border-purple-400 hover:bg-purple-500/20'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name={`pregunta-${index}`}
+                              value={value}
+                              checked={respuestas[index] === value}
+                              onChange={(e) => handleChange(index, e.target.value)}
+                              className="sr-only"
+                            />
+                            <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center transition-all ${
+                              respuestas[index] === value
+                                ? 'border-green-500 bg-green-500'
+                                : 'border-purple-400 bg-purple-400/50'
+                            }`}>
+                              {respuestas[index] === value && (
+                                <div className="w-3 h-3 bg-white rounded-full"></div>
+                              )}
+                            </div>
+                            <span className={`text-lg font-medium ${
+                              respuestas[index] === value ? 'text-green-400' : 'text-gray-300'
+                            }`}>
+                              {key}. {value}
+                            </span>
+                            {respuestas[index] === value && (
+                              <CheckCircle className="w-5 h-5 text-green-400 ml-auto animate-bounce" />
+                            )}
+                          </label>
+                        ))
+                      : Array.isArray(pregunta.opciones) && pregunta.opciones.map((opcion, opcionIndex) => (
+                          <label
+                            key={opcionIndex}
+                            className={`group flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 ${
+                              respuestas[index] === opcion
+                                ? 'border-green-500 bg-green-500/20 hover:bg-green-500/30'
+                                : 'border-purple-500/50 bg-purple-500/10 hover:border-purple-400 hover:bg-purple-500/20'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name={`pregunta-${index}`}
+                              value={opcion}
+                              checked={respuestas[index] === opcion}
+                              onChange={(e) => handleChange(index, e.target.value)}
+                              className="sr-only"
+                            />
+                            <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center transition-all ${
+                              respuestas[index] === opcion
+                                ? 'border-green-500 bg-green-500'
+                                : 'border-purple-400 bg-purple-400/50'
+                            }`}>
+                              {respuestas[index] === opcion && (
+                                <div className="w-3 h-3 bg-white rounded-full"></div>
+                              )}
+                            </div>
+                            <span className={`text-lg font-medium ${
+                              respuestas[index] === opcion ? 'text-green-400' : 'text-gray-300'
+                            }`}>
+                              {opcion}
+                            </span>
+                            {respuestas[index] === opcion && (
+                              <CheckCircle className="w-5 h-5 text-green-400 ml-auto animate-bounce" />
+                            )}
+                          </label>
+                        ))
+                    )}
                   </div>
                 </div>
               </div>

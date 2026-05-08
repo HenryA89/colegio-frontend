@@ -11,11 +11,41 @@ export const getQuiz = async (quizId) => {
       throw new Error("Respuesta vacía del servidor");
     }
 
-    // ✅ Estructura estándar de respuesta
+    // ✅ Verificar estructura de respuesta del backend
+    const backendData = response.data;
+
+    if (!backendData.success) {
+      throw new Error("La respuesta del backend no indica éxito");
+    }
+
+    // ✅ Extraer y normalizar datos del quiz
+    const quizData = backendData.data.quiz;
+
+    if (!quizData) {
+      throw new Error("Estructura de respuesta inválida: falta data.quiz");
+    }
+
+    // ✅ Normalizar estructura para el frontend
+    const normalizedQuiz = {
+      id: backendData.data.quiz_id || quizId,
+      titulo: backendData.data.titulo || quizData.materia || "Quiz sin título",
+      descripcion: `Quiz de ${quizData.materia || "general"} - Nivel ${quizData.nivel || "básico"}`,
+      materia: quizData.materia || backendData.data.materia || "General",
+      nivel: quizData.nivel || "básico",
+      duracion: 30, // Valor por defecto si no viene del backend
+      publicado: true, // Asumimos que está publicado si el backend lo devuelve
+      preguntas: quizData.preguntas || [],
+      total_preguntas:
+        quizData.total_preguntas || quizData.preguntas?.length || 0,
+      ya_respondido: backendData.data.ya_respondido || false,
+      total_participantes: backendData.data.total_participantes || 0,
+    };
+
+    // ✅ Estructura estándar de respuesta para el frontend
     return {
       success: true,
       data: {
-        quiz: response.data,
+        quiz: normalizedQuiz,
       },
       message: "Quiz obtenido exitosamente",
     };
