@@ -5,12 +5,10 @@ import {
   Brain,
   Trophy,
   BarChart3,
-  Eye,
-  AlertCircle,
-  CheckCircle,
   Loader2,
   BookOpen,
   Users,
+  CheckCircle,
 } from "lucide-react";
 
 import {
@@ -21,29 +19,33 @@ import {
 
 export default function QuizAi() {
   const { id } = useParams();
+
   const navigate = useNavigate();
 
-  // =========================
+  // ==========================================
   // STATES
-  // =========================
+  // ==========================================
   const [quiz, setQuiz] = useState(null);
 
   const [ranking, setRanking] = useState([]);
+
   const [resultados, setResultados] = useState([]);
 
   const [loadingQuiz, setLoadingQuiz] = useState(false);
+
   const [loadingRanking, setLoadingRanking] = useState(false);
+
   const [loadingResultados, setLoadingResultados] = useState(false);
 
   const [error, setError] = useState(null);
 
   const [mostrarRanking, setMostrarRanking] = useState(false);
-  const [mostrarResultados, setMostrarResultados] = useState(false);
-  const [inputId, setInputId] = useState("");
 
-  // =========================
+  const [mostrarResultados, setMostrarResultados] = useState(false);
+
+  // ==========================================
   // VALIDACIÓN ID
-  // =========================
+  // ==========================================
   const materialClaseId = Number(id);
 
   const idValido =
@@ -52,73 +54,36 @@ export default function QuizAi() {
     Number.isInteger(materialClaseId) &&
     materialClaseId > 0;
 
-  const inputIdValido =
-    inputId &&
-    !isNaN(Number(inputId)) &&
-    Number.isInteger(Number(inputId)) &&
-    Number(inputId) > 0;
-
-  // =========================
+  // ==========================================
   // OBTENER QUIZ
-  // =========================
+  // ==========================================
   const handleGetQuiz = async () => {
     try {
       setLoadingQuiz(true);
+
       setError(null);
 
-      // Usar ID de la URL o del input
-      const targetId = idValido ? materialClaseId : Number(inputId);
-
-      if (!targetId) {
-        setError(
-          "Por favor, ingresa un ID de quiz válido o accede a una URL como: /profesor/materiales/123/quiz",
-        );
-        setLoadingQuiz(false);
-        return;
+      if (!idValido) {
+        throw new Error("ID de material inválido");
       }
 
-      console.log("🎯 MaterialClase ID a usar:", targetId);
+      console.log("🎯 MaterialClase ID:", materialClaseId);
 
-      /**
-       * IMPORTANTE:
-       * El backend busca el quiz usando:
-       * material_clase_id
-       *
-       * NO usando quiz_id
-       */
-
-      const response = await getQuiz(targetId, "profesor");
+      const response = await getQuiz(materialClaseId, "profesor");
 
       console.log("✅ RESPONSE QUIZ:", response);
 
       if (!response?.success) {
-        throw new Error(response?.message || "No se pudo obtener el quiz");
+        throw new Error(response?.message || "No se pudo cargar el quiz");
       }
 
-      /**
-       * Backend:
-       *
-       * data: {
-       *   quiz_id,
-       *   titulo,
-       *   materia,
-       *   quiz: {},
-       *   ya_respondido,
-       *   total_participantes
-       * }
-       */
-
-      const quizData = response.data;
-
-      setQuiz(quizData);
-
-      console.log("✅ Quiz cargado:", quizData);
+      setQuiz(response.data);
     } catch (err) {
       console.error("❌ ERROR QUIZ:", err);
 
-      setError(err.message || "No se pudo cargar el quiz correctamente.");
+      setError(err.message || "No se pudo cargar el quiz");
 
-      if (err.message?.includes("autenticación")) {
+      if (err.message?.includes("Sesión expirada")) {
         navigate("/login");
       }
     } finally {
@@ -126,32 +91,27 @@ export default function QuizAi() {
     }
   };
 
-  // =========================
-  // OBTENER RANKING
-  // =========================
+  // ==========================================
+  // RANKING
+  // ==========================================
   const handleGetRanking = async () => {
     try {
       setLoadingRanking(true);
+
       setError(null);
 
-      // Usar ID de la URL o del input
-      const targetId = idValido ? materialClaseId : Number(inputId);
-
-      if (!targetId) {
-        setError("Por favor, ingresa un ID de quiz válido para ver el ranking");
-        setLoadingRanking(false);
-        return;
+      if (!quiz?.id) {
+        throw new Error("Primero debes cargar el quiz");
       }
 
-      const response = await getRanking(targetId);
-
-      console.log("🏆 RESPONSE RANKING:", response);
+      const response = await getRanking(quiz.id);
 
       if (!response?.success) {
         throw new Error(response?.message || "Error obteniendo ranking");
       }
 
       setRanking(response.data || []);
+
       setMostrarRanking(true);
     } catch (err) {
       console.error("❌ ERROR RANKING:", err);
@@ -162,34 +122,27 @@ export default function QuizAi() {
     }
   };
 
-  // =========================
-  // OBTENER RESULTADOS
-  // =========================
+  // ==========================================
+  // RESULTADOS
+  // ==========================================
   const handleGetResultados = async () => {
     try {
       setLoadingResultados(true);
+
       setError(null);
 
-      // Usar ID de la URL o del input
-      const targetId = idValido ? materialClaseId : Number(inputId);
-
-      if (!targetId) {
-        setError(
-          "Por favor, ingresa un ID de quiz válido para ver los resultados",
-        );
-        setLoadingResultados(false);
-        return;
+      if (!quiz?.id) {
+        throw new Error("Primero debes cargar el quiz");
       }
 
-      const response = await getResultados(targetId);
-
-      console.log("📊 RESPONSE RESULTADOS:", response);
+      const response = await getResultados(quiz.id);
 
       if (!response?.success) {
         throw new Error(response?.message || "Error obteniendo resultados");
       }
 
       setResultados(response.data || []);
+
       setMostrarResultados(true);
     } catch (err) {
       console.error("❌ ERROR RESULTADOS:", err);
@@ -200,26 +153,21 @@ export default function QuizAi() {
     }
   };
 
-  // =========================
+  // ==========================================
   // AUTO LOAD
-  // =========================
+  // ==========================================
   useEffect(() => {
     if (idValido) {
       handleGetQuiz();
     }
   }, [id]);
 
-  // =========================
-  // SIEMPRE MOSTRAR TARJETAS
-  // =========================
-  // Eliminada la página de error para siempre mostrar las tres tarjetas
-
   return (
     <div className="min-h-screen bg-slate-950 text-white p-6">
       <div className="max-w-7xl mx-auto">
         {/* HEADER */}
         <div className="mb-10">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4">
             <div className="bg-cyan-500/10 p-4 rounded-2xl border border-cyan-500/20">
               <Brain className="w-10 h-10 text-cyan-400" />
             </div>
@@ -228,9 +176,7 @@ export default function QuizAi() {
               <h1 className="text-5xl font-black">QUIZ AI CONTROL CENTER</h1>
 
               <p className="text-slate-400 mt-2">
-                {idValido
-                  ? "Gestión inteligente de quizzes académicos"
-                  : "Selecciona una acción para gestionar quizzes"}
+                Gestión inteligente de quizzes académicos
               </p>
             </div>
           </div>
@@ -243,58 +189,13 @@ export default function QuizAi() {
           </div>
         )}
 
-        {/* INPUT PARA ID - Solo mostrar si no hay ID en URL */}
-        {!idValido && (
-          <div className="mb-8 bg-slate-800 border border-slate-700 rounded-2xl p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20">
-                <Brain className="w-6 h-6 text-blue-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">
-                  Ingresar ID de Quiz
-                </h3>
-                <p className="text-slate-400 text-sm">
-                  Si no tienes una URL específica, ingresa el ID del quiz que
-                  quieres consultar
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <input
-                type="number"
-                value={inputId}
-                onChange={(e) => setInputId(e.target.value)}
-                placeholder="Ej: 123"
-                className="flex-1 px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-400 transition-all"
-              />
-
-              <button
-                onClick={handleGetQuiz}
-                disabled={loadingQuiz || !inputIdValido}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:opacity-50 rounded-xl text-white font-semibold transition-colors"
-              >
-                {loadingQuiz ? "Cargando..." : "Cargar Quiz"}
-              </button>
-            </div>
-
-            <div className="mt-4 text-slate-400 text-sm">
-              <p>O accede directamente con una URL como:</p>
-              <p className="font-mono text-blue-400">
-                /profesor/materiales/123/quiz
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* ACTIONS */}
         <div className="grid md:grid-cols-3 gap-6 mb-10">
           {/* QUIZ */}
           <button
             onClick={handleGetQuiz}
             disabled={loadingQuiz}
-            className="group bg-gradient-to-br from-cyan-600 to-blue-700 hover:scale-[1.02] transition-all duration-300 rounded-3xl p-8 text-left shadow-2xl"
+            className="bg-gradient-to-br from-cyan-600 to-blue-700 rounded-3xl p-8 text-left hover:scale-[1.02] transition-all"
           >
             <div className="flex justify-between items-start mb-6">
               <Brain className="w-12 h-12" />
@@ -304,16 +205,14 @@ export default function QuizAi() {
 
             <h2 className="text-2xl font-black mb-2">Cargar Quiz</h2>
 
-            <p className="text-cyan-100">
-              Obtiene el quiz generado automáticamente por IA.
-            </p>
+            <p className="text-cyan-100">Obtiene el quiz generado por IA</p>
           </button>
 
           {/* RANKING */}
           <button
             onClick={handleGetRanking}
             disabled={loadingRanking}
-            className="group bg-gradient-to-br from-yellow-500 to-orange-600 hover:scale-[1.02] transition-all duration-300 rounded-3xl p-8 text-left shadow-2xl"
+            className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-3xl p-8 text-left hover:scale-[1.02] transition-all"
           >
             <div className="flex justify-between items-start mb-6">
               <Trophy className="w-12 h-12" />
@@ -323,16 +222,14 @@ export default function QuizAi() {
 
             <h2 className="text-2xl font-black mb-2">Ranking</h2>
 
-            <p className="text-yellow-100">
-              Visualiza el rendimiento de los estudiantes.
-            </p>
+            <p className="text-yellow-100">Rendimiento de estudiantes</p>
           </button>
 
           {/* RESULTADOS */}
           <button
             onClick={handleGetResultados}
             disabled={loadingResultados}
-            className="group bg-gradient-to-br from-purple-600 to-fuchsia-700 hover:scale-[1.02] transition-all duration-300 rounded-3xl p-8 text-left shadow-2xl"
+            className="bg-gradient-to-br from-purple-600 to-fuchsia-700 rounded-3xl p-8 text-left hover:scale-[1.02] transition-all"
           >
             <div className="flex justify-between items-start mb-6">
               <BarChart3 className="w-12 h-12" />
@@ -344,37 +241,21 @@ export default function QuizAi() {
 
             <h2 className="text-2xl font-black mb-2">Resultados</h2>
 
-            <p className="text-purple-100">
-              Consulta estadísticas detalladas del quiz.
-            </p>
+            <p className="text-purple-100">Estadísticas detalladas</p>
           </button>
         </div>
 
-        {/* QUIZ CARD */}
+        {/* QUIZ */}
         {quiz && (
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8">
             <div className="flex items-center gap-4 mb-8">
-              <div className="bg-green-500/10 p-4 rounded-2xl border border-green-500/20">
-                <CheckCircle className="w-8 h-8 text-green-400" />
-              </div>
+              <CheckCircle className="w-8 h-8 text-green-400" />
 
               <div>
-                <h2 className="text-3xl font-black">
-                  Quiz cargado correctamente
-                </h2>
+                <h2 className="text-3xl font-black">{quiz.titulo}</h2>
 
-                <p className="text-slate-400">Información general del quiz</p>
+                <p className="text-slate-400">Quiz cargado correctamente</p>
               </div>
-            </div>
-
-            {/* TOP INFO */}
-            <div className="mb-8">
-              <h3 className="text-4xl font-black mb-4">{quiz.titulo}</h3>
-
-              <p className="text-slate-300 text-lg">
-                Quiz generado mediante inteligencia artificial usando el
-                material académico cargado.
-              </p>
             </div>
 
             {/* STATS */}
@@ -392,9 +273,7 @@ export default function QuizAi() {
               <div className="bg-slate-800 rounded-2xl p-5">
                 <p className="text-slate-400 text-sm mb-3">Preguntas</p>
 
-                <p className="font-black text-xl">
-                  {quiz.quiz?.total_preguntas || 0}
-                </p>
+                <p className="font-black text-xl">{quiz.total_preguntas}</p>
               </div>
 
               <div className="bg-slate-800 rounded-2xl p-5">
@@ -404,25 +283,23 @@ export default function QuizAi() {
                   <p className="text-slate-400 text-sm">Participantes</p>
                 </div>
 
-                <p className="font-black text-xl">
-                  {quiz.total_participantes || 0}
-                </p>
+                <p className="font-black text-xl">{quiz.total_participantes}</p>
               </div>
 
               <div className="bg-slate-800 rounded-2xl p-5">
-                <p className="text-slate-400 text-sm mb-3">Estado</p>
+                <p className="text-slate-400 text-sm mb-3">Nivel</p>
 
-                <p className="font-black text-green-400">Publicado</p>
+                <p className="font-black text-xl">{quiz.nivel}</p>
               </div>
             </div>
 
             {/* PREGUNTAS */}
-            {quiz.quiz?.preguntas?.length > 0 && (
+            {quiz.preguntas?.length > 0 && (
               <div>
                 <h2 className="text-2xl font-black mb-6">Preguntas del Quiz</h2>
 
                 <div className="space-y-6">
-                  {quiz.quiz.preguntas.map((pregunta, index) => (
+                  {quiz.preguntas.map((pregunta, index) => (
                     <div
                       key={index}
                       className="bg-slate-800 border border-slate-700 rounded-2xl p-6"
@@ -450,84 +327,6 @@ export default function QuizAi() {
                 </div>
               </div>
             )}
-          </div>
-        )}
-
-        {/* RANKING */}
-        {mostrarRanking && (
-          <div className="mt-10 bg-slate-900 border border-slate-800 rounded-3xl p-8">
-            <h2 className="text-3xl font-black mb-8">Ranking Académico</h2>
-
-            <div className="space-y-4">
-              {ranking.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-slate-800 rounded-2xl p-5 flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-5">
-                    <div className="w-12 h-12 rounded-xl bg-yellow-500 text-black flex items-center justify-center font-black">
-                      #{index + 1}
-                    </div>
-
-                    <div>
-                      <p className="font-bold text-lg">
-                        {item.estudiante_nombre}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-2xl font-black text-yellow-400">
-                    {item.puntaje}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* RESULTADOS */}
-        {mostrarResultados && (
-          <div className="mt-10 bg-slate-900 border border-slate-800 rounded-3xl p-8">
-            <h2 className="text-3xl font-black mb-8">Resultados del Quiz</h2>
-
-            <div className="space-y-5">
-              {resultados.map((item) => (
-                <div
-                  key={item.intento_id}
-                  className="bg-slate-800 rounded-2xl p-6"
-                >
-                  <div className="flex justify-between items-center mb-5">
-                    <div>
-                      <h3 className="text-xl font-bold">
-                        {item.estudiante_nombre}
-                      </h3>
-
-                      <p className="text-slate-400">
-                        Intento #{item.intento_id}
-                      </p>
-                    </div>
-
-                    <div className="text-3xl font-black text-green-400">
-                      {item.puntaje} pts
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
-                      <p className="text-green-300">
-                        Correctas: {item.correctas}
-                      </p>
-                    </div>
-
-                    <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-                      <p className="text-red-300">
-                        Incorrectas: {item.incorrectas}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         )}
       </div>

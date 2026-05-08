@@ -32,7 +32,7 @@ export const getQuiz = async (materialClaseId, userRole = "profesor") => {
     const quizIdNumerico = parseInt(materialClaseId, 10);
 
     if (!Number.isInteger(quizIdNumerico) || quizIdNumerico <= 0) {
-      console.error("❌ quizId inválido:", quizId);
+      console.error("❌ quizId inválido:", materialClaseId);
 
       throw new Error(
         "ID de quiz inválido. Debe ser un número entero positivo.",
