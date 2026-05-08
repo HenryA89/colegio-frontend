@@ -57,7 +57,7 @@ export default function QuizAi() {
         throw new Error(response.message || "Error obteniendo quiz");
       }
 
-      const quizData = response.data.quiz_id;
+      const quizData = response.data.quiz;
 
       setQuiz(quizData);
       setQuizStatus("published");
