@@ -17,6 +17,24 @@ import {
   Flame,
   Award,
   Medal,
+  Rocket,
+  Swords,
+  Shield,
+  Lightning,
+  Fire,
+  Gem,
+  Dragon,
+  SwordsCrossed,
+  Sparkles,
+  Crown,
+  Heart,
+  Infinity,
+  Gauge,
+  TimerOff,
+  Flag,
+  ChevronRight,
+  TrendingUp,
+  Activity,
 } from "lucide-react";
 import {
   getQuiz,
@@ -27,7 +45,7 @@ import {
 export default function QuizEstudiante() {
   const { quizId } = useParams(); // ID del quiz desde la URL
   const navigate = useNavigate();
-
+  
   // Estados principales
   const [quiz, setQuiz] = useState(null);
   const [respuestas, setRespuestas] = useState([]);
@@ -38,7 +56,7 @@ export default function QuizEstudiante() {
   const [loading, setLoading] = useState(false);
   const [tiempoRestante, setTiempoRestante] = useState(null);
   const [quizIniciado, setQuizIniciado] = useState(false);
-
+  
   // Estados adicionales para robustez
   const [quizStatus, setQuizStatus] = useState(null);
   const [userPermissions, setUserPermissions] = useState(null);
@@ -48,47 +66,40 @@ export default function QuizEstudiante() {
   const verificarConfiguracionEstudiante = async () => {
     try {
       console.log("🔍 Verificando configuración del estudiante...");
-
+      
       // 1. Validar token JWT
       const token = localStorage.getItem("token");
       if (!token) {
-        throw new Error(
-          "No hay token de autenticación. Por favor inicia sesión.",
-        );
+        throw new Error("No hay token de autenticación. Por favor inicia sesión.");
       }
-
+      
       // 2. Validar que el ID sea numérico
       const quizIdNumerico = parseInt(quizId);
       if (isNaN(quizIdNumerico) || quizIdNumerico <= 0) {
-        throw new Error(
-          "ID de quiz inválido. Debe ser un número entero positivo.",
-        );
+        throw new Error("ID de quiz inválido. Debe ser un número entero positivo.");
       }
-
+      
       // 3. Verificar que el usuario esté autenticado
       const usuario = localStorage.getItem("usuario");
       if (!usuario) {
-        throw new Error(
-          "Usuario no autenticado. Por favor inicia sesión nuevamente.",
-        );
+        throw new Error("Usuario no autenticado. Por favor inicia sesión nuevamente.");
       }
-
+      
       const usuarioData = JSON.parse(usuario);
       console.log("👤 Estudiante autenticado:", usuarioData.nombre);
-
+      
       // 4. Verificar permisos (solo estudiantes pueden responder quizzes)
       if (usuarioData.rol !== "estudiante") {
-        throw new Error(
-          "Solo los estudiantes pueden responder quizzes. Acceso denegado.",
-        );
+        throw new Error("Solo los estudiantes pueden responder quizzes. Acceso denegado.");
       }
-
+      
       console.log("✅ Configuración del estudiante verificada exitosamente");
       return {
         token,
         quizId: quizIdNumerico,
-        usuario: usuarioData,
+        usuario: usuarioData
       };
+      
     } catch (error) {
       console.error("❌ Error en verificación del estudiante:", error.message);
       throw error;
@@ -101,84 +112,71 @@ export default function QuizEstudiante() {
       try {
         // 1. Verificar configuración previa
         const config = await verificarConfiguracionEstudiante();
-
+        
         // 2. Iniciar estado de carga
         setLoading(true);
         setError("");
         setQuizStatus("loading");
-
+        
         console.log("🎯 Cargando quiz:", config.quizId);
-
+        
         // 3. Realizar petición con configuración correcta
         const quizResponse = await getQuiz(config.quizId);
-
+        
         // 4. ✅ Verificar respuesta exitosa
         if (!quizResponse || !quizResponse.success) {
           throw new Error("La respuesta del backend no indica éxito");
         }
-
+        
         // 5. ✅ Validar estructura de data.quiz
         if (!quizResponse.data || !quizResponse.data.quiz) {
           throw new Error("Estructura de respuesta inválida: falta data.quiz");
         }
-
+        
         const quizData = quizResponse.data.quiz;
-
+        
         // 6. ✅ Validar datos mínimos del quiz
-        const camposRequeridos = [
-          "id",
-          "titulo",
-          "descripcion",
-          "duracion",
-          "preguntas",
-        ];
-        const camposFaltantes = camposRequeridos.filter(
-          (campo) => !quizData[campo],
-        );
-
+        const camposRequeridos = ['id', 'titulo', 'descripcion', 'duracion', 'preguntas'];
+        const camposFaltantes = camposRequeridos.filter(campo => !quizData[campo]);
+        
         if (camposFaltantes.length > 0) {
-          throw new Error(
-            `Datos del quiz incompletos. Faltan: ${camposFaltantes.join(", ")}`,
-          );
+          throw new Error(`Datos del quiz incompletos. Faltan: ${camposFaltantes.join(', ')}`);
         }
-
+        
         // 7. ✅ Verificar que el quiz esté publicado
         if (!quizData.publicado) {
           setQuizStatus("draft");
-          throw new Error(
-            "Este quiz no está disponible aún. Contacta a tu profesor.",
-          );
+          throw new Error("Este quiz no está disponible aún. Contacta a tu profesor.");
         }
-
+        
         // 8. ✅ Verificar que tenga preguntas
         if (!quizData.preguntas || quizData.preguntas.length === 0) {
           throw new Error("Este quiz no tiene preguntas disponibles.");
         }
-
+        
         // 9. ✅ Guardar datos en estado
         setQuiz(quizData);
         setUserPermissions(config.usuario);
         setQuizStatus("published");
         setRespuestas(Array(quizData.preguntas.length).fill(""));
         setTiempoRestante(quizData.duracion * 60); // Convertir a segundos
-
+        
         console.log("✅ Quiz cargado exitosamente:", {
           id: quizData.id,
           titulo: quizData.titulo,
           preguntas: quizData.preguntas.length,
           duracion: quizData.duracion,
-          publicado: quizData.publicado,
+          publicado: quizData.publicado
         });
+        
       } catch (err) {
         console.error("❌ Error cargando quiz:", err);
-
+        
         // ✅ Manejar errores apropiadamente
-        let mensajeError =
-          "No hay actividad disponible en este momento o el quiz no existe.";
-
+        let mensajeError = "No hay actividad disponible en este momento o el quiz no existe.";
+        
         if (err.message.includes("token")) {
-          mensajeError =
-            "Error de autenticación. Por favor inicia sesión nuevamente.";
+          mensajeError = "Error de autenticación. Por favor inicia sesión nuevamente.";
           localStorage.removeItem("token");
           localStorage.removeItem("usuario");
           navigate("/login");
@@ -187,16 +185,16 @@ export default function QuizEstudiante() {
         } else if (err.message.includes("inválido")) {
           mensajeError = "ID de quiz inválido. Verifica la URL.";
         } else if (err.message.includes("no está disponible")) {
-          mensajeError =
-            "Este quiz no está disponible aún. Contacta a tu profesor.";
+          mensajeError = "Este quiz no está disponible aún. Contacta a tu profesor.";
         } else if (err.message.includes("preguntas")) {
           mensajeError = "Este quiz no tiene preguntas disponibles.";
         } else {
           mensajeError = err.message || mensajeError;
         }
-
+        
         setError(mensajeError);
         setQuizStatus("error");
+        
       } finally {
         setLoading(false);
       }
@@ -251,20 +249,16 @@ export default function QuizEstudiante() {
     try {
       // 1. Verificar configuración previa
       const config = await verificarConfiguracionEstudiante();
-
+      
       // 2. Validar que haya quiz y preguntas
       if (!quiz || !quiz.preguntas) {
         throw new Error("No hay preguntas para responder");
       }
 
       // 3. Validar que todas las preguntas estén respondidas
-      const preguntasSinResponder = respuestas.filter(
-        (r) => !r || r.trim() === "",
-      );
+      const preguntasSinResponder = respuestas.filter((r) => !r || r.trim() === "");
       if (preguntasSinResponder.length > 0) {
-        throw new Error(
-          `Por favor responde todas las preguntas antes de enviar. Faltan ${preguntasSinResponder.length} preguntas.`,
-        );
+        throw new Error(`Por favor responde todas las preguntas antes de enviar. Faltan ${preguntasSinResponder.length} preguntas.`);
       }
 
       // 4. Iniciar estado de carga
@@ -275,7 +269,7 @@ export default function QuizEstudiante() {
       console.log("📤 Enviando respuestas del quiz:", {
         quizId: config.quizId,
         respuestasCount: respuestas.length,
-        usuario: config.usuario.nombre,
+        usuario: config.usuario.nombre
       });
 
       // 5. Preparar respuestas en el formato esperado
@@ -285,14 +279,15 @@ export default function QuizEstudiante() {
       }));
 
       // 6. Validar formato de respuestas
-      const respuestasValidas = respuestasFormateadas.every(
-        (r) => r && r.pregunta_id && r.respuesta && r.respuesta.trim() !== "",
+      const respuestasValidas = respuestasFormateadas.every(r => 
+        r && 
+        r.pregunta_id && 
+        r.respuesta && 
+        r.respuesta.trim() !== ""
       );
-
+      
       if (!respuestasValidas) {
-        throw new Error(
-          "Formato de respuestas inválido. Verifica tus respuestas.",
-        );
+        throw new Error("Formato de respuestas inválido. Verifica tus respuestas.");
       }
 
       // 7. ✅ Realizar petición con configuración correcta
@@ -305,9 +300,7 @@ export default function QuizEstudiante() {
 
       // 9. ✅ Validar estructura de data.resultado
       if (!resultado.data || !resultado.data.resultado) {
-        throw new Error(
-          "Estructura de respuesta inválida: falta data.resultado",
-        );
+        throw new Error("Estructura de respuesta inválida: falta data.resultado");
       }
 
       // 10. ✅ Guardar resultados
@@ -321,11 +314,7 @@ export default function QuizEstudiante() {
         console.log("🏆 Cargando ranking del quiz...");
         const rankingData = await getRanking(config.quizId);
         setRanking(rankingData || []);
-        console.log(
-          "✅ Ranking cargado:",
-          rankingData?.length || 0,
-          "posiciones",
-        );
+        console.log("✅ Ranking cargado:", rankingData?.length || 0, "posiciones");
       } catch (rankingError) {
         console.warn("⚠️ No se pudo cargar el ranking:", rankingError);
         // No es crítico, continuamos sin ranking
@@ -336,18 +325,16 @@ export default function QuizEstudiante() {
         porcentaje: resultado.data.porcentaje,
         correctas: resultado.data.correctas,
         incorrectas: resultado.data.incorrectas,
-        tiempo: resultado.data.tiempo,
+        tiempo: resultado.data.tiempo
       });
     } catch (err) {
       console.error("❌ Error enviando quiz:", err);
-
+      
       // ✅ Manejar errores apropiadamente
-      let mensajeError =
-        "Error al enviar las respuestas. Por favor intenta nuevamente.";
-
+      let mensajeError = "Error al enviar las respuestas. Por favor intenta nuevamente.";
+      
       if (err.message.includes("token")) {
-        mensajeError =
-          "Error de autenticación. Por favor inicia sesión nuevamente.";
+        mensajeError = "Error de autenticación. Por favor inicia sesión nuevamente.";
         localStorage.removeItem("token");
         localStorage.removeItem("usuario");
         navigate("/login");
@@ -360,19 +347,18 @@ export default function QuizEstudiante() {
       } else if (err.message.includes("completadas")) {
         mensajeError = "Debes responder todas las preguntas antes de enviar.";
       } else if (err.message.includes("formato")) {
-        mensajeError =
-          "Formato de respuestas inválido. Verifica tus respuestas.";
+        mensajeError = "Formato de respuestas inválido. Verifica tus respuestas.";
       } else if (err.message.includes("estructura")) {
         mensajeError = "Error en la respuesta del servidor. Intente más tarde.";
       } else if (err.message.includes("ya respondido")) {
-        mensajeError =
-          "Ya has respondido este quiz. No puedes responderlo nuevamente.";
+        mensajeError = "Ya has respondido este quiz. No puedes responderlo nuevamente.";
       } else {
         mensajeError = err.message || mensajeError;
       }
-
+      
       setError(mensajeError);
       setQuizStatus("error");
+      
     } finally {
       setLoading(false);
     }
@@ -393,65 +379,51 @@ export default function QuizEstudiante() {
   // ✅ Estado del Quiz - Información al Estudiante
   const renderEstadoQuiz = () => {
     if (!quizStatus) return null;
-
+    
     return (
-      <div
-        className={`mb-6 p-4 rounded-xl border-2 backdrop-blur-lg ${
-          quizStatus === "loading"
-            ? "bg-blue-100/50 border-blue-300/50"
-            : quizStatus === "published"
-              ? "bg-green-100/50 border-green-300/50"
-              : quizStatus === "submitting"
-                ? "bg-yellow-100/50 border-yellow-300/50"
-                : quizStatus === "completed"
-                  ? "bg-purple-100/50 border-purple-300/50"
-                  : "bg-red-100/50 border-red-300/50"
-        }`}
-      >
+      <div className={`mb-6 p-4 rounded-xl border-2 backdrop-blur-lg ${
+        quizStatus === "loading" 
+          ? "bg-blue-100/50 border-blue-300/50" 
+          : quizStatus === "published" 
+          ? "bg-green-100/50 border-green-300/50" 
+          : quizStatus === "submitting" 
+          ? "bg-yellow-100/50 border-yellow-300/50" 
+          : quizStatus === "completed" 
+          ? "bg-purple-100/50 border-purple-300/50" 
+          : "bg-red-100/50 border-red-300/50"
+      }`}>
         <div className="flex items-center gap-3">
-          <div
-            className={`p-2 rounded-lg ${
-              quizStatus === "loading"
-                ? "bg-blue-500"
-                : quizStatus === "published"
-                  ? "bg-green-500"
-                  : quizStatus === "submitting"
-                    ? "bg-yellow-500"
-                    : quizStatus === "completed"
-                      ? "bg-purple-500"
-                      : "bg-red-500"
-            }`}
-          >
+          <div className={`p-2 rounded-lg ${
+            quizStatus === "loading" 
+              ? "bg-blue-500" 
+              : quizStatus === "published" 
+              ? "bg-green-500" 
+              : quizStatus === "submitting" 
+              ? "bg-yellow-500" 
+              : quizStatus === "completed" 
+              ? "bg-purple-500" 
+              : "bg-red-500"
+          }`}>
             {quizStatus === "loading" && (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             )}
-            {quizStatus === "published" && (
-              <CheckCircle className="w-4 h-4 text-white" />
-            )}
-            {quizStatus === "submitting" && (
-              <Clock className="w-4 h-4 text-white" />
-            )}
-            {quizStatus === "completed" && (
-              <Trophy className="w-4 h-4 text-white" />
-            )}
-            {quizStatus === "error" && (
-              <AlertCircle className="w-4 h-4 text-white" />
-            )}
+            {quizStatus === "published" && <CheckCircle className="w-4 h-4 text-white" />}
+            {quizStatus === "submitting" && <Clock className="w-4 h-4 text-white" />}
+            {quizStatus === "completed" && <Trophy className="w-4 h-4 text-white" />}
+            {quizStatus === "error" && <AlertCircle className="w-4 h-4 text-white" />}
           </div>
           <div className="flex-1">
-            <h3
-              className={`text-sm font-bold ${
-                quizStatus === "loading"
-                  ? "text-blue-700"
-                  : quizStatus === "published"
-                    ? "text-green-700"
-                    : quizStatus === "submitting"
-                      ? "text-yellow-700"
-                      : quizStatus === "completed"
-                        ? "text-purple-700"
-                        : "text-red-700"
-              }`}
-            >
+            <h3 className={`text-sm font-bold ${
+              quizStatus === "loading" 
+                ? "text-blue-700" 
+                : quizStatus === "published" 
+                ? "text-green-700" 
+                : quizStatus === "submitting" 
+                ? "text-yellow-700" 
+                : quizStatus === "completed" 
+                ? "text-purple-700" 
+                : "text-red-700"
+            }`}>
               {quizStatus === "loading" && "🔄 Cargando Quiz"}
               {quizStatus === "published" && "✅ Quiz Disponible"}
               {quizStatus === "submitting" && "📤 Enviando Respuestas"}
@@ -460,32 +432,24 @@ export default function QuizEstudiante() {
             </h3>
             <p className="text-gray-600 text-xs">
               {quizStatus === "loading" && "Obteniendo información del quiz..."}
-              {quizStatus === "published" &&
-                "El quiz está listo para que lo respondas."}
-              {quizStatus === "submitting" &&
-                "Enviando tus respuestas al servidor..."}
-              {quizStatus === "completed" &&
-                "¡Felicidades! Has completado el quiz."}
-              {quizStatus === "error" &&
-                "Ocurrió un error. Verifica los detalles."}
+              {quizStatus === "published" && "El quiz está listo para que lo respondas."}
+              {quizStatus === "submitting" && "Enviando tus respuestas al servidor..."}
+              {quizStatus === "completed" && "¡Felicidades! Has completado el quiz."}
+              {quizStatus === "error" && "Ocurrió un error. Verifica los detalles."}
             </p>
           </div>
         </div>
-
+        
         {/* ✅ Información adicional según estado */}
         {quizStatus === "published" && quiz && (
           <div className="mt-3 grid grid-cols-3 gap-3">
             <div className="text-center p-2 bg-white/50 rounded-lg">
               <p className="text-xs text-gray-600">Preguntas</p>
-              <p className="text-sm font-bold text-gray-800">
-                {quiz.preguntas?.length || 0}
-              </p>
+              <p className="text-sm font-bold text-gray-800">{quiz.preguntas?.length || 0}</p>
             </div>
             <div className="text-center p-2 bg-white/50 rounded-lg">
               <p className="text-xs text-gray-600">Duración</p>
-              <p className="text-sm font-bold text-gray-800">
-                {quiz.duracion} min
-              </p>
+              <p className="text-sm font-bold text-gray-800">{quiz.duracion} min</p>
             </div>
             <div className="text-center p-2 bg-white/50 rounded-lg">
               <p className="text-xs text-gray-600">Estado</p>
@@ -493,35 +457,28 @@ export default function QuizEstudiante() {
             </div>
           </div>
         )}
-
+        
         {quizStatus === "completed" && resultadoDetallado && (
           <div className="mt-3 grid grid-cols-3 gap-3">
             <div className="text-center p-2 bg-white/50 rounded-lg">
               <p className="text-xs text-gray-600">Puntaje</p>
-              <p className="text-sm font-bold text-gray-800">
-                {resultadoDetallado.puntaje}
-              </p>
+              <p className="text-sm font-bold text-gray-800">{resultadoDetallado.puntaje}</p>
             </div>
             <div className="text-center p-2 bg-white/50 rounded-lg">
               <p className="text-xs text-gray-600">Porcentaje</p>
-              <p className="text-sm font-bold text-gray-800">
-                {resultadoDetallado.porcentaje}%
-              </p>
+              <p className="text-sm font-bold text-gray-800">{resultadoDetallado.porcentaje}%</p>
             </div>
             <div className="text-center p-2 bg-white/50 rounded-lg">
               <p className="text-xs text-gray-600">Tiempo</p>
-              <p className="text-sm font-bold text-gray-800">
-                {resultadoDetallado.tiempo}
-              </p>
+              <p className="text-sm font-bold text-gray-800">{resultadoDetallado.tiempo}</p>
             </div>
           </div>
         )}
-
+        
         {quizStatus === "error" && (
           <div className="mt-3">
             <p className="text-red-600 text-xs">
-              🔍 Verifica: URL del quiz, conexión a internet, permisos de
-              acceso.
+              🔍 Verifica: URL del quiz, conexión a internet, permisos de acceso.
             </p>
           </div>
         )}
@@ -529,16 +486,95 @@ export default function QuizEstudiante() {
     );
   };
 
-  // Pantalla de carga
+  // Pantalla de carga - Dinámica y Llamativa
   if (loading && !quiz) {
     return (
-      <div className="min-h-screen p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-700 mb-2">
-            Cargando Quiz
-          </h2>
-          <p className="text-gray-600">Preparando tu actividad...</p>
+      <div className="min-h-screen p-6 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative overflow-hidden">
+        {/* Background animado */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-pink-900/20">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+          <div className="absolute top-40 right-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
+          <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-4000"></div>
+        </div>
+
+        <div className="relative z-10 flex items-center justify-center">
+          <div className="text-center">
+            {/* Logo animado */}
+            <div className="relative mb-8">
+              <div className="absolute inset-0 flex justify-center items-center">
+                <div className="w-32 h-32 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-ping opacity-75"></div>
+              </div>
+              <div className="relative w-32 h-32 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-2xl shadow-purple-500/50">
+                <Brain className="w-16 h-16 text-white animate-pulse" />
+              </div>
+            </div>
+
+            {/* Título dinámico */}
+            <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 drop-shadow-lg mb-4 animate-bounce">
+              QUIZ BATTLE
+            </h1>
+            
+            {/* Subtítulo */}
+            <p className="text-xl text-gray-300 mb-8">
+              Preparando tu arena de batalla...
+            </p>
+
+            {/* Indicadores de progreso */}
+            <div className="flex justify-center items-center gap-8 mb-8">
+              <div className="text-center">
+                <div className="relative">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mb-2">
+                    <Rocket className="w-8 h-8 text-white animate-bounce" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full animate-ping"></div>
+                </div>
+                <p className="text-sm text-gray-400">Cargando</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="relative">
+                  <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mb-2">
+                    <Zap className="w-8 h-8 text-white animate-pulse" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-yellow-500 rounded-full animate-ping"></div>
+                </div>
+                <p className="text-sm text-gray-400">Energizando</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="relative">
+                  <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mb-2">
+                    <Flame className="w-8 h-8 text-white animate-pulse" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-green-500 rounded-full animate-ping"></div>
+                </div>
+                <p className="text-sm text-gray-400">Listo</p>
+              </div>
+            </div>
+
+            {/* Barra de progreso animada */}
+            <div className="w-64 mx-auto mb-8">
+              <div className="w-full bg-gray-700 rounded-full h-3">
+                <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full animate-pulse" style={{ width: '70%' }}></div>
+              </div>
+            </div>
+
+            {/* Mensaje dinámico */}
+            <div className="relative">
+              <div className="absolute inset-0 flex justify-center items-center">
+                <div className="text-6xl animate-spin opacity-20">⚡</div>
+              </div>
+              <p className="text-lg text-gray-300 font-semibold">
+                Sincronizando con el servidor...
+              </p>
+            </div>
+
+            {/* Partículas decorativas */}
+            <div className="absolute top-10 left-10 text-4xl animate-bounce animation-delay-1000">✨</div>
+            <div className="absolute top-20 right-20 text-3xl animate-pulse animation-delay-500">🌟</div>
+            <div className="absolute bottom-20 left-20 text-3xl animate-bounce animation-delay-1500">💫</div>
+            <div className="absolute bottom-10 right-10 text-4xl animate-pulse animation-delay-2000">⚡</div>
+          </div>
         </div>
       </div>
     );
@@ -547,7 +583,7 @@ export default function QuizEstudiante() {
   // Pantalla de error
   if (error && !quiz) {
     return (
-      <div className="min-h-screen p-6 bg-red-50 flex items-center justify-center">
+      <div className="min-h-screen p-6 bg-gradient-to-br from-red-900 to-orange-900 flex items-center justify-center">
         <div className="bg-white p-8 rounded-xl shadow-lg border-2 border-red-200 max-w-md">
           <div className="text-center">
             <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-600" />
@@ -565,282 +601,514 @@ export default function QuizEstudiante() {
     );
   }
 
-  // Pantalla de bienvenida antes de iniciar
+  // Pantalla de bienvenida - Dinámica y Llamativa
   if (quiz && !quizIniciado) {
     return (
-      <div className="min-h-screen p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-2xl w-full mx-4">
-          {/* ✅ Estado del Quiz */}
-          {renderEstadoQuiz()}
+      <div className="min-h-screen p-6 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative overflow-hidden">
+        {/* Background animado */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-pink-900/20">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+          <div className="absolute top-40 right-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
+          <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-4000"></div>
+        </div>
 
-          <div className="text-center mb-6">
-            <Brain className="w-20 h-20 mx-auto mb-4 text-indigo-600" />
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              {quiz.titulo}
-            </h1>
-            <p className="text-gray-600">{quiz.descripcion}</p>
+        <div className="relative z-10 flex items-center justify-center">
+          <div className="bg-gradient-to-br from-purple-800/80 to-indigo-800/80 backdrop-blur-lg rounded-3xl p-8 max-w-4xl w-full mx-4 border-2 border-purple-500/50 shadow-2xl shadow-purple-500/25">
+            {/* ✅ Estado del Quiz */}
+            {renderEstadoQuiz()}
+            
+            {/* Header dinámico */}
+            <div className="text-center mb-8">
+              <div className="flex justify-center items-center gap-4 mb-6">
+                <div className="relative">
+                  <Dragon className="w-16 h-16 text-yellow-400 animate-bounce" />
+                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 rounded-full animate-ping"></div>
+                </div>
+                <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 drop-shadow-lg animate-pulse">
+                  QUIZ ARENA
+                </h1>
+                <div className="relative">
+                  <Swords className="w-16 h-16 text-yellow-400 animate-pulse" />
+                  <div className="absolute -top-2 -left-2 w-4 h-4 bg-orange-500 rounded-full animate-ping"></div>
+                </div>
+              </div>
+              
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex justify-center items-center">
+                  <div className="text-6xl animate-spin opacity-20">⚡</div>
+                </div>
+                <Brain className="w-24 h-24 mx-auto mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 animate-pulse" />
+              </div>
+              
+              <h2 className="text-3xl font-bold text-white mb-3 animate-bounce">
+                {quiz.titulo}
+              </h2>
+              
+              <p className="text-xl text-gray-300 mb-8">
+                {quiz.descripcion}
+              </p>
+            </div>
+
+            {/* Stats del quiz */}
+            <div className="grid gap-6 md:grid-cols-3 mb-8">
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative p-6 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-2xl hover:from-blue-700 hover:to-cyan-700 transition-all transform hover:scale-105 shadow-xl shadow-blue-500/25">
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <Target className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold">{quiz.numeroPreguntas || quiz.preguntas?.length || 0}</h3>
+                      <p className="text-sm text-blue-100">Preguntas</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative p-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-105 shadow-xl shadow-purple-500/25">
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <Timer className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold">{quiz.duracion}</h3>
+                      <p className="text-sm text-purple-100">Minutos</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative p-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl hover:from-green-700 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-xl shadow-green-500/25">
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <Trophy className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold capitalize">{quiz.dificultad || "Media"}</h3>
+                      <p className="text-sm text-green-100">Dificultad</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Barra de poder */}
+            <div className="mb-8">
+              <div className="flex justify-between text-sm text-gray-400 mb-2">
+                <span>⚡ Poder del Quiz</span>
+                <span>85%</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-4">
+                <div className="bg-gradient-to-r from-yellow-500 to-orange-500 h-4 rounded-full animate-pulse shadow-lg shadow-yellow-500/50" style={{ width: '85%' }}></div>
+              </div>
+            </div>
+
+            {/* Botón de inicio dinámico */}
+            <div className="text-center">
+              <button
+                onClick={iniciarQuiz}
+                className="group relative px-12 py-6 text-xl font-bold text-white bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl hover:from-green-600 hover:to-emerald-700 transition-all transform hover:scale-105 flex items-center space-x-4 mx-auto shadow-2xl shadow-green-500/25"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative flex items-center space-x-4">
+                  <Rocket className="w-8 h-8 animate-bounce" />
+                  <span>INICIAR BATALLA</span>
+                  <Zap className="w-8 h-8 animate-pulse" />
+                </div>
+              </button>
+              
+              <p className="text-gray-400 mt-4 text-sm">
+                ⚡ Prepárate para la batalla de conocimientos
+              </p>
+            </div>
+
+            {/* Partículas decorativas */}
+            <div className="absolute top-10 left-10 text-4xl animate-bounce animation-delay-1000">✨</div>
+            <div className="absolute top-20 right-20 text-3xl animate-pulse animation-delay-500">🌟</div>
+            <div className="absolute bottom-20 left-20 text-3xl animate-bounce animation-delay-1500">💫</div>
+            <div className="absolute bottom-10 right-10 text-4xl animate-pulse animation-delay-2000">⚡</div>
+            <div className="absolute top-1/2 left-20 text-2xl animate-spin animation-delay-3000">🔥</div>
+            <div className="absolute top-1/3 right-20 text-2xl animate-bounce animation-delay-2500">💎</div>
           </div>
-
-          <div className="grid gap-4 md:grid-cols-3 mb-6">
-            <div className="p-4 bg-blue-50 rounded-lg text-center">
-              <Target className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-              <p className="text-sm font-semibold text-gray-700">Preguntas</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {quiz.numeroPreguntas || quiz.preguntas?.length || 0}
-              </p>
-            </div>
-            <div className="p-4 bg-purple-50 rounded-lg text-center">
-              <Timer className="w-8 h-8 mx-auto mb-2 text-purple-600" />
-              <p className="text-sm font-semibold text-gray-700">Duración</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {quiz.duracion} min
-              </p>
-            </div>
-            <div className="p-4 bg-indigo-50 rounded-lg text-center">
-              <Trophy className="w-8 h-8 mx-auto mb-2 text-indigo-600" />
-              <p className="text-sm font-semibold text-gray-700">Dificultad</p>
-              <p className="text-2xl font-bold text-indigo-600 capitalize">
-                {quiz.dificultad || "Media"}
-              </p>
-            </div>
-          </div>
-
-          {quiz.instrucciones && (
-            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <h3 className="font-semibold text-gray-800 mb-2">
-                Instrucciones
-              </h3>
-              <p className="text-gray-700">{quiz.instrucciones}</p>
-            </div>
-          )}
-
-          <button
-            onClick={iniciarQuiz}
-            className="w-full px-6 py-4 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors flex items-center justify-center space-x-2 text-lg font-semibold"
-          >
-            <Play className="w-6 h-6" />
-            <span>Iniciar Quiz</span>
-            <ArrowRight className="w-6 h-6" />
-          </button>
         </div>
       </div>
     );
   }
 
-  // Pantalla del quiz
+  // Pantalla del quiz activo - Dinámica y Llamativa
   if (quiz && quizIniciado && !enviado) {
     return (
-      <div className="min-h-screen p-6 bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div className="max-w-4xl mx-auto">
-          {/* Header con temporizador */}
-          <div className="bg-white rounded-xl shadow-lg p-4 mb-6">
+      <div className="min-h-screen p-6 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative overflow-hidden">
+        {/* Background animado */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-pink-900/20">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+          <div className="absolute top-40 right-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
+          <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-4000"></div>
+        </div>
+
+        <div className="relative z-10 max-w-6xl mx-auto">
+          {/* ✅ Estado del Quiz */}
+          {renderEstadoQuiz()}
+
+          {/* Header con temporizador dinámico */}
+          <div className="bg-gradient-to-br from-purple-800/80 to-indigo-800/80 backdrop-blur-lg rounded-2xl p-6 mb-8 border-2 border-purple-500/50 shadow-2xl shadow-purple-500/25">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">
-                  {quiz.titulo}
-                </h1>
-                <p className="text-gray-600">
-                  Pregunta {respuestas.findIndex((r) => r) + 1} de{" "}
-                  {quiz.preguntas?.length || 0}
-                </p>
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center animate-pulse">
+                    <Clock className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 rounded-full animate-ping"></div>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-1">⚡ BATALLA EN CURSO</h2>
+                  <p className="text-gray-300">{quiz.titulo}</p>
+                </div>
               </div>
-              <div
-                className={`text-center ${tiempoRestante < 60 ? "text-red-600" : "text-indigo-600"}`}
-              >
-                <Clock className="w-8 h-8 mx-auto mb-1" />
-                <p className="text-2xl font-bold">
-                  {formatearTiempo(tiempoRestante)}
-                </p>
-                <p className="text-sm">Tiempo restante</p>
+              
+              <div className="text-center">
+                <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-2 ${
+                  tiempoRestante <= 60 ? 'bg-gradient-to-r from-red-500 to-orange-500 animate-pulse' : 
+                  tiempoRestante <= 180 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 
+                  'bg-gradient-to-r from-green-500 to-emerald-500'
+                }`}>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-white">{formatearTiempo(tiempoRestante)}</p>
+                  </div>
+                </div>
+                <p className="text-gray-300 text-sm">Tiempo restante</p>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-sm text-gray-400">Pregunta</p>
+                  <p className="text-2xl font-bold text-white">
+                    {respuestas.findIndex(r => r !== "") + 1} / {quiz.preguntas.length}
+                  </p>
+                </div>
+                <div className="relative">
+                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                    <Brain className="w-8 h-8 text-white animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Barra de progreso */}
+            <div className="mt-4">
+              <div className="flex justify-between text-sm text-gray-400 mb-2">
+                <span>🎯 Progreso de la batalla</span>
+                <span>{Math.round((respuestas.findIndex(r => r !== "") + 1) / quiz.preguntas.length * 100)}%</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-3">
+                <div 
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all duration-500 shadow-lg shadow-purple-500/50" 
+                  style={{ width: `${(respuestas.findIndex(r => r !== "") + 1) / quiz.preguntas.length * 100}%` }}
+                ></div>
               </div>
             </div>
           </div>
-
-          {/* ✅ Estado del Quiz */}
-          {renderEstadoQuiz()}
 
           {/* Formulario del quiz */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {quiz.preguntas?.map((pregunta, index) => (
               <div
                 key={pregunta.id || index}
-                className="bg-white rounded-xl shadow-lg p-6"
+                className={`group relative bg-gradient-to-br from-purple-800/60 to-indigo-800/60 backdrop-blur-lg rounded-2xl border-2 border-purple-500/50 hover:border-purple-400 hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 transform hover:scale-105 ${
+                  respuestas[index] ? 'ring-2 ring-green-500/50' : ''
+                }`}
               >
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    Pregunta {index + 1}
-                  </h3>
-                  <p className="text-gray-700">{pregunta.texto}</p>
-                </div>
+                {/* Efecto de brillo */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                
+                <div className="relative p-6">
+                  {/* Header de la pregunta */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${
+                        respuestas[index] ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                      }`}>
+                        {index + 1}
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">Pregunta {index + 1}</h3>
+                        <p className="text-sm text-gray-300">Selecciona tu respuesta</p>
+                      </div>
+                    </div>
+                    {respuestas[index] && (
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-6 h-6 text-green-400" />
+                        <span className="text-green-400 text-sm font-semibold">Respondida</span>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="space-y-3">
-                  {pregunta.opciones?.map((opcion, opcionIndex) => (
-                    <label
-                      key={opcionIndex}
-                      className="flex items-center p-3 border-2 border-gray-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-50 cursor-pointer transition-all"
-                    >
-                      <input
-                        type="radio"
-                        name={`pregunta-${index}`}
-                        value={opcion}
-                        checked={respuestas[index] === opcion}
-                        onChange={(e) => handleChange(index, e.target.value)}
-                        className="mr-3 text-indigo-600 focus:ring-indigo-500"
-                      />
-                      <span className="text-gray-700">{opcion}</span>
-                    </label>
-                  ))}
+                  {/* Texto de la pregunta */}
+                  <div className="mb-6 p-4 bg-white/10 rounded-xl border border-purple-500/30">
+                    <p className="text-lg text-white font-medium">{pregunta.texto}</p>
+                  </div>
+
+                  {/* Opciones */}
+                  <div className="space-y-3">
+                    {pregunta.opciones?.map((opcion, opcionIndex) => (
+                      <label
+                        key={opcionIndex}
+                        className={`group flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 ${
+                          respuestas[index] === opcion
+                            ? 'border-green-500 bg-green-500/20 hover:bg-green-500/30'
+                            : 'border-purple-500/50 bg-purple-500/10 hover:border-purple-400 hover:bg-purple-500/20'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`pregunta-${index}`}
+                          value={opcion}
+                          checked={respuestas[index] === opcion}
+                          onChange={(e) => handleChange(index, e.target.value)}
+                          className="sr-only"
+                        />
+                        <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center transition-all ${
+                          respuestas[index] === opcion
+                            ? 'border-green-500 bg-green-500'
+                            : 'border-purple-400 bg-purple-400/50'
+                        }`}>
+                          {respuestas[index] === opcion && (
+                            <div className="w-3 h-3 bg-white rounded-full"></div>
+                          )}
+                        </div>
+                        <span className={`text-lg font-medium ${
+                          respuestas[index] === opcion ? 'text-green-400' : 'text-gray-300'
+                        }`}>
+                          {opcion}
+                        </span>
+                        {respuestas[index] === opcion && (
+                          <CheckCircle className="w-5 h-5 text-green-400 ml-auto animate-bounce" />
+                        )}
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
 
-            {/* Botón de envío */}
-            <div className="flex justify-center">
+            {/* Botón de envío dinámico */}
+            <div className="text-center">
               <button
                 type="submit"
-                disabled={loading}
-                className="px-8 py-4 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 disabled:bg-gray-400 transition-colors flex items-center space-x-2 text-lg font-semibold"
+                disabled={loading || respuestas.some(r => !r || r.trim() === "")}
+                className="group relative px-12 py-6 text-xl font-bold text-white bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl hover:from-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 transition-all transform hover:scale-105 flex items-center space-x-4 mx-auto shadow-2xl shadow-green-500/25"
               >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Enviando...</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-6 h-6" />
-                    <span>Enviar Respuestas</span>
-                  </>
-                )}
+                <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative flex items-center space-x-4">
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                      <span>ENVIANDO...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="w-8 h-8 animate-bounce" />
+                      <span>ENVIAR RESPUESTAS</span>
+                      <Zap className="w-8 h-8 animate-pulse" />
+                    </>
+                  )}
+                </div>
               </button>
+              
+              {respuestas.some(r => !r || r.trim() === "") && (
+                <p className="text-yellow-400 mt-4 text-sm animate-pulse">
+                  ⚡ Debes responder todas las preguntas antes de enviar
+                </p>
+              )}
             </div>
           </form>
+
+          {/* Partículas decorativas */}
+          <div className="absolute top-10 left-10 text-4xl animate-bounce animation-delay-1000">✨</div>
+          <div className="absolute top-20 right-20 text-3xl animate-pulse animation-delay-500">🌟</div>
+          <div className="absolute bottom-20 left-20 text-3xl animate-bounce animation-delay-1500">💫</div>
+          <div className="absolute bottom-10 right-10 text-4xl animate-pulse animation-delay-2000">⚡</div>
         </div>
       </div>
     );
   }
 
-  // Pantalla de resultados
+  // Pantalla de resultados - Dinámica y Llamativa
   if (enviado) {
-    const porcentaje = Math.round(
-      (puntaje / (quiz.preguntas?.length || 1)) * 100,
-    );
-    const estrellas = Math.round(porcentaje / 20); // 0-5 estrellas
-
     return (
-      <div className="min-h-screen p-6 bg-linear-to-br from-green-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-4xl w-full mx-4">
-          <div className="text-center mb-6">
-            <Trophy className="w-20 h-20 mx-auto mb-4 text-yellow-500" />
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              ¡Quiz Completado!
-            </h1>
-            <p className="text-gray-600">Has completado el quiz exitosamente</p>
-          </div>
+      <div className="min-h-screen p-6 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative overflow-hidden">
+        {/* Background animado */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-pink-900/20">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+          <div className="absolute top-40 right-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
+          <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-4000"></div>
+        </div>
 
-          <div className="grid gap-6 md:grid-cols-2 mb-6">
-            <div className="p-6 bg-green-50 rounded-lg text-center">
-              <Target className="w-12 h-12 mx-auto mb-3 text-green-600" />
-              <p className="text-sm font-semibold text-gray-700 mb-1">
-                Tu Puntaje
-              </p>
-              <p className="text-4xl font-bold text-green-600">{puntaje}</p>
-              <p className="text-gray-600">
-                de {quiz.preguntas?.length || 0} puntos
-              </p>
-              <p className="text-2xl font-bold text-green-600 mt-2">
-                {porcentaje}%
-              </p>
+        <div className="relative z-10 max-w-6xl mx-auto">
+          {/* ✅ Estado del Quiz */}
+          {renderEstadoQuiz()}
+
+          {/* Header de resultados */}
+          <div className="bg-gradient-to-br from-purple-800/80 to-indigo-800/80 backdrop-blur-lg rounded-3xl p-8 mb-8 border-2 border-purple-500/50 shadow-2xl shadow-purple-500/25">
+            <div className="text-center mb-8">
+              <div className="flex justify-center items-center gap-4 mb-6">
+                <div className="relative">
+                  <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center animate-pulse">
+                    <Trophy className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-yellow-500 rounded-full animate-ping"></div>
+                </div>
+                <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 drop-shadow-lg animate-bounce">
+                  BATALLA COMPLETADA
+                </h1>
+                <div className="relative">
+                  <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center animate-pulse">
+                    <Crown className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="absolute -top-2 -left-2 w-4 h-4 bg-orange-500 rounded-full animate-ping"></div>
+                </div>
+              </div>
+              
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex justify-center items-center">
+                  <div className="text-6xl animate-spin opacity-20">🎉</div>
+                </div>
+                <p className="text-2xl text-white mb-4">
+                  ¡Felicidades! Has completado la batalla
+                </p>
+                <p className="text-xl text-gray-300">
+                  {quiz.titulo}
+                </p>
+              </div>
             </div>
 
-            <div className="p-6 bg-indigo-50 rounded-lg text-center">
-              <Star className="w-12 h-12 mx-auto mb-3 text-indigo-600" />
-              <p className="text-sm font-semibold text-gray-700 mb-1">
-                Calificación
-              </p>
-              <div className="flex justify-center gap-1 mb-2">
+            {/* Resultados principales */}
+            <div className="grid gap-6 md:grid-cols-3 mb-8">
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative p-6 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-2xl hover:from-yellow-600 hover:to-orange-600 transition-all transform hover:scale-105 shadow-xl shadow-yellow-500/25">
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <Trophy className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-3xl font-bold">{puntaje}</h3>
+                      <p className="text-sm text-yellow-100">Puntaje Final</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative p-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl hover:from-green-600 hover:to-emerald-600 transition-all transform hover:scale-105 shadow-xl shadow-green-500/25">
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <Target className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-3xl font-bold">{resultadoDetallado?.porcentaje || 0}%</h3>
+                      <p className="text-sm text-green-100">Porcentaje</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative p-6 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-2xl hover:from-blue-600 hover:to-cyan-600 transition-all transform hover:scale-105 shadow-xl shadow-blue-500/25">
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <Clock className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-3xl font-bold">{resultadoDetallado?.tiempo || "00:00"}</h3>
+                      <p className="text-sm text-blue-100">Tiempo</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Estrellas de calificación */}
+            <div className="text-center mb-8">
+              <div className="flex justify-center items-center gap-2 mb-4">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-8 h-8 ${i < estrellas ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+                    className={`w-12 h-12 ${
+                      i < (resultadoDetallado?.porcentaje >= 80 ? 5 : resultadoDetallado?.porcentaje >= 60 ? 4 : resultadoDetallado?.porcentaje >= 40 ? 3 : resultadoDetallado?.porcentaje >= 20 ? 2 : 1)
+                        ? 'text-yellow-400 fill-current animate-pulse'
+                        : 'text-gray-600'
+                    }`}
                   />
                 ))}
               </div>
-              <p className="text-lg font-semibold text-gray-700">
-                {porcentaje >= 90
-                  ? "Excelente"
-                  : porcentaje >= 70
-                    ? "Muy Bueno"
-                    : porcentaje >= 50
-                      ? "Bueno"
-                      : porcentaje >= 30
-                        ? "Regular"
-                        : "Necesita Mejorar"}
+              <p className="text-xl text-white font-semibold">
+                Calificación: {resultadoDetallado?.porcentaje >= 80 ? 'Excelente' : resultadoDetallado?.porcentaje >= 60 ? 'Bueno' : resultadoDetallado?.porcentaje >= 40 ? 'Regular' : 'Necesita mejorar'}
               </p>
             </div>
-          </div>
 
-          {/* Ranking */}
-          {ranking.length > 0 && (
-            <div className="mb-6 p-6 bg-blue-50 rounded-lg">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Ranking del Quiz
-              </h3>
-              <div className="space-y-2">
-                {ranking.slice(0, 5).map((usuario, index) => (
-                  <div
-                    key={usuario.id || index}
-                    className="flex items-center justify-between p-3 bg-white rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
-                          index === 0
-                            ? "bg-yellow-500"
-                            : index === 1
-                              ? "bg-gray-400"
-                              : index === 2
-                                ? "bg-orange-600"
-                                : "bg-indigo-600"
-                        }`}
-                      >
-                        {index + 1}
-                      </span>
-                      <span className="font-semibold text-gray-800">
-                        {usuario.nombre}
-                      </span>
+            {/* Ranking */}
+            {ranking.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-2xl font-bold text-white mb-6 text-center">🏆 Ranking de la Batalla</h3>
+                <div className="space-y-3">
+                  {ranking.slice(0, 5).map((participante, index) => (
+                    <div key={participante.id} className="flex items-center justify-between p-4 bg-white/10 rounded-xl border border-purple-500/30">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${
+                          index === 0 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                          index === 1 ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
+                          index === 2 ? 'bg-gradient-to-r from-orange-600 to-orange-700' :
+                          'bg-gradient-to-r from-blue-500 to-blue-600'
+                        }`}>
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="text-lg font-semibold text-white">{participante.nombre}</p>
+                          <p className="text-sm text-gray-400">Tiempo: {participante.tiempo}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-green-400">{participante.puntaje} pts</p>
+                        <p className="text-sm text-gray-400">{participante.porcentaje}%</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-indigo-600">
-                        {usuario.puntaje} pts
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {usuario.porcentaje}%
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="flex justify-center gap-4">
-            <button
-              onClick={reiniciarQuiz}
-              className="px-6 py-3 text-indigo-600 border-2 border-indigo-200 rounded-xl hover:bg-indigo-50 transition-colors flex items-center space-x-2"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>Reiniciar Quiz</span>
-            </button>
-            <button
-              onClick={() => window.history.back()}
-              className="px-6 py-3 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors flex items-center space-x-2"
-            >
-              <ArrowRight className="w-4 h-4" />
-              <span>Continuar</span>
-            </button>
+            {/* Botones de acción */}
+            <div className="flex justify-center gap-6">
+              <button
+                onClick={reiniciarQuiz}
+                className="px-8 py-4 text-indigo-600 border-2 border-indigo-200 rounded-xl hover:bg-indigo-50 transition-colors flex items-center space-x-2"
+              >
+                <RotateCcw className="w-5 h-5" />
+                <span>Reiniciar Quiz</span>
+              </button>
+              <button
+                onClick={() => window.history.back()}
+                className="px-8 py-4 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors flex items-center space-x-2"
+              >
+                <ArrowRight className="w-5 h-5" />
+                <span>Continuar</span>
+              </button>
+            </div>
           </div>
+
+          {/* Partículas decorativas */}
+          <div className="absolute top-10 left-10 text-4xl animate-bounce animation-delay-1000">🎉</div>
+          <div className="absolute top-20 right-20 text-3xl animate-pulse animation-delay-500">🏆</div>
+          <div className="absolute bottom-20 left-20 text-3xl animate-bounce animation-delay-1500">🌟</div>
+          <div className="absolute bottom-10 right-10 text-4xl animate-pulse animation-delay-2000">⚡</div>
         </div>
       </div>
     );
