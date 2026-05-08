@@ -76,13 +76,10 @@ export default function Clases() {
       setNombreClase("");
       setTexto("");
 
-      // Redirigir directamente a QuizAI después de crear clase
-      setTimeout(() => {
-        console.log(
-          "🎯 Redirigiendo directamente a QuizAI después de crear clase",
-        );
-        navigate("/profesor/quiz-ai");
-      }, 1500);
+      // Clase creada exitosamente - sin redirección automática
+      console.log(
+        "✅ Clase creada correctamente - usuario puede navegar manualmente",
+      );
     } catch (err) {
       console.error("Error:", err);
       setErrorTexto(`Error al crear la clase: ${err.message}`);
@@ -132,13 +129,10 @@ export default function Clases() {
       setPdf(null);
       setTitulo("");
 
-      // Redirigir directamente a QuizAI después de subir material
-      setTimeout(() => {
-        console.log(
-          "🎯 Redirigiendo directamente a QuizAI después de subir material",
-        );
-        navigate("/profesor/quiz-ai");
-      }, 1500);
+      // Material subido exitosamente - sin redirección automática
+      console.log(
+        "✅ Material subido correctamente - usuario puede navegar manualmente",
+      );
     } catch (err) {
       console.error("Error:", err);
       setError(`Error al subir el material: ${err.message}`);
