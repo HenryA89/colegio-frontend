@@ -39,6 +39,7 @@ export default function QuizAi() {
 
   const [mostrarRanking, setMostrarRanking] = useState(false);
   const [mostrarResultados, setMostrarResultados] = useState(false);
+  const [inputId, setInputId] = useState("");
 
   // =========================
   // VALIDACIÓN ID
@@ -51,6 +52,12 @@ export default function QuizAi() {
     Number.isInteger(materialClaseId) &&
     materialClaseId > 0;
 
+  const inputIdValido =
+    inputId &&
+    !isNaN(Number(inputId)) &&
+    Number.isInteger(Number(inputId)) &&
+    Number(inputId) > 0;
+
   // =========================
   // OBTENER QUIZ
   // =========================
@@ -59,15 +66,18 @@ export default function QuizAi() {
       setLoadingQuiz(true);
       setError(null);
 
-      console.log("🎯 MaterialClase ID:", materialClaseId);
+      // Usar ID de la URL o del input
+      const targetId = idValido ? materialClaseId : Number(inputId);
 
-      if (!idValido) {
+      if (!targetId) {
         setError(
-          "Para cargar un quiz específico, necesitas acceder a una URL válida como: /profesor/materiales/123/quiz",
+          "Por favor, ingresa un ID de quiz válido o accede a una URL como: /profesor/materiales/123/quiz",
         );
         setLoadingQuiz(false);
         return;
       }
+
+      console.log("🎯 MaterialClase ID a usar:", targetId);
 
       /**
        * IMPORTANTE:
@@ -77,7 +87,7 @@ export default function QuizAi() {
        * NO usando quiz_id
        */
 
-      const response = await getQuiz(materialClaseId, "profesor");
+      const response = await getQuiz(targetId, "profesor");
 
       console.log("✅ RESPONSE QUIZ:", response);
 
@@ -124,15 +134,16 @@ export default function QuizAi() {
       setLoadingRanking(true);
       setError(null);
 
-      if (!idValido) {
-        setError(
-          "Para ver el ranking, necesitas acceder a una URL válida como: /profesor/materiales/123/quiz",
-        );
+      // Usar ID de la URL o del input
+      const targetId = idValido ? materialClaseId : Number(inputId);
+
+      if (!targetId) {
+        setError("Por favor, ingresa un ID de quiz válido para ver el ranking");
         setLoadingRanking(false);
         return;
       }
 
-      const response = await getRanking(materialClaseId);
+      const response = await getRanking(targetId);
 
       console.log("🏆 RESPONSE RANKING:", response);
 
@@ -159,15 +170,18 @@ export default function QuizAi() {
       setLoadingResultados(true);
       setError(null);
 
-      if (!idValido) {
+      // Usar ID de la URL o del input
+      const targetId = idValido ? materialClaseId : Number(inputId);
+
+      if (!targetId) {
         setError(
-          "Para ver los resultados, necesitas acceder a una URL válida como: /profesor/materiales/123/quiz",
+          "Por favor, ingresa un ID de quiz válido para ver los resultados",
         );
         setLoadingResultados(false);
         return;
       }
 
-      const response = await getResultados(materialClaseId);
+      const response = await getResultados(targetId);
 
       console.log("📊 RESPONSE RESULTADOS:", response);
 
@@ -226,6 +240,51 @@ export default function QuizAi() {
         {error && (
           <div className="mb-8 bg-red-500/10 border border-red-500/20 text-red-300 p-5 rounded-2xl">
             {error}
+          </div>
+        )}
+
+        {/* INPUT PARA ID - Solo mostrar si no hay ID en URL */}
+        {!idValido && (
+          <div className="mb-8 bg-slate-800 border border-slate-700 rounded-2xl p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20">
+                <Brain className="w-6 h-6 text-blue-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  Ingresar ID de Quiz
+                </h3>
+                <p className="text-slate-400 text-sm">
+                  Si no tienes una URL específica, ingresa el ID del quiz que
+                  quieres consultar
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <input
+                type="number"
+                value={inputId}
+                onChange={(e) => setInputId(e.target.value)}
+                placeholder="Ej: 123"
+                className="flex-1 px-4 py-3 bg-slate-900 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-400 transition-all"
+              />
+
+              <button
+                onClick={handleGetQuiz}
+                disabled={loadingQuiz || !inputIdValido}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:opacity-50 rounded-xl text-white font-semibold transition-colors"
+              >
+                {loadingQuiz ? "Cargando..." : "Cargar Quiz"}
+              </button>
+            </div>
+
+            <div className="mt-4 text-slate-400 text-sm">
+              <p>O accede directamente con una URL como:</p>
+              <p className="font-mono text-blue-400">
+                /profesor/materiales/123/quiz
+              </p>
+            </div>
           </div>
         )}
 
