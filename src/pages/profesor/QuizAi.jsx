@@ -44,7 +44,9 @@ export default function QuizAi() {
       console.log("🎯 Tipo:", typeof id);
 
       if (!id || isNaN(Number(id))) {
-        throw new Error("ID inválido");
+        throw new Error(
+          "ID de quiz inválido. Debes acceder a un quiz específico.",
+        );
       }
 
       const response = await getQuiz(Number(id), "profesor");
@@ -127,6 +129,27 @@ export default function QuizAi() {
       setLoading(false);
     }
   };
+
+  // Si no hay ID, mostrar mensaje de error
+  if (!id) {
+    return (
+      <div className="min-h-screen p-6 bg-slate-950 text-white flex items-center justify-center">
+        <div className="text-center max-w-2xl">
+          <AlertCircle className="w-20 h-20 text-red-400 mx-auto mb-6" />
+          <h1 className="text-4xl font-bold mb-4">Quiz no encontrado</h1>
+          <p className="text-gray-300 mb-8">
+            Debes acceder a un quiz específico utilizando su ID en la URL.
+          </p>
+          <button
+            onClick={() => navigate("/profesor/seleccionmateria")}
+            className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition-colors"
+          >
+            Ir a Selección de Materia
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-6 bg-slate-950 text-white">
