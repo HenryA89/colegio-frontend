@@ -63,13 +63,13 @@ export default function AccionesClase() {
     {
       id: "quiz-ia",
       titulo: "Quiz IA",
-      descripcion: "Crea quizzes inteligentes con inteligencia artificial",
+      descripcion: "Gestiona y visualiza quizzes de la clase",
       icono: Brain,
       color: "from-purple-400 to-purple-600",
       bgColor: "from-purple-50 to-purple-100",
       borderColor: "border-purple-200",
       hoverColor: "hover:border-purple-400",
-      ruta: `/profesor/generar-quiz/${id}`,
+      ruta: `/profesor/quiz-ai/${id}`,
     },
     {
       id: "actividades",

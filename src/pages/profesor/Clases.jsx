@@ -77,7 +77,7 @@ export default function Clases() {
       setTexto("");
       cargarClases();
 
-      // Redirigir a acciones de clase después de crear clase
+      // Redirigir directamente a QuizAI después de crear clase
       setTimeout(() => {
         const primeraClase = clases[0];
         if (primeraClase) {
@@ -85,9 +85,7 @@ export default function Clases() {
             "claseSeleccionada",
             JSON.stringify(primeraClase),
           );
-          navigate(
-            `/profesor/acciones-clase/${primeraClase.id || primeraClase._id}`,
-          );
+          navigate(`/profesor/quiz-ai/${primeraClase.id || primeraClase._id}`);
         }
       }, 1500);
     } catch (err) {
@@ -139,7 +137,7 @@ export default function Clases() {
       setPdf(null);
       setTitulo("");
 
-      // Redirigir a acciones de clase después de subir material
+      // Redirigir directamente a QuizAI después de subir material
       setTimeout(() => {
         const primeraClase = clases[0];
         if (primeraClase) {
@@ -147,9 +145,7 @@ export default function Clases() {
             "claseSeleccionada",
             JSON.stringify(primeraClase),
           );
-          navigate(
-            `/profesor/acciones-clase/${primeraClase.id || primeraClase._id}`,
-          );
+          navigate(`/profesor/quiz-ai/${primeraClase.id || primeraClase._id}`);
         }
       }, 1500);
     } catch (err) {

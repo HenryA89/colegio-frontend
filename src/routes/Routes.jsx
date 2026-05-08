@@ -29,7 +29,6 @@ const EvaluacionesClase = lazy(
 const Actividades = lazy(() => import("../pages/profesor/Actividades"));
 const Asistencias = lazy(() => import("../pages/profesor/Asistencias"));
 const QuizAi = lazy(() => import("../pages/profesor/QuizAi"));
-const GenerarQuiz = lazy(() => import("../pages/profesor/GenerarQuiz"));
 const AccionesClase = lazy(() => import("../pages/profesor/AccionesClase"));
 
 const Usuarios = lazy(() => import("../pages/admin/Usuarios"));
@@ -152,12 +151,6 @@ export const routes = [
   {
     path: "/profesor/quiz-ai/:id",
     element: <QuizAi />,
-    isPrivate: true,
-    roles: ["profesor"],
-  },
-  {
-    path: "/profesor/generar-quiz/:id",
-    element: <GenerarQuiz />,
     isPrivate: true,
     roles: ["profesor"],
   },
