@@ -36,22 +36,16 @@ function ProfesorDashboard() {
         </Link>
 
         <Link
-          to="/profesor/seleccionmateria"
-          className="block w-full p-6 shadow-lg border-2 border-transparent bg-linear-to-br from-indigo-50 to-purple-50 hover:border-indigo-300 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
+          to="/profesor/quiz-ai"
+          className="block p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 border-transparent hover:border-indigo-200"
         >
-          <div className="flex items-center justify-center space-x-4">
-            <div className="p-4 text-3xl text-white bg-linear-to-br from-indigo-400 to-purple-600 rounded-xl">
-              🤖
-            </div>
-            <div className="text-left">
-              <h3 className="text-xl font-bold text-gray-800 transition-colors group-hover:text-indigo-600">
-                Seleccionar Materia
-              </h3>
-              <p className="text-sm text-gray-600">
-                Genera quizzes automáticos con inteligencia artificial
-              </p>
-            </div>
-          </div>
+          <div className="text-4xl mb-4">🧠</div>
+          <h3 className="text-xl font-bold text-gray-800 transition-colors group-hover:text-indigo-600">
+            Generar Quiz
+          </h3>
+          <p className="text-sm text-gray-600">
+            Genera quizzes automáticos con inteligencia artificial
+          </p>
         </Link>
       </div>
 

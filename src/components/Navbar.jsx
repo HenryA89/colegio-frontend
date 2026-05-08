@@ -77,7 +77,11 @@ export default function Navbar({ toggleSidebar }) {
               <div className="flex items-center ml-4 space-x-4">
                 {usuario.rol === "profesor" && (
                   <>
-                    <NavLink to="/profesor/clases" icon="📘" text="Clases" />
+                    <NavLink
+                      to="/profesor/quiz-ai"
+                      icon="🧠"
+                      text="Generar Quiz"
+                    />
                     <NavLink
                       to="/profesor/evaluaciones-clase"
                       icon="📝"
@@ -172,6 +176,12 @@ export default function Navbar({ toggleSidebar }) {
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
               {usuario.rol === "profesor" && (
                 <>
+                  <MobileNavLink
+                    to="/profesor/quiz-ai"
+                    icon="🧠"
+                    text="Generar Quiz"
+                    onClick={() => setIsMenuOpen(false)}
+                  />
                   <MobileNavLink
                     to="/profesor/clases"
                     icon="📘"

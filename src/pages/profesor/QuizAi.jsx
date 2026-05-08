@@ -32,7 +32,7 @@ export default function QuizAi() {
   const [mostrarResultados, setMostrarResultados] = useState(false);
 
   // =========================
-  // OBTENER QUIZ
+  // OBTENER QUIZ EXISTENTE
   // =========================
   const handleGetQuiz = async () => {
     try {
@@ -40,13 +40,21 @@ export default function QuizAi() {
       setError(null);
       setQuizStatus("loading");
 
+      console.log("🎯 Obteniendo quiz existente...");
+
+      // Si hay quizId en la URL, usar ese
+      // Si no, mostrar mensaje para que especifiquen un ID
+      if (!quizId) {
+        throw new Error(
+          "Para obtener un quiz existente, debes especificar un ID en la URL (ej: /profesor/quiz-ai/123)",
+        );
+      }
+
       console.log("🎯 ID recibido desde params:", quizId);
       console.log("🎯 Tipo:", typeof quizId);
 
-      if (!quizId || isNaN(Number(quizId))) {
-        throw new Error(
-          "ID de quiz inválido. Debes acceder a un quiz específico.",
-        );
+      if (isNaN(Number(quizId))) {
+        throw new Error("ID de quiz inválido. Debe ser un número.");
       }
 
       const response = await getQuiz(Number(quizId), "profesor");
@@ -86,18 +94,25 @@ export default function QuizAi() {
       setLoading(true);
       setError(null);
 
-      const response = await getRanking(Number(id));
-
-      console.log("🏆 RANKING:", response);
-
-      if (!response.success) {
-        throw new Error(response.error || "Error obteniendo ranking");
+      if (!quizId || isNaN(Number(quizId))) {
+        throw new Error(
+          "Se necesita un ID de quiz válido para obtener el ranking. Usa /profesor/quiz-ai/123",
+        );
       }
 
-      setRanking(response.data.top_3 || []);
+      console.log("🏆 Obteniendo ranking para quiz:", quizId);
+
+      const response = await getRanking(Number(quizId));
+
+      if (!response.success) {
+        throw new Error(response.message || "Error obteniendo ranking");
+      }
+
+      setRanking(response.data);
       setMostrarRanking(true);
+      console.log("✅ Ranking obtenido:", response.data);
     } catch (err) {
-      console.error(err);
+      console.error("❌ Error ranking:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -112,18 +127,25 @@ export default function QuizAi() {
       setLoading(true);
       setError(null);
 
-      const response = await getResultados(Number(id));
-
-      console.log("📊 RESULTADOS:", response);
-
-      if (!response.success) {
-        throw new Error(response.error || "Error obteniendo resultados");
+      if (!quizId || isNaN(Number(quizId))) {
+        throw new Error(
+          "Se necesita un ID de quiz válido para obtener los resultados. Usa /profesor/quiz-ai/123",
+        );
       }
 
-      setResultados(response.data.resultados || []);
+      console.log("📊 Obteniendo resultados para quiz:", quizId);
+
+      const response = await getResultados(Number(quizId));
+
+      if (!response.success) {
+        throw new Error(response.message || "Error obteniendo resultados");
+      }
+
+      setResultados(response.data);
       setMostrarResultados(true);
+      console.log("✅ Resultados obtenidos:", response.data);
     } catch (err) {
-      console.error(err);
+      console.error("❌ Error resultados:", err);
       setError(err.message);
     } finally {
       setLoading(false);
