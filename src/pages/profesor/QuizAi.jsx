@@ -18,9 +18,11 @@ import {
 } from "../../services/profesorServices/quizAiService";
 
 export default function QuizAi() {
-  const { id } = useParams();
+  const { materialId } = useParams();
 
   const navigate = useNavigate();
+
+  const location = useLocation();
 
   // ==========================================
   // STATES
@@ -46,10 +48,10 @@ export default function QuizAi() {
   // ==========================================
   // VALIDACIÓN ID
   // ==========================================
-  const materialClaseId = Number(id);
+  const materialClaseId = Number(materialId);
 
   const idValido =
-    id &&
+    materialId &&
     !isNaN(materialClaseId) &&
     Number.isInteger(materialClaseId) &&
     materialClaseId > 0;
@@ -160,7 +162,7 @@ export default function QuizAi() {
     if (idValido) {
       handleGetQuiz();
     }
-  }, [id]);
+  }, [materialId]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-6">
