@@ -48,20 +48,21 @@ export const getQuiz = async (quizId, userRole = "profesor") => {
     console.log(" Obteniendo quiz:", quizIdNumerico);
     const response = await api.get(`/api/v1/quizzes/${quizIdNumerico}`);
 
-    // Verificar respuesta exitosa
+    // Verificar respuesta exitosa (axios ya maneja el JSON)
     if (!response.data) {
       throw new Error("Respuesta vacía del servidor");
     }
 
     // Verificar estructura de respuesta del backend
-    const backendData = response.data;
+    const data = response.data;
 
-    if (!backendData.success) {
-      throw new Error("La respuesta del backend no indica éxito");
+    // Verificar éxito del backend
+    if (!data.success) {
+      throw new Error(data.error || "La respuesta del backend no indica éxito");
     }
 
     // Extraer y normalizar datos del quiz
-    const quizData = backendData.data.quiz;
+    const quizData = data.data.quiz;
 
     if (!quizData) {
       throw new Error("Estructura de respuesta inválida: falta data.quiz");
