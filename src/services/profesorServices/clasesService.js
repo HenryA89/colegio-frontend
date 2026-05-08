@@ -148,7 +148,7 @@ export const fetchClases = async (token) => {
     console.log("👨‍🏫 Obteniendo clases para profesor:", idValidado);
 
     // Obtener clases del profesor
-    const res = await api.get(`/profesores/asignar_materias`);
+    const res = await api.get(`/profesores/materias_asignadas`);
 
     console.log("✅ Respuesta del backend:", res.status);
     console.log("Estructura de la respuesta:", res.data);

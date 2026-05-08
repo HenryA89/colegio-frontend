@@ -23,157 +23,66 @@ export default function QuizAi() {
   const [mostrarRanking, setMostrarRanking] = useState(false);
   const [mostrarResultados, setMostrarResultados] = useState(false);
 
-  // ✅ Verificar configuración antes de enviar petición
-  const verificarConfiguracionPrevia = async () => {
-    try {
-      console.log("🔍 Verificando configuración previa...");
+  // ✅ Simplificado - Las validaciones ahora están en el servicio
 
-      // 1. Validar token JWT
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error(
-          "No hay token de autenticación. Por favor inicia sesión.",
-        );
-      }
-
-      // 2. Validar que el ID sea numérico (MaterialClase.id)
-      const quizIdNumerico = parseInt(id);
-      if (isNaN(quizIdNumerico) || quizIdNumerico <= 0) {
-        throw new Error(
-          "ID de quiz inválido. Debe ser un número entero positivo.",
-        );
-      }
-
-      // 3. Verificar que el usuario esté autenticado
-      const usuario = localStorage.getItem("usuario");
-      if (!usuario) {
-        throw new Error(
-          "Usuario no autenticado. Por favor inicia sesión nuevamente.",
-        );
-      }
-
-      const usuarioData = JSON.parse(usuario);
-      console.log("👤 Usuario autenticado:", usuarioData.rol);
-
-      // 4. Verificar permisos (solo profesores pueden ver quizzes)
-      if (usuarioData.rol !== "profesor") {
-        throw new Error(
-          "No tienes permisos para acceder a esta función. Solo profesores pueden ver quizzes.",
-        );
-      }
-
-      console.log("✅ Configuración previa verificada exitosamente");
-      return {
-        token,
-        quizId: quizIdNumerico,
-        usuario: usuarioData,
-      };
-    } catch (error) {
-      console.error("❌ Error en verificación previa:", error.message);
-      throw error;
-    }
-  };
-
-  // ✅ Obtener quiz con petición configurada correctamente
+  // ✅ Obtener quiz simplificado - validaciones en el servicio
   const handleGetQuiz = async () => {
     try {
-      // 1. Verificar configuración previa
-      const config = await verificarConfiguracionPrevia();
-
-      // 2. Iniciar estado de carga
+      // 1. Iniciar estado de carga
       setLoading(true);
       setError(null);
       setQuizStatus("loading");
 
-      console.log("📚 Enviando petición GET al backend...");
-      console.log("🔗 URL: /api/v1/quizzes/" + config.quizId);
-      console.log("🔐 Token: Bearer " + config.token.substring(0, 20) + "...");
+      // 2. Realizar petición con validaciones incluidas en el servicio
+      console.log("🎯 Obteniendo quiz:", id);
+      const quizResponse = await getQuiz(id, "profesor");
 
-      // 3. Realizar petición con configuración correcta
-      const response = await getQuiz(config.quizId);
-
-      // 4. ✅ Verificar respuesta exitosa
-      if (!response || !response.success) {
+      // 3. ✅ Verificar respuesta exitosa
+      if (!quizResponse || !quizResponse.success) {
         throw new Error("La respuesta del backend no indica éxito");
       }
 
-      // 5. ✅ Validar estructura de data.quiz
-      if (!response.data || !response.data.quiz) {
-        throw new Error("Estructura de respuesta inválida: falta data.quiz");
-      }
-
-      const quizData = response.data.quiz;
-
-      // 6. ✅ Validar datos mínimos del quiz
-      const camposRequeridos = [
-        "id",
-        "titulo",
-        "descripcion",
-        "duracion",
-        "preguntas",
-      ];
-      const camposFaltantes = camposRequeridos.filter(
-        (campo) => !quizData[campo],
-      );
-
-      if (camposFaltantes.length > 0) {
-        throw new Error(
-          `Datos del quiz incompletos. Faltan: ${camposFaltantes.join(", ")}`,
-        );
-      }
-
-      // 7. ✅ Verificar estado del quiz
-      if (!quizData.publicado) {
-        setQuizStatus("draft");
-        console.warn("⚠️ Quiz no publicado aún");
-      } else {
-        setQuizStatus("published");
-        console.log("✅ Quiz publicado y disponible");
-      }
-
-      // 8. ✅ Guardar datos en estado
+      // 4. ✅ Guardar datos en estado
+      const quizData = quizResponse.data.quiz;
       setQuiz(quizData);
-      setUserPermissions(config.usuario);
+      setUserPermissions(quizResponse.data.usuario);
+      setQuizStatus("published"); // Para profesores, asumimos que está disponible
 
-      console.log("✅ Quiz obtenido exitosamente:", {
+      console.log("✅ Quiz cargado exitosamente:", {
         id: quizData.id,
         titulo: quizData.titulo,
-        preguntas: quizData.preguntas?.length || 0,
+        materia: quizData.materia,
         publicado: quizData.publicado,
-        duracion: quizData.duracion,
       });
-
-      // 9. ✅ Mostrar información al usuario
-      console.log("🎯 Quiz configurado y listo para usar");
-    } catch (error) {
-      console.error("❌ Error en handleGetQuiz:", error);
+    } catch (err) {
+      console.error("❌ Error cargando quiz:", err);
 
       // ✅ Manejar errores apropiadamente
       let mensajeError =
-        "Error al obtener el quiz. Por favor intenta nuevamente.";
+        "No hay quiz disponible en este momento o el quiz no existe.";
 
-      if (error.message.includes("token")) {
+      if (err.message.includes("token")) {
         mensajeError =
           "Error de autenticación. Por favor inicia sesión nuevamente.";
-        localStorage.removeItem("token");
-        localStorage.removeItem("usuario");
-        window.location.href = "/login";
-      } else if (error.message.includes("permisos")) {
-        mensajeError = "No tienes permisos para realizar esta acción.";
-      } else if (error.message.includes("inválido")) {
+        navigate("/login");
+      } else if (err.message.includes("permisos")) {
+        mensajeError = "No tienes permisos para acceder a esta función.";
+      } else if (err.message.includes("inválido")) {
         mensajeError = "ID de quiz inválido. Verifica la URL.";
-      } else if (error.message.includes("encontrado")) {
+      } else if (err.message.includes("no encontrado")) {
         mensajeError = "Quiz no encontrado. Verifica el ID.";
-      } else if (error.message.includes("estructura")) {
+      } else if (err.message.includes("incompletos")) {
+        mensajeError =
+          "Los datos del quiz están incompletos. Contacta al administrador.";
+      } else if (err.message.includes("estructura")) {
         mensajeError = "Error en la respuesta del servidor. Intente más tarde.";
       } else {
-        mensajeError = error.message || mensajeError;
+        mensajeError = err.message || mensajeError;
       }
 
       setError(mensajeError);
       setQuizStatus("error");
     } finally {
-      // ✅ Finalizar estado de carga
       setLoading(false);
     }
   };

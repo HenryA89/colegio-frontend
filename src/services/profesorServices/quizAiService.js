@@ -1,81 +1,206 @@
 import api from "../../services/api";
 
-// Obtener quiz
-export const getQuiz = async (quizId) => {
+// Obtener quiz con validaciones robustas
+export const getQuiz = async (quizId, userRole = "profesor") => {
   try {
-    // ✅ Petición configurada correctamente
-    const response = await api.get(`/api/v1/quizzes/${quizId}`);
+    // Validaciones previas
+    console.log(" Verificando configuración para obtener quiz...");
 
-    // ✅ Verificar respuesta exitosa
+    // 1. Validar token JWT
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error(
+        "No hay token de autenticación. Por favor inicia sesión.",
+      );
+    }
+
+    // 2. Validar que el ID sea numérico
+    const quizIdNumerico = parseInt(quizId);
+    if (isNaN(quizIdNumerico) || quizIdNumerico <= 0) {
+      throw new Error(
+        "ID de quiz inválido. Debe ser un número entero positivo.",
+      );
+    }
+
+    // 3. Verificar que el usuario esté autenticado
+    const usuario = localStorage.getItem("usuario");
+    if (!usuario || usuario === "undefined" || usuario === "null") {
+      throw new Error(
+        "Usuario no autenticado. Por favor inicia sesión nuevamente.",
+      );
+    }
+
+    const usuarioData = JSON.parse(usuario);
+    console.log(` ${userRole} autenticado:`, usuarioData.nombre);
+
+    // 4. Verificar permisos según rol
+    if (userRole === "profesor" && usuarioData.rol !== "profesor") {
+      throw new Error(
+        "Solo los profesores pueden acceder a esta función. Acceso denegado.",
+      );
+    } else if (userRole === "estudiante" && usuarioData.rol !== "estudiante") {
+      throw new Error(
+        "Solo los estudiantes pueden responder quizzes. Acceso denegado.",
+      );
+    }
+
+    // Petición configurada correctamente
+    console.log(" Obteniendo quiz:", quizIdNumerico);
+    const response = await api.get(`/api/v1/quizzes/${quizIdNumerico}`);
+
+    // Verificar respuesta exitosa
     if (!response.data) {
       throw new Error("Respuesta vacía del servidor");
     }
 
-    // ✅ Verificar estructura de respuesta del backend
+    // Verificar estructura de respuesta del backend
     const backendData = response.data;
 
     if (!backendData.success) {
       throw new Error("La respuesta del backend no indica éxito");
     }
 
-    // ✅ Extraer y normalizar datos del quiz
+    // Extraer y normalizar datos del quiz
     const quizData = backendData.data.quiz;
 
     if (!quizData) {
       throw new Error("Estructura de respuesta inválida: falta data.quiz");
     }
 
-    // ✅ Normalizar estructura para el frontend
+    // Validar datos mínimos del quiz
+    const camposRequeridos =
+      userRole === "profesor"
+        ? ["id", "titulo", "materia"]
+        : ["id", "titulo", "descripcion", "duracion", "preguntas"];
+
+    const camposFaltantes = camposRequeridos.filter(
+      (campo) => !quizData[campo],
+    );
+
+    if (camposFaltantes.length > 0) {
+      throw new Error(
+        `Datos del quiz incompletos. Faltan: ${camposFaltantes.join(", ")}`,
+      );
+    }
+
+    // Validaciones específicas para estudiantes
+    if (userRole === "estudiante") {
+      // Verificar que el quiz esté publicado
+      if (!quizData.publicado && !backendData.data.published) {
+        throw new Error(
+          "Este quiz no está disponible aún. Contacta a tu profesor.",
+        );
+      }
+
+      // Verificar que tenga preguntas
+      if (!quizData.preguntas || quizData.preguntas.length === 0) {
+        throw new Error("Este quiz no tiene preguntas disponibles.");
+      }
+
+      // Verificar si ya fue respondido
+      if (backendData.data.ya_respondido) {
+        throw new Error(
+          "Ya has respondido este quiz. No puedes responderlo nuevamente.",
+        );
+      }
+    }
+
+    // Normalizar estructura para el frontend
     const normalizedQuiz = {
-      id: backendData.data.quiz_id || quizId,
-      titulo: backendData.data.titulo || quizData.materia || "Quiz sin título",
-      descripcion: `Quiz de ${quizData.materia || "general"} - Nivel ${quizData.nivel || "básico"}`,
+      id: backendData.data.quiz_id || quizData.id || quizIdNumerico,
+      titulo:
+        backendData.data.titulo ||
+        quizData.titulo ||
+        quizData.materia ||
+        "Quiz sin título",
+      descripcion:
+        quizData.descripcion ||
+        `Quiz de ${quizData.materia || "general"} - Nivel ${quizData.nivel || "básico"}`,
       materia: quizData.materia || backendData.data.materia || "General",
       nivel: quizData.nivel || "básico",
-      duracion: 30, // Valor por defecto si no viene del backend
-      publicado: true, // Asumimos que está publicado si el backend lo devuelve
+      duracion: quizData.duracion || 30, // Valor por defecto si no viene del backend
+      publicado: quizData.publicado || backendData.data.published || true, // Asumimos que está publicado si el backend lo devuelve
       preguntas: quizData.preguntas || [],
       total_preguntas:
         quizData.total_preguntas || quizData.preguntas?.length || 0,
       ya_respondido: backendData.data.ya_respondido || false,
       total_participantes: backendData.data.total_participantes || 0,
+      // Datos adicionales para profesores
+      creado_por: quizData.creado_por || usuarioData.id,
+      fecha_creacion: quizData.fecha_creacion || new Date().toISOString(),
+      fecha_actualizacion:
+        quizData.fecha_actualizacion || new Date().toISOString(),
     };
 
-    // ✅ Estructura estándar de respuesta para el frontend
+    console.log(" Quiz obtenido exitosamente:", {
+      id: normalizedQuiz.id,
+      titulo: normalizedQuiz.titulo,
+      preguntas: normalizedQuiz.preguntas.length,
+      duracion: normalizedQuiz.duracion,
+      publicado: normalizedQuiz.publicado,
+      rol: userRole,
+    });
+
+    // Estructura estándar de respuesta para el frontend
     return {
       success: true,
       data: {
         quiz: normalizedQuiz,
+        usuario: usuarioData,
       },
       message: "Quiz obtenido exitosamente",
     };
   } catch (error) {
-    console.error("❌ Error obteniendo quiz:", error);
+    console.error(" Error obteniendo quiz:", error);
 
-    // ✅ Manejo específico de errores
-    if (error.response?.status === 401) {
-      throw new Error("No autorizado. Token inválido o expirado.");
+    // Manejo específico de errores
+    let mensajeError = "No se pudo obtener el quiz. Verifica tu conexión.";
+
+    if (error.message.includes("token")) {
+      mensajeError =
+        "Error de autenticación. Por favor inicia sesión nuevamente.";
+      localStorage.removeItem("token");
+      localStorage.removeItem("usuario");
+    } else if (error.message.includes("permisos")) {
+      mensajeError = "No tienes permisos para acceder a esta función.";
+    } else if (error.message.includes("inválido")) {
+      mensajeError = "ID de quiz inválido. Verifica la URL.";
+    } else if (error.message.includes("no encontrado")) {
+      mensajeError = "Quiz no encontrado. Verifica el ID.";
+    } else if (error.message.includes("no está disponible")) {
+      mensajeError =
+        "Este quiz no está disponible aún. Contacta a tu profesor.";
+    } else if (error.message.includes("preguntas")) {
+      mensajeError = "Este quiz no tiene preguntas disponibles.";
+    } else if (error.message.includes("ya respondido")) {
+      mensajeError =
+        "Ya has respondido este quiz. No puedes responderlo nuevamente.";
+    } else if (error.message.includes("estructura")) {
+      mensajeError = "Error en la respuesta del servidor. Intente más tarde.";
+    } else if (error.response?.status === 401) {
+      mensajeError = "No autorizado. Token inválido o expirado.";
+      localStorage.removeItem("token");
+      localStorage.removeItem("usuario");
     } else if (error.response?.status === 403) {
-      throw new Error(
-        "Acceso denegado. No tienes permisos para ver este quiz.",
-      );
+      mensajeError = "Acceso denegado. No tienes permisos para ver este quiz.";
     } else if (error.response?.status === 404) {
-      throw new Error("Quiz no encontrado. Verifica el ID.");
+      mensajeError = "Quiz no encontrado. Verifica el ID.";
     } else if (error.response?.status === 422) {
-      throw new Error(
-        "ID de quiz inválido. Debe ser un número entero positivo.",
-      );
+      mensajeError = "ID de quiz inválido. Debe ser un número entero positivo.";
     } else if (error.response?.status >= 500) {
-      throw new Error("Error del servidor. Por favor intenta más tarde.");
+      mensajeError = "Error del servidor. Por favor intenta más tarde.";
     } else {
-      throw new Error("No se pudo obtener el quiz. Verifica tu conexión.");
+      mensajeError = error.message || mensajeError;
     }
+
+    throw new Error(mensajeError);
   }
 };
 
 // Responder quiz
 export const submitQuiz = async (quizId, respuestas) => {
   try {
+    // Validar configuración previa
     // ✅ Validar configuración previa
     const token = localStorage.getItem("token");
     if (!token) {

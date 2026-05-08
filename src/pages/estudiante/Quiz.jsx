@@ -63,120 +63,31 @@ export default function QuizEstudiante() {
   const [userPermissions, setUserPermissions] = useState(null);
   const [resultadoDetallado, setResultadoDetallado] = useState(null);
 
-  // ✅ Verificar configuración previa del estudiante
-  const verificarConfiguracionEstudiante = async () => {
-    try {
-      console.log("🔍 Verificando configuración del estudiante...");
+  // ✅ Simplificado - Las validaciones ahora están en el servicio
 
-      // 1. Validar token JWT
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error(
-          "No hay token de autenticación. Por favor inicia sesión.",
-        );
-      }
-
-      // 2. Validar que el ID sea numérico
-      const quizIdNumerico = parseInt(quizId);
-      if (isNaN(quizIdNumerico) || quizIdNumerico <= 0) {
-        throw new Error(
-          "ID de quiz inválido. Debe ser un número entero positivo.",
-        );
-      }
-
-      // 3. Verificar que el usuario esté autenticado
-      const usuario = localStorage.getItem("usuario");
-      if (!usuario || usuario === "undefined" || usuario === "null") {
-        throw new Error(
-          "Usuario no autenticado. Por favor inicia sesión nuevamente.",
-        );
-      }
-
-      const usuarioData = JSON.parse(usuario);
-      console.log("👤 Estudiante autenticado:", usuarioData.nombre);
-
-      // 4. Verificar permisos (solo estudiantes pueden responder quizzes)
-      if (usuarioData.rol !== "estudiante") {
-        throw new Error(
-          "Solo los estudiantes pueden responder quizzes. Acceso denegado.",
-        );
-      }
-
-      console.log("✅ Configuración del estudiante verificada exitosamente");
-      return {
-        token,
-        quizId: quizIdNumerico,
-        usuario: usuarioData,
-      };
-    } catch (error) {
-      console.error("❌ Error en verificación del estudiante:", error.message);
-      throw error;
-    }
-  };
-
-  // ✅ Obtener el quiz con validación completa
+  // ✅ Obtener el quiz simplificado - validaciones en el servicio
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
-        // 1. Verificar configuración previa
-        const config = await verificarConfiguracionEstudiante();
-
-        // 2. Iniciar estado de carga
+        // 1. Iniciar estado de carga
         setLoading(true);
         setError("");
         setQuizStatus("loading");
 
-        console.log("🎯 Cargando quiz:", config.quizId);
+        console.log("🎯 Cargando quiz:", quizId);
 
-        // 3. Realizar petición con configuración correcta
-        const quizResponse = await getQuiz(config.quizId);
+        // 2. Realizar petición con validaciones incluidas en el servicio
+        const quizResponse = await getQuiz(quizId, "estudiante");
 
-        // 4. ✅ Verificar respuesta exitosa
+        // 3. ✅ Verificar respuesta exitosa
         if (!quizResponse || !quizResponse.success) {
           throw new Error("La respuesta del backend no indica éxito");
         }
 
-        // 5. ✅ Validar estructura de data.quiz
-        if (!quizResponse.data || !quizResponse.data.quiz) {
-          throw new Error("Estructura de respuesta inválida: falta data.quiz");
-        }
-
+        // 4. ✅ Guardar datos en estado
         const quizData = quizResponse.data.quiz;
-
-        // 6. ✅ Validar datos mínimos del quiz
-        const camposRequeridos = [
-          "id",
-          "titulo",
-          "descripcion",
-          "duracion",
-          "preguntas",
-        ];
-        const camposFaltantes = camposRequeridos.filter(
-          (campo) => !quizData[campo],
-        );
-
-        if (camposFaltantes.length > 0) {
-          throw new Error(
-            `Datos del quiz incompletos. Faltan: ${camposFaltantes.join(", ")}`,
-          );
-        }
-
-        // 7. ✅ Verificar que el quiz esté publicado
-        if (!quizData.publicado) {
-          setQuizStatus("draft");
-          throw new Error(
-            "Este quiz no está disponible aún. Contacta a tu profesor.",
-          );
-        }
-
-        // 8. ✅ Verificar que tenga preguntas
-        if (!quizData.preguntas || quizData.preguntas.length === 0) {
-          throw new Error("Este quiz no tiene preguntas disponibles.");
-        }
-
-        // 9. ✅ Guardar datos en estado
         setQuiz(quizData);
-        setUserPermissions(config.usuario);
+        setUserPermissions(quizResponse.data.usuario);
         setQuizStatus("published");
         setRespuestas(Array(quizData.preguntas.length).fill(""));
         setTiempoRestante(quizData.duracion * 60); // Convertir a segundos
@@ -198,8 +109,6 @@ export default function QuizEstudiante() {
         if (err.message.includes("token")) {
           mensajeError =
             "Error de autenticación. Por favor inicia sesión nuevamente.";
-          localStorage.removeItem("token");
-          localStorage.removeItem("usuario");
           navigate("/login");
         } else if (err.message.includes("permisos")) {
           mensajeError = "No tienes permisos para acceder a esta función.";
@@ -210,6 +119,9 @@ export default function QuizEstudiante() {
             "Este quiz no está disponible aún. Contacta a tu profesor.";
         } else if (err.message.includes("preguntas")) {
           mensajeError = "Este quiz no tiene preguntas disponibles.";
+        } else if (err.message.includes("ya respondido")) {
+          mensajeError =
+            "Ya has respondido este quiz. No puedes responderlo nuevamente.";
         } else {
           mensajeError = err.message || mensajeError;
         }
