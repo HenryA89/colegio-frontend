@@ -62,7 +62,9 @@ export default function QuizAi() {
       console.log("🎯 MaterialClase ID:", materialClaseId);
 
       if (!idValido) {
-        throw new Error("ID inválido. Debes acceder a un quiz válido.");
+        throw new Error(
+          "Para cargar un quiz específico, necesitas acceder a una URL válida como: /profesor/material/123/quiz",
+        );
       }
 
       /**
@@ -184,32 +186,9 @@ export default function QuizAi() {
   }, [id]);
 
   // =========================
-  // ERROR PAGE
+  // SIEMPRE MOSTRAR TARJETAS
   // =========================
-  if (!idValido) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
-        <div className="max-w-xl w-full bg-slate-900 border border-slate-800 rounded-3xl p-10 text-center">
-          <AlertCircle className="w-20 h-20 text-red-500 mx-auto mb-6" />
-
-          <h1 className="text-4xl font-black text-white mb-4">
-            Quiz no encontrado
-          </h1>
-
-          <p className="text-slate-400 mb-8">
-            El identificador enviado no es válido.
-          </p>
-
-          <button
-            onClick={() => navigate("/profesor/seleccionmateria")}
-            className="px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all"
-          >
-            Volver
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Eliminada la página de error para siempre mostrar las tres tarjetas
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-6">
@@ -225,7 +204,9 @@ export default function QuizAi() {
               <h1 className="text-5xl font-black">QUIZ AI CONTROL CENTER</h1>
 
               <p className="text-slate-400 mt-2">
-                Gestión inteligente de quizzes académicos
+                {idValido
+                  ? "Gestión inteligente de quizzes académicos"
+                  : "Selecciona una acción para gestionar quizzes"}
               </p>
             </div>
           </div>
