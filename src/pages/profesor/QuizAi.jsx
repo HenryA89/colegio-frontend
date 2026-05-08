@@ -131,7 +131,7 @@ export default function QuizAi() {
   };
 
   // Si no hay ID, mostrar mensaje de error
-  if (!id) {
+  if (!quizId) {
     return (
       <div className="min-h-screen p-6 bg-slate-950 text-white flex items-center justify-center">
         <div className="text-center max-w-2xl">
