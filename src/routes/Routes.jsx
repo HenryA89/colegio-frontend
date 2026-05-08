@@ -149,6 +149,12 @@ export const routes = [
     roles: ["profesor"],
   },
   {
+    path: "/profesor/quiz-ai",
+    element: <QuizAi />,
+    isPrivate: true,
+    roles: ["profesor"],
+  },
+  {
     path: "/profesor/quiz-ai/:quizId",
     element: <QuizAi />,
     isPrivate: true,

@@ -76,59 +76,12 @@ export default function Clases() {
       setNombreClase("");
       setTexto("");
 
-      // Recargar clases para obtener la más reciente
-      const clasesActualizadas = await fetchClases(usuario?.token);
-      setClases(clasesActualizadas || []);
-
-      setTimeout(async () => {
-        if (clasesActualizadas && clasesActualizadas.length > 0) {
-          const ultimaClase = clasesActualizadas[0]; // La más reciente
-          console.log("🎯 Procesando clase para QuizAI:", ultimaClase);
-
-          // Guardar clase seleccionada en localStorage (para contexto)
-          localStorage.setItem(
-            "claseSeleccionada",
-            JSON.stringify(ultimaClase),
-          );
-
-          try {
-            // Generar quiz desde el contenido de la clase
-            console.log("🤖 Generando quiz para clase:", ultimaClase.id);
-
-            const response = await fetch(
-              `/api/v1/clases/${ultimaClase.id}/generar-quiz`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-              },
-            );
-
-            if (!response.ok) {
-              throw new Error("Error generando el quiz");
-            }
-
-            const data = await response.json();
-            console.log("✅ Quiz generado:", data);
-
-            if (data.success && data.quizId) {
-              // Redirigir a QuizAI con el quizId generado
-              navigate(`/profesor/quiz-ai/${data.quizId}`);
-            } else {
-              throw new Error("No se pudo obtener el ID del quiz generado");
-            }
-          } catch (error) {
-            console.error("❌ Error generando quiz:", error);
-            setErrorTexto(
-              "No se pudo generar el quiz automáticamente. Por favor, usa el botón 'Gestionar' para crearlo manualmente.",
-            );
-          }
-        } else {
-          console.error("❌ No se encontraron clases después de crear clase");
-          setErrorTexto("No se pudo encontrar la clase para generar el QuizAI");
-        }
+      // Redirigir directamente a QuizAI después de crear clase
+      setTimeout(() => {
+        console.log(
+          "🎯 Redirigiendo directamente a QuizAI después de crear clase",
+        );
+        navigate("/profesor/quiz-ai");
       }, 1500);
     } catch (err) {
       console.error("Error:", err);
@@ -179,61 +132,12 @@ export default function Clases() {
       setPdf(null);
       setTitulo("");
 
-      // Recargar clases para obtener la más reciente
-      const clasesActualizadas = await fetchClases(usuario?.token);
-      setClases(clasesActualizadas || []);
-
-      setTimeout(async () => {
-        if (clasesActualizadas && clasesActualizadas.length > 0) {
-          const ultimaClase = clasesActualizadas[0]; // La más reciente
-          console.log("🎯 Procesando clase para QuizAI:", ultimaClase);
-
-          // Guardar clase seleccionada en localStorage (para contexto)
-          localStorage.setItem(
-            "claseSeleccionada",
-            JSON.stringify(ultimaClase),
-          );
-
-          try {
-            // Generar quiz desde el material de la clase
-            console.log("🤖 Generando quiz para clase:", ultimaClase.id);
-
-            const response = await fetch(
-              `/api/v1/clases/${ultimaClase.id}/generar-quiz`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-              },
-            );
-
-            if (!response.ok) {
-              throw new Error("Error generando el quiz");
-            }
-
-            const data = await response.json();
-            console.log("✅ Quiz generado:", data);
-
-            if (data.success && data.quizId) {
-              // Redirigir a QuizAI con el quizId generado
-              navigate(`/profesor/quiz-ai/${data.quizId}`);
-            } else {
-              throw new Error("No se pudo obtener el ID del quiz generado");
-            }
-          } catch (error) {
-            console.error("❌ Error generando quiz:", error);
-            setError(
-              "No se pudo generar el quiz automáticamente. Por favor, usa el botón 'Gestionar' para crearlo manualmente.",
-            );
-          }
-        } else {
-          console.error(
-            "❌ No se encontraron clases después de subir material",
-          );
-          setError("No se pudo encontrar la clase para generar el QuizAI");
-        }
+      // Redirigir directamente a QuizAI después de subir material
+      setTimeout(() => {
+        console.log(
+          "🎯 Redirigiendo directamente a QuizAI después de subir material",
+        );
+        navigate("/profesor/quiz-ai");
       }, 1500);
     } catch (err) {
       console.error("Error:", err);
