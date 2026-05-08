@@ -75,17 +75,25 @@ export default function Clases() {
       // Limpiar formulario
       setNombreClase("");
       setTexto("");
-      cargarClases();
 
-      // Redirigir directamente a QuizAI después de crear clase
+      // Recargar clases para obtener la más reciente y redirigir
+      const clasesActualizadas = await fetchClases(usuario?.token);
+      setClases(clasesActualizadas || []);
+
       setTimeout(() => {
-        const primeraClase = clases[0];
-        if (primeraClase) {
+        if (clasesActualizadas && clasesActualizadas.length > 0) {
+          const ultimaClase = clasesActualizadas[0]; // La más reciente
+          console.log("🎯 Redirigiendo a QuizAI con clase:", ultimaClase);
           localStorage.setItem(
             "claseSeleccionada",
-            JSON.stringify(primeraClase),
+            JSON.stringify(ultimaClase),
           );
-          navigate(`/profesor/quiz-ai/${primeraClase.id || primeraClase._id}`);
+          navigate(`/profesor/quiz-ai/${ultimaClase.id || ultimaClase._id}`);
+        } else {
+          console.error("❌ No se encontraron clases después de crear clase");
+          setErrorTexto(
+            "No se pudo encontrar la clase para redirigir al QuizAI",
+          );
         }
       }, 1500);
     } catch (err) {
@@ -137,15 +145,24 @@ export default function Clases() {
       setPdf(null);
       setTitulo("");
 
-      // Redirigir directamente a QuizAI después de subir material
+      // Recargar clases para obtener la más reciente y redirigir
+      const clasesActualizadas = await fetchClases(usuario?.token);
+      setClases(clasesActualizadas || []);
+
       setTimeout(() => {
-        const primeraClase = clases[0];
-        if (primeraClase) {
+        if (clasesActualizadas && clasesActualizadas.length > 0) {
+          const ultimaClase = clasesActualizadas[0]; // La más reciente
+          console.log("🎯 Redirigiendo a QuizAI con clase:", ultimaClase);
           localStorage.setItem(
             "claseSeleccionada",
-            JSON.stringify(primeraClase),
+            JSON.stringify(ultimaClase),
           );
-          navigate(`/profesor/quiz-ai/${primeraClase.id || primeraClase._id}`);
+          navigate(`/profesor/quiz-ai/${ultimaClase.id || ultimaClase._id}`);
+        } else {
+          console.error(
+            "❌ No se encontraron clases después de subir material",
+          );
+          setError("No se pudo encontrar la clase para redirigir al QuizAI");
         }
       }, 1500);
     } catch (err) {
