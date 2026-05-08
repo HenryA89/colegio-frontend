@@ -29,14 +29,14 @@ function ProfesorDashboard() {
                 Seleccionar Materia
               </h3>
               <p className="text-sm text-gray-600">
-                Elige una materia para gestionar sus actividades
+                Genera quizzes automáticos con inteligencia artificial
               </p>
             </div>
           </div>
         </Link>
 
         <Link
-          to="/profesor/quiz-ai"
+          to="/profesor/seleccionmateria"
           className="block w-full p-6 shadow-lg border-2 border-transparent bg-linear-to-br from-indigo-50 to-purple-50 hover:border-indigo-300 hover:shadow-xl hover:scale-105 transition-all duration-300 rounded-2xl group"
         >
           <div className="flex items-center justify-center space-x-4">
@@ -45,7 +45,7 @@ function ProfesorDashboard() {
             </div>
             <div className="text-left">
               <h3 className="text-xl font-bold text-gray-800 transition-colors group-hover:text-indigo-600">
-                Quiz con IA
+                Seleccionar Materia
               </h3>
               <p className="text-sm text-gray-600">
                 Genera quizzes automáticos con inteligencia artificial

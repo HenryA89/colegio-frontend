@@ -76,6 +76,20 @@ export default function Clases() {
       setNombreClase("");
       setTexto("");
       cargarClases();
+
+      // Redirigir a acciones de clase después de crear clase
+      setTimeout(() => {
+        const primeraClase = clases[0];
+        if (primeraClase) {
+          localStorage.setItem(
+            "claseSeleccionada",
+            JSON.stringify(primeraClase),
+          );
+          navigate(
+            `/profesor/acciones-clase/${primeraClase.id || primeraClase._id}`,
+          );
+        }
+      }, 1500);
     } catch (err) {
       console.error("Error:", err);
       setErrorTexto(`Error al crear la clase: ${err.message}`);
@@ -124,7 +138,20 @@ export default function Clases() {
       setTexto("");
       setPdf(null);
       setTitulo("");
-      // No recargar clases automáticamente para no depender de su funcionamiento
+
+      // Redirigir a acciones de clase después de subir material
+      setTimeout(() => {
+        const primeraClase = clases[0];
+        if (primeraClase) {
+          localStorage.setItem(
+            "claseSeleccionada",
+            JSON.stringify(primeraClase),
+          );
+          navigate(
+            `/profesor/acciones-clase/${primeraClase.id || primeraClase._id}`,
+          );
+        }
+      }, 1500);
     } catch (err) {
       console.error("Error:", err);
       setError(`Error al subir el material: ${err.message}`);
