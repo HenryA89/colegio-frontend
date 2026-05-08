@@ -3,7 +3,7 @@ import api from "../../services/api";
 // ==========================================
 // OBTENER QUIZ
 // ==========================================
-export const getQuiz = async (quizId, userRole = "profesor") => {
+export const getQuiz = async (materialClaseId, userRole = "profesor") => {
   try {
     console.log("📚 Obteniendo quiz...");
 
@@ -29,7 +29,7 @@ export const getQuiz = async (quizId, userRole = "profesor") => {
     // VALIDAR ID
     // ==========================================
 
-    const quizIdNumerico = parseInt(quizId, 10);
+    const quizIdNumerico = parseInt(materialClaseId, 10);
 
     if (!Number.isInteger(quizIdNumerico) || quizIdNumerico <= 0) {
       console.error("❌ quizId inválido:", quizId);
@@ -45,7 +45,7 @@ export const getQuiz = async (quizId, userRole = "profesor") => {
     // PETICIÓN
     // ==========================================
 
-    const response = await api.get(`/api/v1/quizzes/${quizIdNumerico}`);
+    const response = await api.get(`/api/v1/materiales/${quizIdNumerico}/quiz`);
 
     console.log("✅ Response quiz:", response.data);
 

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+
 import {
   Brain,
   Trophy,
@@ -7,6 +8,9 @@ import {
   Eye,
   AlertCircle,
   CheckCircle,
+  Loader2,
+  BookOpen,
+  Users,
 } from "lucide-react";
 
 import {
@@ -16,65 +20,87 @@ import {
 } from "../../services/profesorServices/quizAiService";
 
 export default function QuizAi() {
-  const { quizId } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
 
+  // =========================
+  // STATES
+  // =========================
   const [quiz, setQuiz] = useState(null);
+
   const [ranking, setRanking] = useState([]);
   const [resultados, setResultados] = useState([]);
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [loadingQuiz, setLoadingQuiz] = useState(false);
+  const [loadingRanking, setLoadingRanking] = useState(false);
+  const [loadingResultados, setLoadingResultados] = useState(false);
 
-  const [quizStatus, setQuizStatus] = useState(null);
+  const [error, setError] = useState(null);
 
   const [mostrarRanking, setMostrarRanking] = useState(false);
   const [mostrarResultados, setMostrarResultados] = useState(false);
 
   // =========================
-  // OBTENER QUIZ EXISTENTE
+  // VALIDACIÓN ID
+  // =========================
+  const materialClaseId = Number(id);
+
+  const idValido =
+    id &&
+    !isNaN(materialClaseId) &&
+    Number.isInteger(materialClaseId) &&
+    materialClaseId > 0;
+
+  // =========================
+  // OBTENER QUIZ
   // =========================
   const handleGetQuiz = async () => {
     try {
-      setLoading(true);
+      setLoadingQuiz(true);
       setError(null);
-      setQuizStatus("loading");
 
-      console.log("🎯 Obteniendo quiz existente...");
+      console.log("🎯 MaterialClase ID:", materialClaseId);
 
-      // Si hay quizId en la URL, usar ese
-      // Si no, mostrar mensaje para que especifiquen un ID
-      if (!quizId) {
-        throw new Error(
-          "Para obtener un quiz existente, debes especificar un ID en la URL (ej: /profesor/quiz-ai/123)",
-        );
+      if (!idValido) {
+        throw new Error("ID inválido. Debes acceder a un quiz válido.");
       }
 
-      console.log("🎯 ID recibido desde params:", quizId);
-      console.log("🎯 Tipo:", typeof quizId);
+      /**
+       * IMPORTANTE:
+       * El backend busca el quiz usando:
+       * material_clase_id
+       *
+       * NO usando quiz_id
+       */
 
-      if (isNaN(Number(quizId))) {
-        throw new Error("ID de quiz inválido. Debe ser un número.");
-      }
-
-      const response = await getQuiz(Number(quizId), "profesor");
+      const response = await getQuiz(materialClaseId, "profesor");
 
       console.log("✅ RESPONSE QUIZ:", response);
 
-      if (!response.success) {
-        throw new Error(response.message || "Error obteniendo quiz");
+      if (!response?.success) {
+        throw new Error(response?.message || "No se pudo obtener el quiz");
       }
 
-      const quizData = response.data.quiz;
+      /**
+       * Backend:
+       *
+       * data: {
+       *   quiz_id,
+       *   titulo,
+       *   materia,
+       *   quiz: {},
+       *   ya_respondido,
+       *   total_participantes
+       * }
+       */
+
+      const quizData = response.data;
 
       setQuiz(quizData);
-      setQuizStatus("published");
 
       console.log("✅ Quiz cargado:", quizData);
     } catch (err) {
       console.error("❌ ERROR QUIZ:", err);
-
-      setQuizStatus("error");
 
       setError(err.message || "No se pudo cargar el quiz correctamente.");
 
@@ -82,7 +108,7 @@ export default function QuizAi() {
         navigate("/login");
       }
     } finally {
-      setLoading(false);
+      setLoadingQuiz(false);
     }
   };
 
@@ -91,31 +117,29 @@ export default function QuizAi() {
   // =========================
   const handleGetRanking = async () => {
     try {
-      setLoading(true);
+      setLoadingRanking(true);
       setError(null);
 
-      if (!quizId || isNaN(Number(quizId))) {
-        throw new Error(
-          "Se necesita un ID de quiz válido para obtener el ranking. Usa /profesor/quiz-ai/123",
-        );
+      if (!idValido) {
+        throw new Error("ID inválido para ranking.");
       }
 
-      console.log("🏆 Obteniendo ranking para quiz:", quizId);
+      const response = await getRanking(materialClaseId);
 
-      const response = await getRanking(Number(quizId));
+      console.log("🏆 RESPONSE RANKING:", response);
 
-      if (!response.success) {
-        throw new Error(response.message || "Error obteniendo ranking");
+      if (!response?.success) {
+        throw new Error(response?.message || "Error obteniendo ranking");
       }
 
-      setRanking(response.data);
+      setRanking(response.data || []);
       setMostrarRanking(true);
-      console.log("✅ Ranking obtenido:", response.data);
     } catch (err) {
-      console.error("❌ Error ranking:", err);
+      console.error("❌ ERROR RANKING:", err);
+
       setError(err.message);
     } finally {
-      setLoading(false);
+      setLoadingRanking(false);
     }
   };
 
@@ -124,49 +148,63 @@ export default function QuizAi() {
   // =========================
   const handleGetResultados = async () => {
     try {
-      setLoading(true);
+      setLoadingResultados(true);
       setError(null);
 
-      if (!quizId || isNaN(Number(quizId))) {
-        throw new Error(
-          "Se necesita un ID de quiz válido para obtener los resultados. Usa /profesor/quiz-ai/123",
-        );
+      if (!idValido) {
+        throw new Error("ID inválido para resultados.");
       }
 
-      console.log("📊 Obteniendo resultados para quiz:", quizId);
+      const response = await getResultados(materialClaseId);
 
-      const response = await getResultados(Number(quizId));
+      console.log("📊 RESPONSE RESULTADOS:", response);
 
-      if (!response.success) {
-        throw new Error(response.message || "Error obteniendo resultados");
+      if (!response?.success) {
+        throw new Error(response?.message || "Error obteniendo resultados");
       }
 
-      setResultados(response.data);
+      setResultados(response.data || []);
       setMostrarResultados(true);
-      console.log("✅ Resultados obtenidos:", response.data);
     } catch (err) {
-      console.error("❌ Error resultados:", err);
+      console.error("❌ ERROR RESULTADOS:", err);
+
       setError(err.message);
     } finally {
-      setLoading(false);
+      setLoadingResultados(false);
     }
   };
 
-  // Si no hay ID, mostrar mensaje de error
-  if (!quizId) {
+  // =========================
+  // AUTO LOAD
+  // =========================
+  useEffect(() => {
+    if (idValido) {
+      handleGetQuiz();
+    }
+  }, [id]);
+
+  // =========================
+  // ERROR PAGE
+  // =========================
+  if (!idValido) {
     return (
-      <div className="min-h-screen p-6 bg-slate-950 text-white flex items-center justify-center">
-        <div className="text-center max-w-2xl">
-          <AlertCircle className="w-20 h-20 text-red-400 mx-auto mb-6" />
-          <h1 className="text-4xl font-bold mb-4">Quiz no encontrado</h1>
-          <p className="text-gray-300 mb-8">
-            Debes acceder a un quiz específico utilizando su ID en la URL.
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+        <div className="max-w-xl w-full bg-slate-900 border border-slate-800 rounded-3xl p-10 text-center">
+          <AlertCircle className="w-20 h-20 text-red-500 mx-auto mb-6" />
+
+          <h1 className="text-4xl font-black text-white mb-4">
+            Quiz no encontrado
+          </h1>
+
+          <p className="text-slate-400 mb-8">
+            El identificador enviado no es válido.
           </p>
+
           <button
             onClick={() => navigate("/profesor/seleccionmateria")}
-            className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition-colors"
+            className="px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all"
           >
-            Ir a Selección de Materia
+            Volver
           </button>
         </div>
       </div>
@@ -174,120 +212,223 @@ export default function QuizAi() {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-slate-950 text-white">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold mb-10">QUIZ CONTROL CENTER</h1>
+    <div className="min-h-screen bg-slate-950 text-white p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* HEADER */}
+        <div className="mb-10">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="bg-cyan-500/10 p-4 rounded-2xl border border-cyan-500/20">
+              <Brain className="w-10 h-10 text-cyan-400" />
+            </div>
 
-        {/* BOTONES */}
+            <div>
+              <h1 className="text-5xl font-black">QUIZ AI CONTROL CENTER</h1>
+
+              <p className="text-slate-400 mt-2">
+                Gestión inteligente de quizzes académicos
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ERROR */}
+        {error && (
+          <div className="mb-8 bg-red-500/10 border border-red-500/20 text-red-300 p-5 rounded-2xl">
+            {error}
+          </div>
+        )}
+
+        {/* ACTIONS */}
         <div className="grid md:grid-cols-3 gap-6 mb-10">
+          {/* QUIZ */}
           <button
             onClick={handleGetQuiz}
-            disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 p-6 rounded-xl"
+            disabled={loadingQuiz}
+            className="group bg-gradient-to-br from-cyan-600 to-blue-700 hover:scale-[1.02] transition-all duration-300 rounded-3xl p-8 text-left shadow-2xl"
           >
-            <Brain className="w-10 h-10 mb-4" />
-            <p className="font-bold">Generar Quiz</p>
+            <div className="flex justify-between items-start mb-6">
+              <Brain className="w-12 h-12" />
+
+              {loadingQuiz && <Loader2 className="w-6 h-6 animate-spin" />}
+            </div>
+
+            <h2 className="text-2xl font-black mb-2">Cargar Quiz</h2>
+
+            <p className="text-cyan-100">
+              Obtiene el quiz generado automáticamente por IA.
+            </p>
           </button>
 
+          {/* RANKING */}
           <button
             onClick={handleGetRanking}
-            disabled={loading}
-            className="bg-yellow-600 hover:bg-yellow-700 p-6 rounded-xl"
+            disabled={loadingRanking}
+            className="group bg-gradient-to-br from-yellow-500 to-orange-600 hover:scale-[1.02] transition-all duration-300 rounded-3xl p-8 text-left shadow-2xl"
           >
-            <Trophy className="w-10 h-10 mb-4" />
-            <p className="font-bold">Ranking</p>
+            <div className="flex justify-between items-start mb-6">
+              <Trophy className="w-12 h-12" />
+
+              {loadingRanking && <Loader2 className="w-6 h-6 animate-spin" />}
+            </div>
+
+            <h2 className="text-2xl font-black mb-2">Ranking</h2>
+
+            <p className="text-yellow-100">
+              Visualiza el rendimiento de los estudiantes.
+            </p>
           </button>
 
+          {/* RESULTADOS */}
           <button
             onClick={handleGetResultados}
-            disabled={loading}
-            className="bg-purple-600 hover:bg-purple-700 p-6 rounded-xl"
+            disabled={loadingResultados}
+            className="group bg-gradient-to-br from-purple-600 to-fuchsia-700 hover:scale-[1.02] transition-all duration-300 rounded-3xl p-8 text-left shadow-2xl"
           >
-            <BarChart3 className="w-10 h-10 mb-4" />
-            <p className="font-bold">Resultados</p>
+            <div className="flex justify-between items-start mb-6">
+              <BarChart3 className="w-12 h-12" />
+
+              {loadingResultados && (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              )}
+            </div>
+
+            <h2 className="text-2xl font-black mb-2">Resultados</h2>
+
+            <p className="text-purple-100">
+              Consulta estadísticas detalladas del quiz.
+            </p>
           </button>
         </div>
 
-        {/* STATUS */}
-        {quizStatus && (
-          <div className="mb-8 p-5 rounded-xl bg-slate-900 border border-slate-700">
-            <div className="flex items-center gap-4">
-              {quizStatus === "loading" && (
-                <>
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                  <p>Cargando quiz...</p>
-                </>
-              )}
-
-              {quizStatus === "published" && (
-                <>
-                  <CheckCircle className="text-green-500" />
-                  <p>Quiz cargado correctamente</p>
-                </>
-              )}
-
-              {quizStatus === "error" && (
-                <>
-                  <AlertCircle className="text-red-500" />
-                  <p>Error cargando quiz</p>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ERROR */}
-        {error && <div className="bg-red-600 p-4 rounded-xl mb-6">{error}</div>}
-
-        {/* QUIZ */}
+        {/* QUIZ CARD */}
         {quiz && (
-          <div className="bg-slate-900 p-8 rounded-2xl border border-slate-700">
-            <div className="flex items-center gap-3 mb-6">
-              <Eye className="w-8 h-8 text-cyan-400" />
-              <h2 className="text-2xl font-bold">Información del Quiz</h2>
-            </div>
-
-            <h3 className="text-3xl font-bold mb-4">{quiz.titulo}</h3>
-
-            <p className="text-slate-300 mb-6">{quiz.descripcion}</p>
-
-            <div className="grid md:grid-cols-4 gap-4">
-              <div className="bg-slate-800 p-4 rounded-xl">
-                <p className="text-slate-400 text-sm">Materia</p>
-                <p className="font-bold">{quiz.materia}</p>
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="bg-green-500/10 p-4 rounded-2xl border border-green-500/20">
+                <CheckCircle className="w-8 h-8 text-green-400" />
               </div>
 
-              <div className="bg-slate-800 p-4 rounded-xl">
-                <p className="text-slate-400 text-sm">Preguntas</p>
-                <p className="font-bold">{quiz.total_preguntas}</p>
-              </div>
+              <div>
+                <h2 className="text-3xl font-black">
+                  Quiz cargado correctamente
+                </h2>
 
-              <div className="bg-slate-800 p-4 rounded-xl">
-                <p className="text-slate-400 text-sm">Duración</p>
-                <p className="font-bold">{quiz.duracion} min</p>
-              </div>
-
-              <div className="bg-slate-800 p-4 rounded-xl">
-                <p className="text-slate-400 text-sm">Nivel</p>
-                <p className="font-bold">{quiz.nivel}</p>
+                <p className="text-slate-400">Información general del quiz</p>
               </div>
             </div>
+
+            {/* TOP INFO */}
+            <div className="mb-8">
+              <h3 className="text-4xl font-black mb-4">{quiz.titulo}</h3>
+
+              <p className="text-slate-300 text-lg">
+                Quiz generado mediante inteligencia artificial usando el
+                material académico cargado.
+              </p>
+            </div>
+
+            {/* STATS */}
+            <div className="grid md:grid-cols-4 gap-5 mb-10">
+              <div className="bg-slate-800 rounded-2xl p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <BookOpen className="w-5 h-5 text-cyan-400" />
+
+                  <p className="text-slate-400 text-sm">Materia</p>
+                </div>
+
+                <p className="font-black text-xl">{quiz.materia}</p>
+              </div>
+
+              <div className="bg-slate-800 rounded-2xl p-5">
+                <p className="text-slate-400 text-sm mb-3">Preguntas</p>
+
+                <p className="font-black text-xl">
+                  {quiz.quiz?.total_preguntas || 0}
+                </p>
+              </div>
+
+              <div className="bg-slate-800 rounded-2xl p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <Users className="w-5 h-5 text-yellow-400" />
+
+                  <p className="text-slate-400 text-sm">Participantes</p>
+                </div>
+
+                <p className="font-black text-xl">
+                  {quiz.total_participantes || 0}
+                </p>
+              </div>
+
+              <div className="bg-slate-800 rounded-2xl p-5">
+                <p className="text-slate-400 text-sm mb-3">Estado</p>
+
+                <p className="font-black text-green-400">Publicado</p>
+              </div>
+            </div>
+
+            {/* PREGUNTAS */}
+            {quiz.quiz?.preguntas?.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-black mb-6">Preguntas del Quiz</h2>
+
+                <div className="space-y-6">
+                  {quiz.quiz.preguntas.map((pregunta, index) => (
+                    <div
+                      key={index}
+                      className="bg-slate-800 border border-slate-700 rounded-2xl p-6"
+                    >
+                      <h3 className="text-xl font-bold mb-6">
+                        {index + 1}. {pregunta.pregunta}
+                      </h3>
+
+                      <div className="grid gap-4">
+                        {pregunta.opciones?.map((opcion, opcionIndex) => (
+                          <div
+                            key={opcionIndex}
+                            className={`p-4 rounded-xl border ${
+                              opcion === pregunta.respuesta_correcta
+                                ? "bg-green-500/10 border-green-500 text-green-300"
+                                : "bg-slate-900 border-slate-700"
+                            }`}
+                          >
+                            {opcion}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* MODAL RANKING */}
+        {/* RANKING */}
         {mostrarRanking && (
-          <div className="mt-10 bg-slate-900 p-8 rounded-2xl">
-            <h2 className="text-2xl font-bold mb-6">Ranking</h2>
+          <div className="mt-10 bg-slate-900 border border-slate-800 rounded-3xl p-8">
+            <h2 className="text-3xl font-black mb-8">Ranking Académico</h2>
 
             <div className="space-y-4">
               {ranking.map((item, index) => (
                 <div
                   key={index}
-                  className="bg-slate-800 p-4 rounded-xl flex justify-between"
+                  className="bg-slate-800 rounded-2xl p-5 flex items-center justify-between"
                 >
-                  <p>{item.estudiante_nombre}</p>
-                  <p>{item.puntaje}</p>
+                  <div className="flex items-center gap-5">
+                    <div className="w-12 h-12 rounded-xl bg-yellow-500 text-black flex items-center justify-center font-black">
+                      #{index + 1}
+                    </div>
+
+                    <div>
+                      <p className="font-bold text-lg">
+                        {item.estudiante_nombre}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-2xl font-black text-yellow-400">
+                    {item.puntaje}
+                  </div>
                 </div>
               ))}
             </div>
@@ -296,24 +437,43 @@ export default function QuizAi() {
 
         {/* RESULTADOS */}
         {mostrarResultados && (
-          <div className="mt-10 bg-slate-900 p-8 rounded-2xl">
-            <h2 className="text-2xl font-bold mb-6">Resultados</h2>
+          <div className="mt-10 bg-slate-900 border border-slate-800 rounded-3xl p-8">
+            <h2 className="text-3xl font-black mb-8">Resultados del Quiz</h2>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               {resultados.map((item) => (
                 <div
                   key={item.intento_id}
-                  className="bg-slate-800 p-4 rounded-xl"
+                  className="bg-slate-800 rounded-2xl p-6"
                 >
-                  <div className="flex justify-between mb-2">
-                    <p className="font-bold">{item.estudiante_nombre}</p>
+                  <div className="flex justify-between items-center mb-5">
+                    <div>
+                      <h3 className="text-xl font-bold">
+                        {item.estudiante_nombre}
+                      </h3>
 
-                    <p className="text-green-400">{item.puntaje} pts</p>
+                      <p className="text-slate-400">
+                        Intento #{item.intento_id}
+                      </p>
+                    </div>
+
+                    <div className="text-3xl font-black text-green-400">
+                      {item.puntaje} pts
+                    </div>
                   </div>
 
-                  <div className="text-sm text-slate-300">
-                    Correctas: {item.correctas} | Incorrectas:{" "}
-                    {item.incorrectas}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                      <p className="text-green-300">
+                        Correctas: {item.correctas}
+                      </p>
+                    </div>
+
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                      <p className="text-red-300">
+                        Incorrectas: {item.incorrectas}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))}
