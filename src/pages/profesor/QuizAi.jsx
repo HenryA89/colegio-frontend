@@ -16,7 +16,7 @@ import {
 } from "../../services/profesorServices/quizAiService";
 
 export default function QuizAi() {
-  const { id } = useParams();
+  const { quizId } = useParams();
   const navigate = useNavigate();
 
   const [quiz, setQuiz] = useState(null);
@@ -40,16 +40,16 @@ export default function QuizAi() {
       setError(null);
       setQuizStatus("loading");
 
-      console.log("🎯 ID recibido desde params:", id);
-      console.log("🎯 Tipo:", typeof id);
+      console.log("🎯 ID recibido desde params:", quizId);
+      console.log("🎯 Tipo:", typeof quizId);
 
-      if (!id || isNaN(Number(id))) {
+      if (!quizId || isNaN(Number(quizId))) {
         throw new Error(
           "ID de quiz inválido. Debes acceder a un quiz específico.",
         );
       }
 
-      const response = await getQuiz(Number(id), "profesor");
+      const response = await getQuiz(Number(quizId), "profesor");
 
       console.log("✅ RESPONSE QUIZ:", response);
 
@@ -57,7 +57,7 @@ export default function QuizAi() {
         throw new Error(response.message || "Error obteniendo quiz");
       }
 
-      const quizData = response.data.quiz;
+      const quizData = response.data.quiz_id;
 
       setQuiz(quizData);
       setQuizStatus("published");
