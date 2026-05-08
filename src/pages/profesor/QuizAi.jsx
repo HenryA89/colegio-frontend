@@ -18,11 +18,11 @@ import {
 } from "../../services/profesorServices/quizAiService";
 
 export default function QuizAi() {
-  const { materialId } = useParams();
+  const { id } = useParams();
 
   const navigate = useNavigate();
 
-  console.log("🔍 QuizAi renderizado - materialId:", materialId);
+  console.log("🔍 QuizAi renderizado - id:", id);
   console.log("🔍 location:", location);
 
   // ==========================================
@@ -49,10 +49,10 @@ export default function QuizAi() {
   // ==========================================
   // VALIDACIÓN ID
   // ==========================================
-  const materialClaseId = Number(materialId);
+  const materialClaseId = Number(id);
 
   const idValido =
-    materialId &&
+    id &&
     !isNaN(materialClaseId) &&
     Number.isInteger(materialClaseId) &&
     materialClaseId > 0;
@@ -163,7 +163,7 @@ export default function QuizAi() {
     if (idValido) {
       handleGetQuiz();
     }
-  }, [materialId]);
+  }, [id]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-6">
