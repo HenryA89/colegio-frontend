@@ -43,13 +43,26 @@ export default function QuizAi() {
   // =========================
   // VALIDACIÓN ID
   // =========================
+  console.log("🔍 useParams() devuelve:", useParams());
+  console.log("🔍 id extraído:", id);
+  console.log("🔍 typeof id:", typeof id);
+
   const materialClaseId = Number(id);
+
+  console.log("🔍 materialClaseId después de Number():", materialClaseId);
+  console.log("🔍 isNaN(materialClaseId):", isNaN(materialClaseId));
+  console.log(
+    "🔍 Number.isInteger(materialClaseId):",
+    Number.isInteger(materialClaseId),
+  );
 
   const idValido =
     id &&
     !isNaN(materialClaseId) &&
     Number.isInteger(materialClaseId) &&
     materialClaseId > 0;
+
+  console.log("🔍 idValido:", idValido);
 
   // =========================
   // OBTENER QUIZ
@@ -62,9 +75,7 @@ export default function QuizAi() {
       console.log("🎯 MaterialClase ID:", materialClaseId);
 
       if (!idValido) {
-        throw new Error(
-          "Para cargar un quiz específico, necesitas acceder a una URL válida como: /profesor/material/123/quiz",
-        );
+        throw new Error("Para cargar un quiz específico");
       }
 
       /**
