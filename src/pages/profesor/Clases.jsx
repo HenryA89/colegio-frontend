@@ -399,6 +399,22 @@ export default function Clases() {
                     {/* Acciones */}
                     <div className="flex gap-3">
                       <button
+                        onClick={() => {
+                          // Guardar clase seleccionada en localStorage
+                          localStorage.setItem(
+                            "claseSeleccionada",
+                            JSON.stringify(clase),
+                          );
+                          navigate(
+                            `/profesor/acciones-clase/${clase.id || clase._id}`,
+                          );
+                        }}
+                        className="flex-1 px-3 py-2 text-green-600 border-2 border-green-200 rounded-lg hover:bg-green-50 hover:border-green-300 transition-all flex items-center justify-center gap-2"
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span className="text-sm">Gestionar</span>
+                      </button>
+                      <button
                         onClick={() =>
                           navigate(
                             `/profesor/estudiantes-clases/${clase.id || clase._id}`,

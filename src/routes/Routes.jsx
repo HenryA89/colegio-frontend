@@ -30,6 +30,7 @@ const Actividades = lazy(() => import("../pages/profesor/Actividades"));
 const Asistencias = lazy(() => import("../pages/profesor/Asistencias"));
 const QuizAi = lazy(() => import("../pages/profesor/QuizAi"));
 const GenerarQuiz = lazy(() => import("../pages/profesor/GenerarQuiz"));
+const AccionesClase = lazy(() => import("../pages/profesor/AccionesClase"));
 
 const Usuarios = lazy(() => import("../pages/admin/Usuarios"));
 const Materias = lazy(() => import("../pages/admin/Materias"));
@@ -139,6 +140,12 @@ export const routes = [
   {
     path: "/profesor/evaluaciones-clase/:id",
     element: <EvaluacionesClase />,
+    isPrivate: true,
+    roles: ["profesor"],
+  },
+  {
+    path: "/profesor/acciones-clase/:id",
+    element: <AccionesClase />,
     isPrivate: true,
     roles: ["profesor"],
   },
