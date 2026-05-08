@@ -69,7 +69,7 @@ export default function AccionesClase() {
       bgColor: "from-purple-50 to-purple-100",
       borderColor: "border-purple-200",
       hoverColor: "hover:border-purple-400",
-      ruta: `/profesor/quizAi/${id}`,
+      ruta: `/profesor/generar-quiz/${id}`,
     },
     {
       id: "actividades",
