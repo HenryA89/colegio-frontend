@@ -67,7 +67,9 @@ export default function QuizAi() {
       setError(null);
 
       if (!idValido) {
-        throw new Error("ID de material inválido");
+        throw new Error(
+          "Por favor, accede a una URL válida como: /materiales/123/quiz",
+        );
       }
 
       console.log("🎯 MaterialClase ID:", materialClaseId);

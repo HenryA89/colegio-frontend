@@ -52,9 +52,7 @@ export const getQuiz = async (materialClaseId, userRole = "profesor") => {
     // =========================
     // REQUEST
     // =========================
-    const response = await api.get(
-      `/api/v1/materiales_clase/${materialId}/quiz`,
-    );
+    const response = await api.get(`/api/v1/materiales/${materialId}/quiz`);
 
     console.log("✅ Response quiz:", response.data);
 
