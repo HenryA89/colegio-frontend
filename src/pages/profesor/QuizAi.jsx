@@ -22,7 +22,8 @@ export default function QuizAi() {
 
   const navigate = useNavigate();
 
-  const location = useLocation();
+  console.log("🔍 QuizAi renderizado - materialId:", materialId);
+  console.log("🔍 location:", location);
 
   // ==========================================
   // STATES
