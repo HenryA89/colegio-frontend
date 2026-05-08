@@ -1,22 +1,39 @@
 import api from "../../services/api";
 
 // ==========================================
-// OBTENER QUIZ
+// VALIDAR ID NUMÉRICO
+// ==========================================
+const validarId = (id, nombre = "ID") => {
+  const idNumerico = parseInt(id, 10);
+
+  if (!Number.isInteger(idNumerico) || idNumerico <= 0) {
+    console.error(`❌ ${nombre} inválido:`, id);
+
+    throw new Error(`${nombre} inválido. Debe ser un número entero positivo.`);
+  }
+
+  return idNumerico;
+};
+
+// ==========================================
+// OBTENER QUIZ DESDE material_clase_id
 // ==========================================
 export const getQuiz = async (materialClaseId, userRole = "profesor") => {
   try {
     console.log("📚 Obteniendo quiz...");
 
-    // ==========================================
-    // VALIDACIONES PREVIAS
-    // ==========================================
-
+    // =========================
+    // TOKEN
+    // =========================
     const token = localStorage.getItem("token");
 
     if (!token) {
       throw new Error("No hay token de autenticación");
     }
 
+    // =========================
+    // USUARIO
+    // =========================
     const usuario = localStorage.getItem("usuario");
 
     if (!usuario || usuario === "undefined" || usuario === "null") {
@@ -25,33 +42,21 @@ export const getQuiz = async (materialClaseId, userRole = "profesor") => {
 
     const usuarioData = JSON.parse(usuario);
 
-    // ==========================================
-    // VALIDAR ID
-    // ==========================================
+    // =========================
+    // VALIDAR MATERIAL ID
+    // =========================
+    const materialId = validarId(materialClaseId, "MaterialClase ID");
 
-    const quizIdNumerico = parseInt(materialClaseId, 10);
+    console.log("🆔 MaterialClase ID:", materialId);
 
-    if (!Number.isInteger(quizIdNumerico) || quizIdNumerico <= 0) {
-      console.error("❌ quizId inválido:", materialClaseId);
-
-      throw new Error(
-        "ID de quiz inválido. Debe ser un número entero positivo.",
-      );
-    }
-
-    console.log("🆔 Quiz ID:", quizIdNumerico);
-
-    // ==========================================
-    // PETICIÓN
-    // ==========================================
-
-    const response = await api.get(`/api/v1/materiales/${quizIdNumerico}/quiz`);
+    // =========================
+    // REQUEST
+    // =========================
+    const response = await api.get(
+      `/api/v1/materiales_clase/${materialId}/quiz`,
+    );
 
     console.log("✅ Response quiz:", response.data);
-
-    // ==========================================
-    // VALIDAR RESPUESTA
-    // ==========================================
 
     if (!response?.data) {
       throw new Error("Respuesta vacía del servidor");
@@ -65,30 +70,6 @@ export const getQuiz = async (materialClaseId, userRole = "profesor") => {
       );
     }
 
-    // ==========================================
-    // ESTRUCTURA REAL DEL BACKEND
-    // ==========================================
-    /**
-     * Backend devuelve:
-     *
-     * {
-     *   success: true,
-     *   data: {
-     *     quiz_id,
-     *     titulo,
-     *     materia,
-     *     quiz: {
-     *       materia,
-     *       nivel,
-     *       total_preguntas,
-     *       preguntas: []
-     *     },
-     *     ya_respondido,
-     *     total_participantes
-     *   }
-     * }
-     */
-
     const data = backendData.data;
 
     if (!data) {
@@ -101,12 +82,13 @@ export const getQuiz = async (materialClaseId, userRole = "profesor") => {
       throw new Error("No se encontró la estructura del quiz");
     }
 
-    // ==========================================
-    // NORMALIZAR DATOS
-    // ==========================================
-
+    // =========================
+    // NORMALIZACIÓN
+    // =========================
     const normalizedQuiz = {
       id: data.quiz_id,
+
+      material_clase_id: materialId,
 
       titulo: data.titulo || "Quiz sin título",
 
@@ -125,10 +107,9 @@ export const getQuiz = async (materialClaseId, userRole = "profesor") => {
       total_participantes: data.total_participantes || 0,
     };
 
-    // ==========================================
+    // =========================
     // VALIDACIONES EXTRA
-    // ==========================================
-
+    // =========================
     if (!Array.isArray(normalizedQuiz.preguntas)) {
       normalizedQuiz.preguntas = [];
     }
@@ -139,9 +120,7 @@ export const getQuiz = async (materialClaseId, userRole = "profesor") => {
       }
 
       if (normalizedQuiz.ya_respondido) {
-        throw new Error(
-          "Ya has respondido este quiz. No puedes responderlo nuevamente.",
-        );
+        throw new Error("Ya has respondido este quiz.");
       }
     }
 
@@ -149,24 +128,17 @@ export const getQuiz = async (materialClaseId, userRole = "profesor") => {
 
     return {
       success: true,
-      data: {
-        quiz: normalizedQuiz,
-        usuario: usuarioData,
-      },
+      data: normalizedQuiz,
       message: "Quiz obtenido exitosamente",
+      usuario: usuarioData,
     };
   } catch (error) {
     console.error("❌ Error obteniendo quiz:", error);
 
-    // ==========================================
-    // AXIOS ERROR
-    // ==========================================
-
     if (error.response) {
       const status = error.response.status;
-      const backendError = error.response.data?.error;
 
-      console.error("📛 Backend Error:", backendError);
+      const backendError = error.response.data?.error;
 
       switch (status) {
         case 400:
@@ -195,10 +167,6 @@ export const getQuiz = async (materialClaseId, userRole = "profesor") => {
       }
     }
 
-    // ==========================================
-    // ERROR NORMAL
-    // ==========================================
-
     throw new Error(error.message || "No se pudo obtener el quiz");
   }
 };
@@ -208,61 +176,34 @@ export const getQuiz = async (materialClaseId, userRole = "profesor") => {
 // ==========================================
 export const submitQuiz = async (quizId, respuestas) => {
   try {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      throw new Error("No hay token de autenticación");
-    }
-
-    const quizIdNumerico = parseInt(quizId, 10);
-
-    if (!Number.isInteger(quizIdNumerico) || quizIdNumerico <= 0) {
-      throw new Error("ID de quiz inválido");
-    }
+    const id = validarId(quizId, "Quiz ID");
 
     if (!Array.isArray(respuestas) || respuestas.length === 0) {
       throw new Error("Debes responder al menos una pregunta");
     }
-
-    // ==========================================
-    // FORMATO QUE ESPERA EL BACKEND
-    // ==========================================
 
     const respuestasFormateadas = respuestas.map((respuesta) => ({
       pregunta_id: respuesta.pregunta_id,
       opcion_seleccionada: respuesta.opcion_seleccionada || respuesta.respuesta,
     }));
 
-    console.log("📤 Enviando respuestas:", respuestasFormateadas);
-
-    const response = await api.post(
-      `/api/v1/quizzes/${quizIdNumerico}/responder`,
-      {
-        respuestas: respuestasFormateadas,
-      },
-    );
-
-    console.log("✅ Resultado quiz:", response.data);
+    const response = await api.post(`/api/v1/quizzes/${id}/responder`, {
+      respuestas: respuestasFormateadas,
+    });
 
     if (!response?.data?.success) {
       throw new Error(response.data?.error || "Error respondiendo quiz");
     }
 
-    return {
-      success: true,
-      data: response.data.data,
-      message: "Quiz respondido exitosamente",
-    };
+    return response.data;
   } catch (error) {
     console.error("❌ Error respondiendo quiz:", error);
 
-    if (error.response) {
-      const backendError = error.response.data?.error;
-
-      throw new Error(backendError || "No se pudo responder el quiz");
-    }
-
-    throw new Error(error.message || "No se pudo responder el quiz");
+    throw new Error(
+      error.response?.data?.error ||
+        error.message ||
+        "No se pudo responder el quiz",
+    );
   }
 };
 
@@ -271,13 +212,9 @@ export const submitQuiz = async (quizId, respuestas) => {
 // ==========================================
 export const getRanking = async (quizId) => {
   try {
-    const quizIdNumerico = parseInt(quizId, 10);
+    const id = validarId(quizId, "Quiz ID");
 
-    if (!Number.isInteger(quizIdNumerico) || quizIdNumerico <= 0) {
-      throw new Error("ID de quiz inválido");
-    }
-
-    const response = await api.get(`/api/v1/quizzes/${quizIdNumerico}/top`);
+    const response = await api.get(`/api/v1/quizzes/${id}/top`);
 
     return response.data;
   } catch (error) {
@@ -294,15 +231,9 @@ export const getRanking = async (quizId) => {
 // ==========================================
 export const getResultados = async (quizId) => {
   try {
-    const quizIdNumerico = parseInt(quizId, 10);
+    const id = validarId(quizId, "Quiz ID");
 
-    if (!Number.isInteger(quizIdNumerico) || quizIdNumerico <= 0) {
-      throw new Error("ID de quiz inválido");
-    }
-
-    const response = await api.get(
-      `/api/v1/quizzes/${quizIdNumerico}/resultados`,
-    );
+    const response = await api.get(`/api/v1/quizzes/${id}/resultados`);
 
     return response.data;
   } catch (error) {
