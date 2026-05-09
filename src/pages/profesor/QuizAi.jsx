@@ -18,7 +18,7 @@ import {
   getResultados,
 } from "../../services/profesorServices/quizAiService";
 
-export default function QuizAi({ materialClaseId }) {
+export default function QuizAi({ materialId }) {
   // ==========================================
   // STATES
   // ==========================================
@@ -43,8 +43,7 @@ export default function QuizAi({ materialClaseId }) {
   // ==========================================
   // VALIDAR ID
   // ==========================================
-  const idValido =
-    materialClaseId && !isNaN(materialClaseId) && Number(materialClaseId) > 0;
+  const idValido = materialId && !isNaN(materialId) && Number(materialId) > 0;
 
   // ==========================================
   // OBTENER QUIZ
@@ -55,13 +54,13 @@ export default function QuizAi({ materialClaseId }) {
 
       setError(null);
 
-      console.log("🎯 MATERIAL ID:", materialClaseId);
+      console.log("🎯 MATERIAL ID:", materialId);
 
       if (!idValido) {
         throw new Error("ID del material inválido");
       }
 
-      const response = await getQuiz(materialClaseId, "profesor");
+      const response = await getQuiz(materialId, "profesor");
 
       console.log("✅ RESPONSE QUIZ:", response);
 
@@ -79,7 +78,7 @@ export default function QuizAi({ materialClaseId }) {
     } finally {
       setLoadingQuiz(false);
     }
-  }, [materialClaseId, idValido]);
+  }, [materialId, idValido]);
 
   // ==========================================
   // OBTENER RANKING
@@ -187,7 +186,7 @@ export default function QuizAi({ materialClaseId }) {
         <div className="grid md:grid-cols-3 gap-6 mb-10">
           {/* QUIZ */}
           <button
-            onClick={handleGetQuiz}
+            onClick={() => handleGetQuiz(material.id)}
             disabled={loadingQuiz}
             className="bg-gradient-to-br from-cyan-600 to-blue-700 rounded-3xl p-8 text-left hover:scale-[1.02] transition-all disabled:opacity-50"
           >

@@ -86,7 +86,7 @@ const manejarError = (error) => {
 // ==========================================
 // NORMALIZAR QUIZ PROFESOR
 // ==========================================
-const normalizarQuizProfesor = (backendData, materialClaseId) => {
+const normalizarQuizProfesor = (backendData, materialId) => {
   const data = backendData?.data;
 
   if (!data) {
@@ -102,7 +102,7 @@ const normalizarQuizProfesor = (backendData, materialClaseId) => {
   return {
     id: data.quiz_id,
 
-    material_clase_id: materialClaseId,
+    material_clase_id: materialId,
 
     titulo: data.titulo || "Quiz sin título",
 
@@ -159,11 +159,11 @@ const normalizarQuizEstudiante = (backendData) => {
 // OBTENER QUIZ PROFESOR
 // GET /api/v1/materiales/:id/quiz
 // ==========================================
-export const getQuiz = async (materialClaseId) => {
+export const getQuiz = async (materialId) => {
   try {
-    console.log("📚 OBTENIENDO QUIZ PROFESOR:", materialClaseId);
+    console.log("📚 OBTENIENDO QUIZ PROFESOR:", materialId);
 
-    const id = validarId(materialClaseId, "MaterialClase ID");
+    const id = validarId(materialId, "Material ID");
 
     obtenerToken();
 
