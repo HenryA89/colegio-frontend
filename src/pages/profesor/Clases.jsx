@@ -126,9 +126,9 @@ export default function Clases() {
       });
 
       // Capturar y almacenar el material_clase_id usando el contexto
-      if (resultado?.data?.material_clase_id) {
+      if (resultado?.data?.material_id) {
         const materialData = {
-          material_clase_id: resultado.data.material_clase_id,
+          material_id: resultado.data.material_id,
           titulo: resultado.data.titulo || "Material sin título",
           archivo: resultado.data.archivo || pdf.name,
         };
