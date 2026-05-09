@@ -18,7 +18,9 @@ import {
   getResultados,
 } from "../../services/profesorServices/quizAiService";
 
-export default function QuizAi({ materialId, token }) {
+export default function QuizAi() {
+  const materialId = localStorage.getItem("materialClaseId");
+  const token = localStorage.getItem("token");
   // ==========================================
   // STATES
   // ==========================================
@@ -57,7 +59,9 @@ export default function QuizAi({ materialId, token }) {
       console.log("🎯 MATERIAL ID:", materialId);
 
       if (!idValido) {
-        throw new Error("ID del material inválido");
+        throw new Error(
+          "No hay material seleccionado. Por favor, sube un material PDF primero para generar el quiz.",
+        );
       }
 
       const response = await getQuiz(materialId, token);

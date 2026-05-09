@@ -118,10 +118,26 @@ export default function Clases() {
       );
 
       // Enviar archivo sin requerir clase específica
-      await subirMaterial({
+      const resultado = await subirMaterial({
         file: pdf,
         titulo: `Material - ${materiaSeleccionada?.nombre || "General"} - ${new Date().toLocaleDateString("es-ES")}`,
       });
+
+      // Capturar y almacenar el material_clase_id
+      if (resultado?.data?.material_clase_id) {
+        localStorage.setItem(
+          "materialClaseId",
+          resultado.data.material_clase_id,
+        );
+        localStorage.setItem(
+          "materialTitulo",
+          resultado.data.titulo || "Material sin título",
+        );
+        console.log(
+          "🎯 Material Clase ID guardado:",
+          resultado.data.material_clase_id,
+        );
+      }
 
       setMensaje("¡Material subido correctamente!");
       // Limpiar formulario
@@ -129,10 +145,8 @@ export default function Clases() {
       setPdf(null);
       setTitulo("");
 
-      // Material subido exitosamente - sin redirección automática
-      console.log(
-        "✅ Material subido correctamente - usuario puede navegar manualmente",
-      );
+      // Material subido exitosamente - con ID guardado para QuizAi
+      console.log("✅ Material subido correctamente - ID guardado para QuizAi");
     } catch (err) {
       console.error("Error:", err);
       setError(`Error al subir el material: ${err.message}`);
