@@ -26,9 +26,9 @@ export const MaterialProvider = ({ children }) => {
     setMaterialSeleccionado(null);
   };
 
-  // Obtener el material_clase_id
+  // Obtener el material_id
   const getMaterialId = () => {
-    return materialSeleccionado?.material_clase_id || null;
+    return materialSeleccionado?.material_id || null;
   };
 
   // Obtener el título del material
