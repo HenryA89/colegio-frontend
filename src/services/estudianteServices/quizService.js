@@ -133,7 +133,7 @@ export const getQuizEstudiante = async (quizId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/api/v1/quizzes/${id}`);
+    const response = await api.get(`/quizzes/${id}`);
 
     console.log("✅ RESPONSE QUIZ ESTUDIANTE:", response.data);
 
@@ -181,7 +181,7 @@ export const submitQuiz = async (quizId, respuestas) => {
       opcion_seleccionada: respuesta.opcion_seleccionada || respuesta.respuesta,
     }));
 
-    const response = await api.post(`/api/v1/quizzes/${id}/responder`, {
+    const response = await api.post(`/quizzes/${id}/responder`, {
       respuestas: respuestasFormateadas,
     });
 
@@ -208,7 +208,7 @@ export const getRanking = async (quizId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/api/v1/quizzes/${id}/top`);
+    const response = await api.get(`/quizzes/${id}/top`);
 
     console.log("🏆 RESPONSE RANKING:", response.data);
 
@@ -235,7 +235,7 @@ export const getResultados = async (quizId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/api/v1/quizzes/${id}/resultados`);
+    const response = await api.get(`/quizzes/${id}/resultados`);
 
     console.log("📊 RESPONSE RESULTADOS:", response.data);
 
