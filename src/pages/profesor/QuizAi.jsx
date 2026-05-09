@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useMaterial } from "../../context/MaterialContext";
 
 import {
   Brain,
@@ -19,8 +20,10 @@ import {
 } from "../../services/profesorServices/quizAiService";
 
 export default function QuizAi() {
-  const materialId = localStorage.getItem("materialClaseId");
-  const token = localStorage.getItem("token");
+  const { getMaterialId, getMaterialTitulo, hayMaterialSeleccionado } =
+    useMaterial();
+  const materialId = getMaterialId();
+  const usuario = localStorage.getItem("token");
   // ==========================================
   // STATES
   // ==========================================
@@ -58,13 +61,13 @@ export default function QuizAi() {
 
       console.log("🎯 MATERIAL ID:", materialId);
 
-      if (!idValido) {
+      if (!idValido || !hayMaterialSeleccionado()) {
         throw new Error(
           "No hay material seleccionado. Por favor, sube un material PDF primero para generar el quiz.",
         );
       }
 
-      const response = await getQuiz(materialId, token);
+      const response = await getQuiz(materialId, usuario);
 
       console.log("✅ RESPONSE QUIZ:", response);
 
@@ -173,7 +176,9 @@ export default function QuizAi() {
               <h1 className="text-5xl font-black">QUIZ AI CONTROL CENTER</h1>
 
               <p className="text-slate-400 mt-2">
-                Gestión inteligente de quizzes académicos
+                {hayMaterialSeleccionado()
+                  ? `Material: ${getMaterialTitulo()} (ID: ${materialId})`
+                  : "Gestión inteligente de quizzes académicos"}
               </p>
             </div>
           </div>

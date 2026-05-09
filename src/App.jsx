@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import { routes } from "./routes/Routes";
 import AuthProvider from "./context/AuthContext";
+import { MaterialProvider } from "./context/MaterialContext";
 import PrivateRoute from "./components/PrivateRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
 import NotFound from "./pages/NotFound";
@@ -31,41 +32,43 @@ const LayoutWrapper = ({ children }) => {
 export default function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {routes.map(({ path, element, isPrivate, roles }) => {
-            if (isPrivate) {
+      <MaterialProvider>
+        <Router>
+          <Routes>
+            {routes.map(({ path, element, isPrivate, roles }) => {
+              if (isPrivate) {
+                return (
+                  <Route
+                    key={path}
+                    path={path}
+                    element={
+                      <PrivateRoute roles={roles}>
+                        <Suspense fallback={<LoadingSpinner />}>
+                          <LayoutWrapper>{element}</LayoutWrapper>
+                        </Suspense>
+                      </PrivateRoute>
+                    }
+                  />
+                );
+              }
               return (
                 <Route
                   key={path}
                   path={path}
                   element={
-                    <PrivateRoute roles={roles}>
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <LayoutWrapper>{element}</LayoutWrapper>
-                      </Suspense>
-                    </PrivateRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <LayoutWrapper>{element}</LayoutWrapper>
+                    </Suspense>
                   }
                 />
               );
-            }
-            return (
-              <Route
-                key={path}
-                path={path}
-                element={
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <LayoutWrapper>{element}</LayoutWrapper>
-                  </Suspense>
-                }
-              />
-            );
-          })}
+            })}
 
-          {/* Ruta 404 */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Router>
+            {/* Ruta 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Router>
+      </MaterialProvider>
     </AuthProvider>
   );
 }

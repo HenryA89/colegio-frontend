@@ -9,6 +9,7 @@ import {
   Clock,
 } from "lucide-react";
 import { useAuth } from "../../hooks/UseAuth";
+import { useMaterial } from "../../context/MaterialContext";
 import {
   fetchClases,
   subirMaterial,
@@ -17,6 +18,7 @@ import {
 
 export default function Clases() {
   const { usuario } = useAuth();
+  const { seleccionarMaterial } = useMaterial();
   const navigate = useNavigate();
   const [clases, setClases] = useState([]);
   const [open, setOpen] = useState(false);
@@ -123,20 +125,16 @@ export default function Clases() {
         titulo: `Material - ${materiaSeleccionada?.nombre || "General"} - ${new Date().toLocaleDateString("es-ES")}`,
       });
 
-      // Capturar y almacenar el material_clase_id
+      // Capturar y almacenar el material_clase_id usando el contexto
       if (resultado?.data?.material_clase_id) {
-        localStorage.setItem(
-          "materialClaseId",
-          resultado.data.material_clase_id,
-        );
-        localStorage.setItem(
-          "materialTitulo",
-          resultado.data.titulo || "Material sin título",
-        );
-        console.log(
-          "🎯 Material Clase ID guardado:",
-          resultado.data.material_clase_id,
-        );
+        const materialData = {
+          material_clase_id: resultado.data.material_clase_id,
+          titulo: resultado.data.titulo || "Material sin título",
+          archivo: resultado.data.archivo || pdf.name,
+        };
+
+        seleccionarMaterial(materialData);
+        console.log("🎯 Material seleccionado en contexto:", materialData);
       }
 
       setMensaje("¡Material subido correctamente!");
