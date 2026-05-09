@@ -187,7 +187,7 @@ export default function QuizAi({ materialClaseId }) {
         <div className="grid md:grid-cols-3 gap-6 mb-10">
           {/* QUIZ */}
           <button
-            onClick={() => handleGetQuiz(quiz.material_id)}
+            onClick={handleGetQuiz}
             disabled={loadingQuiz}
             className="bg-gradient-to-br from-cyan-600 to-blue-700 rounded-3xl p-8 text-left hover:scale-[1.02] transition-all disabled:opacity-50"
           >
