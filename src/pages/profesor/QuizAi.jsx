@@ -18,7 +18,7 @@ import {
   getResultados,
 } from "../../services/profesorServices/quizAiService";
 
-export default function QuizAi({ materialId }) {
+export default function QuizAi({ materialId, token }) {
   // ==========================================
   // STATES
   // ==========================================
@@ -60,7 +60,7 @@ export default function QuizAi({ materialId }) {
         throw new Error("ID del material inválido");
       }
 
-      const response = await getQuiz(materialId, "profesor");
+      const response = await getQuiz(materialId, token);
 
       console.log("✅ RESPONSE QUIZ:", response);
 
@@ -186,7 +186,7 @@ export default function QuizAi({ materialId }) {
         <div className="grid md:grid-cols-3 gap-6 mb-10">
           {/* QUIZ */}
           <button
-            onClick={() => handleGetQuiz(material.id)}
+            onClick={() => handleGetQuiz(materialId)}
             disabled={loadingQuiz}
             className="bg-gradient-to-br from-cyan-600 to-blue-700 rounded-3xl p-8 text-left hover:scale-[1.02] transition-all disabled:opacity-50"
           >

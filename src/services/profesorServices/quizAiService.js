@@ -159,7 +159,7 @@ const normalizarQuizEstudiante = (backendData) => {
 // OBTENER QUIZ PROFESOR
 // GET /api/v1/materiales/:id/quiz
 // ==========================================
-export const getQuiz = async (materialId) => {
+export const getQuiz = async (materialId, usuario) => {
   try {
     console.log("📚 OBTENIENDO QUIZ PROFESOR:", materialId);
 
@@ -167,7 +167,7 @@ export const getQuiz = async (materialId) => {
 
     obtenerToken();
 
-    obtenerUsuario();
+    obtenerUsuario(usuario);
 
     const response = await api.get(`/api/v1/materiales/${id}/quiz`);
 
