@@ -1,635 +1,324 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+
 import {
-  Clock,
-  CheckCircle,
-  AlertCircle,
   Brain,
+  Loader2,
   Trophy,
+  Medal,
+  CheckCircle2,
+  Clock3,
   Target,
-  Timer,
-  ArrowRight,
-  RotateCcw,
-  Star,
-  Zap,
-  Rocket,
-  Swords,
-  Crown,
+  Send,
 } from "lucide-react";
 
 import {
-  getQuiz,
+  getQuizEstudiante,
   submitQuiz,
   getRanking,
-} from "../../services/profesorServices/quizAiService";
+} from "../../services/estudianteServices/quizService";
 
-export default function QuizEstudiante() {
-  const { quizId } = useParams();
-  const navigate = useNavigate();
-
+export default function QuizEstudiante({ quizId }) {
+  // ==========================================
+  // STATES
+  // ==========================================
   const [quiz, setQuiz] = useState(null);
+
   const [respuestas, setRespuestas] = useState([]);
+
   const [ranking, setRanking] = useState([]);
+
   const [resultado, setResultado] = useState(null);
 
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [quizFinalizado, setQuizFinalizado] = useState(false);
 
-  const [quizIniciado, setQuizIniciado] = useState(false);
-  const [enviado, setEnviado] = useState(false);
-  const [tiempoRestante, setTiempoRestante] = useState(null);
-  const [autoEnviado, setAutoEnviado] = useState(false);
+  const [loadingQuiz, setLoadingQuiz] = useState(false);
 
-  // =========================
-  // PROGRESO
-  // =========================
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
 
-  const respuestasContestadas = useMemo(() => {
-    return respuestas.filter((r) => r && r.trim() !== "").length;
-  }, [respuestas]);
+  const [loadingRanking, setLoadingRanking] = useState(false);
 
-  const porcentajeProgreso = useMemo(() => {
-    if (!quiz?.preguntas?.length) return 0;
+  const [error, setError] = useState(null);
 
-    return Math.round((respuestasContestadas / quiz.preguntas.length) * 100);
-  }, [respuestasContestadas, quiz]);
+  // ==========================================
+  // VALIDAR ID
+  // ==========================================
+  const idValido = quizId && !isNaN(quizId) && Number(quizId) > 0;
 
-  // =========================
-  // FORMATEAR TIEMPO
-  // =========================
-
-  const formatearTiempo = (segundos) => {
-    if (!segundos && segundos !== 0) return "00:00";
-
-    const mins = Math.floor(segundos / 60);
-    const secs = segundos % 60;
-
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  // =========================
-  // CARGAR QUIZ
-  // =========================
-
-  useEffect(() => {
-    const fetchQuiz = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const response = await getQuiz(quizId, "estudiante");
-
-        if (!response?.success) {
-          throw new Error("No fue posible cargar el quiz");
-        }
-
-        const quizData = response.data.quiz;
-
-        if (!quizData?.preguntas?.length) {
-          throw new Error("El quiz no tiene preguntas disponibles");
-        }
-
-        setQuiz(quizData);
-        setRespuestas(Array(quizData.preguntas.length).fill(""));
-        setTiempoRestante((quizData.duracion || 10) * 60);
-      } catch (err) {
-        console.error(err);
-
-        if (err.message.includes("token")) {
-          localStorage.removeItem("token");
-          navigate("/login");
-        }
-
-        setError(
-          err.message || "No fue posible cargar el quiz. Intenta nuevamente.",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (quizId) fetchQuiz();
-  }, [quizId, navigate]);
-
-  // =========================
-  // TEMPORIZADOR
-  // =========================
-
-  useEffect(() => {
-    if (
-      !quizIniciado ||
-      enviado ||
-      tiempoRestante === null ||
-      tiempoRestante <= 0
-    ) {
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTiempoRestante((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-
-          if (!autoEnviado) {
-            setAutoEnviado(true);
-            handleSubmit();
-          }
-
-          return 0;
-        }
-
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [quizIniciado, tiempoRestante, enviado, autoEnviado]);
-
-  // =========================
-  // CAMBIAR RESPUESTA
-  // =========================
-
-  const handleChange = useCallback((index, value) => {
-    setRespuestas((prev) => {
-      const nuevas = [...prev];
-      nuevas[index] = value;
-      return nuevas;
-    });
-  }, []);
-
-  // =========================
-  // INICIAR QUIZ
-  // =========================
-
-  const iniciarQuiz = () => {
-    setQuizIniciado(true);
-  };
-
-  // =========================
-  // ENVIAR QUIZ
-  // =========================
-
-  const handleSubmit = async (e) => {
-    if (e?.preventDefault) e.preventDefault();
-
-    if (submitting || enviado) return;
-
+  // ==========================================
+  // OBTENER QUIZ
+  // ==========================================
+  const handleGetQuiz = useCallback(async () => {
     try {
-      if (!quiz?.preguntas?.length) {
-        throw new Error("No hay preguntas disponibles");
-      }
+      setLoadingQuiz(true);
 
-      const incompletas = respuestas.filter((r) => !r || r.trim() === "");
+      setError(null);
 
-      if (incompletas.length > 0 && !autoEnviado) {
-        throw new Error(
-          `Debes responder todas las preguntas. Faltan ${incompletas.length}`,
-        );
-      }
+      console.log("🎓 QUIZ ID:", quizId);
 
-      setSubmitting(true);
-      setError("");
+      const response = await getQuizEstudiante(quizId);
 
-      const payload = respuestas.map((respuesta, index) => ({
-        pregunta_id: quiz.preguntas[index].id,
-        respuesta: respuesta || "",
-      }));
-
-      const response = await submitQuiz(quizId, payload);
+      console.log("✅ QUIZ ESTUDIANTE:", response);
 
       if (!response?.success) {
-        throw new Error("Error al enviar respuestas");
+        throw new Error(response?.message || "No se pudo cargar el quiz");
       }
 
-      const resultadoQuiz = response.data;
-
-      setResultado(resultadoQuiz);
-      setEnviado(true);
-
-      try {
-        const rankingData = await getRanking(quizId);
-        setRanking(rankingData || []);
-      } catch (rankingError) {
-        console.warn(rankingError);
-      }
+      setQuiz(response.data);
     } catch (err) {
-      console.error(err);
+      console.error("❌ ERROR CARGANDO QUIZ:", err);
 
-      setError(err.message || "Ocurrió un error enviando el quiz.");
+      setError(err.message || "Error cargando quiz");
     } finally {
-      setSubmitting(false);
+      setLoadingQuiz(false);
+    }
+  }, [quizId]);
+
+  // ==========================================
+  // SELECCIONAR RESPUESTA
+  // ==========================================
+  const handleSeleccionarRespuesta = (preguntaId, opcion) => {
+    setRespuestas((prev) => {
+      const existe = prev.find((r) => r.pregunta_id === preguntaId);
+
+      if (existe) {
+        return prev.map((r) =>
+          r.pregunta_id === preguntaId
+            ? {
+                ...r,
+                opcion_seleccionada: opcion,
+              }
+            : r,
+        );
+      }
+
+      return [
+        ...prev,
+        {
+          pregunta_id: preguntaId,
+          opcion_seleccionada: opcion,
+        },
+      ];
+    });
+  };
+
+  // ==========================================
+  // OBTENER TOP 3
+  // ==========================================
+  const handleGetRanking = async (currentQuizId) => {
+    try {
+      setLoadingRanking(true);
+
+      const response = await getRanking(currentQuizId);
+
+      console.log("🏆 RANKING:", response);
+
+      if (!response?.success) {
+        throw new Error("No se pudo obtener el ranking");
+      }
+
+      // TOP 3
+      const top3 = response.data?.slice(0, 3) || [];
+
+      setRanking(top3);
+    } catch (err) {
+      console.error("❌ ERROR RANKING:", err);
+    } finally {
+      setLoadingRanking(false);
     }
   };
 
-  // =========================
-  // REINICIAR
-  // =========================
+  // ==========================================
+  // ENVIAR QUIZ
+  // ==========================================
+  const handleSubmitQuiz = async () => {
+    try {
+      setLoadingSubmit(true);
 
-  const reiniciarQuiz = () => {
-    setQuizIniciado(false);
-    setEnviado(false);
-    setResultado(null);
-    setRanking([]);
-    setRespuestas(Array(quiz?.preguntas?.length || 0).fill(""));
-    setTiempoRestante((quiz?.duracion || 10) * 60);
-    setAutoEnviado(false);
+      setError(null);
+
+      if (!quiz?.id) {
+        throw new Error("No existe quiz disponible");
+      }
+
+      if (respuestas.length !== quiz.preguntas.length) {
+        throw new Error("Debes responder todas las preguntas");
+      }
+
+      const response = await submitQuiz(quiz.id, respuestas);
+
+      console.log("✅ QUIZ RESPONDIDO:", response);
+
+      if (!response?.success) {
+        throw new Error(response?.message || "No se pudo enviar el quiz");
+      }
+
+      // ==========================
+      // RESULTADO PERSONAL
+      // ==========================
+      setResultado({
+        puntaje: response.data?.puntaje || 0,
+
+        correctas: response.data?.correctas || 0,
+
+        porcentaje: response.data?.porcentaje || 0,
+      });
+
+      // ==========================
+      // FINALIZAR QUIZ
+      // ==========================
+      setQuizFinalizado(true);
+
+      // ==========================
+      // OBTENER TOP 3
+      // ==========================
+      await handleGetRanking(quiz.id);
+    } catch (err) {
+      console.error("❌ ERROR ENVIANDO QUIZ:", err);
+
+      setError(err.message || "No se pudo responder el quiz");
+    } finally {
+      setLoadingSubmit(false);
+    }
   };
 
-  // =========================
+  // ==========================================
+  // AUTO LOAD
+  // ==========================================
+  useEffect(() => {
+    if (idValido) {
+      handleGetQuiz();
+    }
+  }, [idValido, handleGetQuiz]);
+
+  // ==========================================
   // LOADING
-  // =========================
-
-  if (loading) {
+  // ==========================================
+  if (loadingQuiz) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-black flex items-center justify-center p-6">
-        <div className="text-center max-w-xl">
-          <div className="relative mb-10 flex justify-center">
-            <div className="absolute w-40 h-40 rounded-full bg-purple-500/20 blur-3xl animate-pulse"></div>
-
-            <div className="relative w-28 h-28 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center shadow-2xl">
-              <Brain className="w-14 h-14 text-white animate-pulse" />
-            </div>
-          </div>
-
-          <h1 className="text-5xl font-black text-white mb-4">QUIZ ARENA</h1>
-
-          <p className="text-gray-300 text-lg mb-8">
-            Preparando experiencia interactiva...
-          </p>
-
-          <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
-            <div className="h-full w-2/3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse"></div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <Loader2 className="w-14 h-14 text-cyan-400 animate-spin" />
       </div>
     );
   }
 
-  // =========================
-  // ERROR
-  // =========================
-
-  if (error && !quiz) {
+  // ==========================================
+  // NO QUIZ
+  // ==========================================
+  if (!quiz) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-950 to-black flex items-center justify-center p-6">
-        <div className="bg-white/10 backdrop-blur-lg border border-red-500/30 rounded-3xl p-10 max-w-lg text-center">
-          <AlertCircle className="w-20 h-20 text-red-400 mx-auto mb-6" />
-
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Ocurrió un problema
-          </h2>
-
-          <p className="text-red-200 mb-8">{error}</p>
-
-          <button
-            onClick={() => navigate(-1)}
-            className="px-8 py-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold transition-all"
-          >
-            Volver
-          </button>
-        </div>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
+        No hay quiz disponible
       </div>
     );
   }
 
-  // =========================
-  // PANTALLA INICIAL
-  // =========================
-
-  if (quiz && !quizIniciado) {
+  // ==========================================
+  // RESULTADOS FINALES
+  // ==========================================
+  if (quizFinalizado) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-black p-6 flex items-center justify-center">
-        <div className="max-w-5xl w-full bg-white/10 backdrop-blur-lg border border-purple-500/30 rounded-3xl p-10 shadow-2xl">
-          <div className="text-center mb-10">
-            <div className="flex justify-center items-center gap-6 mb-8">
-              <Rocket className="w-16 h-16 text-yellow-400 animate-bounce" />
+      <div className="min-h-screen bg-slate-950 text-white p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* HEADER */}
+          <div className="mb-10">
+            <div className="flex items-center gap-4">
+              <div className="bg-green-500/10 p-4 rounded-2xl border border-green-500/20">
+                <CheckCircle2 className="w-10 h-10 text-green-400" />
+              </div>
 
-              <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500">
-                QUIZ ARENA
-              </h1>
-
-              <Swords className="w-16 h-16 text-yellow-400 animate-pulse" />
-            </div>
-
-            <h2 className="text-4xl font-bold text-white mb-4">
-              {quiz.titulo}
-            </h2>
-
-            <p className="text-gray-300 text-lg max-w-3xl mx-auto">
-              {quiz.descripcion}
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 mb-10">
-            <StatCard
-              icon={<Target className="w-8 h-8" />}
-              value={quiz.preguntas.length}
-              label="Preguntas"
-              gradient="from-blue-500 to-cyan-500"
-            />
-
-            <StatCard
-              icon={<Timer className="w-8 h-8" />}
-              value={`${quiz.duracion} min`}
-              label="Duración"
-              gradient="from-purple-500 to-pink-500"
-            />
-
-            <StatCard
-              icon={<Trophy className="w-8 h-8" />}
-              value={quiz.dificultad || "Media"}
-              label="Dificultad"
-              gradient="from-green-500 to-emerald-500"
-            />
-          </div>
-
-          <div className="text-center">
-            <button
-              onClick={iniciarQuiz}
-              className="px-12 py-5 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 hover:scale-105 transition-all text-white font-bold text-xl shadow-2xl"
-            >
-              ⚔️ INICIAR BATALLA
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // =========================
-  // QUIZ ACTIVO
-  // =========================
-
-  if (quiz && quizIniciado && !enviado) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-black p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white/10 backdrop-blur-lg border border-purple-500/30 rounded-3xl p-6 mb-8">
-            <div className="flex flex-col lg:flex-row gap-6 justify-between items-center">
               <div>
-                <h1 className="text-3xl font-black text-white mb-2">
-                  ⚡ BATALLA EN CURSO
-                </h1>
+                <h1 className="text-5xl font-black">QUIZ FINALIZADO</h1>
 
-                <p className="text-gray-300">{quiz.titulo}</p>
-              </div>
-
-              <div className="flex gap-6 items-center">
-                <div className="text-center">
-                  <div
-                    className={`w-24 h-24 rounded-full flex items-center justify-center shadow-2xl ${
-                      tiempoRestante <= 60
-                        ? "bg-red-500 animate-pulse"
-                        : tiempoRestante <= 180
-                          ? "bg-yellow-500"
-                          : "bg-green-500"
-                    }`}
-                  >
-                    <div>
-                      <p className="font-black text-white text-lg">
-                        {formatearTiempo(tiempoRestante)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-center">
-                  <p className="text-sm text-gray-400 mb-1">Progreso</p>
-
-                  <p className="text-3xl font-black text-white">
-                    {respuestasContestadas}/{quiz.preguntas.length}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <div className="w-full bg-white/10 rounded-full h-4 overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
-                  style={{ width: `${porcentajeProgreso}%` }}
-                ></div>
+                <p className="text-slate-400 mt-2">
+                  Tus resultados han sido registrados
+                </p>
               </div>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {quiz.preguntas.map((pregunta, index) => (
-              <div
-                key={pregunta.id || index}
-                className="bg-white/10 backdrop-blur-lg border border-purple-500/30 rounded-3xl p-8"
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-14 h-14 rounded-full flex items-center justify-center font-black text-white ${
-                        respuestas[index] ? "bg-green-500" : "bg-purple-500"
-                      }`}
-                    >
-                      {index + 1}
-                    </div>
+          {/* ERROR */}
+          {error && (
+            <div className="mb-8 bg-red-500/10 border border-red-500/20 text-red-300 p-5 rounded-2xl">
+              {error}
+            </div>
+          )}
 
-                    <div>
-                      <h3 className="text-2xl font-bold text-white">
-                        Pregunta {index + 1}
-                      </h3>
-                    </div>
-                  </div>
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* RESULTADO PERSONAL */}
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8">
+              <div className="flex items-center gap-3 mb-8">
+                <Target className="w-8 h-8 text-cyan-400" />
 
-                  {respuestas[index] && (
-                    <CheckCircle className="w-8 h-8 text-green-400" />
-                  )}
-                </div>
+                <h2 className="text-3xl font-black">Tu Resultado</h2>
+              </div>
 
-                <div className="p-5 rounded-2xl bg-white/5 border border-white/10 mb-8">
-                  <p className="text-white text-xl leading-relaxed">
-                    {pregunta.enunciado || pregunta.texto}
+              <div className="space-y-6">
+                <div className="bg-slate-800 rounded-2xl p-6">
+                  <p className="text-slate-400 mb-2">Puntaje</p>
+
+                  <p className="text-5xl font-black text-cyan-400">
+                    {resultado?.puntaje}
                   </p>
                 </div>
 
-                <div className="space-y-4">
-                  {Object.entries(pregunta.opciones || {}).map(
-                    ([key, value]) => (
-                      <label
-                        key={key}
-                        className={`flex items-center gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all ${
-                          respuestas[index] === value
-                            ? "border-green-500 bg-green-500/10"
-                            : "border-white/10 bg-white/5 hover:border-purple-400"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          className="hidden"
-                          checked={respuestas[index] === value}
-                          onChange={() => handleChange(index, value)}
-                        />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-800 rounded-2xl p-5">
+                    <p className="text-slate-400 mb-2">Correctas</p>
 
-                        <div
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                            respuestas[index] === value
-                              ? "border-green-500 bg-green-500"
-                              : "border-gray-400"
-                          }`}
-                        >
-                          {respuestas[index] === value && (
-                            <div className="w-2 h-2 bg-white rounded-full"></div>
-                          )}
-                        </div>
+                    <p className="text-3xl font-black text-green-400">
+                      {resultado?.correctas}
+                    </p>
+                  </div>
 
-                        <span
-                          className={`text-lg ${
-                            respuestas[index] === value
-                              ? "text-green-300"
-                              : "text-gray-200"
-                          }`}
-                        >
-                          <strong>{key}.</strong> {value}
-                        </span>
-                      </label>
-                    ),
-                  )}
+                  <div className="bg-slate-800 rounded-2xl p-5">
+                    <p className="text-slate-400 mb-2">Porcentaje</p>
+
+                    <p className="text-3xl font-black text-yellow-400">
+                      {resultado?.porcentaje}%
+                    </p>
+                  </div>
                 </div>
               </div>
-            ))}
+            </div>
 
-            {error && (
-              <div className="bg-red-500/20 border border-red-500/40 rounded-2xl p-5 text-red-200 flex items-center gap-3">
-                <AlertCircle className="w-6 h-6" />
-                {error}
+            {/* TOP 3 */}
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8">
+              <div className="flex items-center gap-3 mb-8">
+                <Trophy className="w-8 h-8 text-yellow-400" />
+
+                <h2 className="text-3xl font-black">Top 3 Ranking</h2>
               </div>
-            )}
 
-            <div className="text-center pb-10">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-14 py-6 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 hover:scale-105 transition-all text-white font-black text-xl shadow-2xl disabled:opacity-50"
-              >
-                {submitting ? "ENVIANDO..." : "🚀 FINALIZAR QUIZ"}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  // =========================
-  // RESULTADOS
-  // =========================
-
-  if (enviado && resultado) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-black p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white/10 backdrop-blur-lg border border-purple-500/30 rounded-3xl p-10 mb-8 text-center">
-            <div className="flex justify-center items-center gap-6 mb-8">
-              <Trophy className="w-20 h-20 text-yellow-400 animate-bounce" />
-
-              <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500">
-                QUIZ COMPLETADO
-              </h1>
-
-              <Crown className="w-20 h-20 text-yellow-400 animate-pulse" />
-            </div>
-
-            <p className="text-white text-2xl mb-10">Excelente trabajo ⚡</p>
-
-            <div className="grid md:grid-cols-3 gap-6 mb-10">
-              <StatCard
-                icon={<Trophy className="w-8 h-8" />}
-                value={resultado.puntaje || 0}
-                label="Puntaje"
-                gradient="from-yellow-500 to-orange-500"
-              />
-
-              <StatCard
-                icon={<Target className="w-8 h-8" />}
-                value={`${resultado.porcentaje || 0}%`}
-                label="Precisión"
-                gradient="from-green-500 to-emerald-500"
-              />
-
-              <StatCard
-                icon={<Clock className="w-8 h-8" />}
-                value={resultado.tiempo || "00:00"}
-                label="Tiempo"
-                gradient="from-blue-500 to-cyan-500"
-              />
-            </div>
-
-            <div className="flex justify-center gap-2 mb-8">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`w-10 h-10 ${
-                    i < Math.ceil((resultado.porcentaje || 0) / 20)
-                      ? "text-yellow-400 fill-yellow-400"
-                      : "text-gray-600"
-                  }`}
-                />
-              ))}
-            </div>
-
-            {ranking.length > 0 && (
-              <div className="text-left mt-10">
-                <h2 className="text-3xl font-bold text-white mb-6 text-center">
-                  🏆 Ranking
-                </h2>
-
+              {loadingRanking ? (
+                <div className="flex justify-center py-10">
+                  <Loader2 className="w-10 h-10 animate-spin text-yellow-400" />
+                </div>
+              ) : (
                 <div className="space-y-4">
-                  {ranking.slice(0, 5).map((item, index) => (
+                  {ranking.map((item, index) => (
                     <div
-                      key={item.id || index}
-                      className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-5"
+                      key={index}
+                      className="bg-slate-800 rounded-2xl p-5 flex justify-between items-center"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center font-black text-white">
-                          {index + 1}
+                        <div className="bg-yellow-500/10 p-3 rounded-xl">
+                          <Medal className="w-6 h-6 text-yellow-400" />
                         </div>
 
                         <div>
-                          <p className="text-white font-semibold text-lg">
-                            {item.nombre}
+                          <p className="font-bold text-lg">
+                            #{index + 1} {item.estudiante || item.nombre}
                           </p>
-
-                          <p className="text-gray-400 text-sm">{item.tiempo}</p>
                         </div>
                       </div>
 
-                      <div className="text-right">
-                        <p className="text-green-400 font-black text-xl">
-                          {item.puntaje} pts
-                        </p>
-
-                        <p className="text-gray-400 text-sm">
-                          {item.porcentaje}%
-                        </p>
-                      </div>
+                      <p className="text-2xl font-black text-yellow-400">
+                        {item.puntaje || item.score}
+                      </p>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-
-            <div className="flex flex-wrap justify-center gap-5 mt-10">
-              <button
-                onClick={reiniciarQuiz}
-                className="px-8 py-4 rounded-2xl border border-white/20 text-white hover:bg-white/10 transition-all flex items-center gap-2"
-              >
-                <RotateCcw className="w-5 h-5" />
-                Reiniciar
-              </button>
-
-              <button
-                onClick={() => navigate(-1)}
-                className="px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white transition-all flex items-center gap-2"
-              >
-                <ArrowRight className="w-5 h-5" />
-                Continuar
-              </button>
+              )}
             </div>
           </div>
         </div>
@@ -637,30 +326,121 @@ export default function QuizEstudiante() {
     );
   }
 
-  return null;
-}
-
-// =========================
-// COMPONENTE REUTILIZABLE
-// =========================
-
-function StatCard({ icon, value, label, gradient }) {
+  // ==========================================
+  // QUIZ
+  // ==========================================
   return (
-    <div className="relative group">
-      <div
-        className={`absolute inset-0 bg-gradient-to-r ${gradient} rounded-3xl blur-xl opacity-40 group-hover:opacity-70 transition-opacity`}
-      ></div>
+    <div className="min-h-screen bg-slate-950 text-white p-6">
+      <div className="max-w-5xl mx-auto">
+        {/* HEADER */}
+        <div className="mb-10">
+          <div className="flex items-center gap-4">
+            <div className="bg-cyan-500/10 p-4 rounded-2xl border border-cyan-500/20">
+              <Brain className="w-10 h-10 text-cyan-400" />
+            </div>
 
-      <div
-        className={`relative bg-gradient-to-r ${gradient} rounded-3xl p-6 text-white text-center`}
-      >
-        <div className="flex justify-center mb-4">
-          <div className="p-4 bg-white/20 rounded-2xl">{icon}</div>
+            <div>
+              <h1 className="text-5xl font-black">{quiz.titulo}</h1>
+
+              <p className="text-slate-400 mt-2">{quiz.materia}</p>
+            </div>
+          </div>
         </div>
 
-        <h3 className="text-3xl font-black mb-2">{value}</h3>
+        {/* ERROR */}
+        {error && (
+          <div className="mb-8 bg-red-500/10 border border-red-500/20 text-red-300 p-5 rounded-2xl">
+            {error}
+          </div>
+        )}
 
-        <p className="text-white/80">{label}</p>
+        {/* INFO */}
+        <div className="grid md:grid-cols-3 gap-5 mb-10">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+            <p className="text-slate-400 mb-2">Preguntas</p>
+
+            <p className="text-3xl font-black">{quiz.total_preguntas}</p>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+            <p className="text-slate-400 mb-2">Nivel</p>
+
+            <p className="text-3xl font-black">{quiz.nivel}</p>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock3 className="w-5 h-5 text-cyan-400" />
+
+              <p className="text-slate-400">Tiempo límite</p>
+            </div>
+
+            <p className="text-3xl font-black">
+              {quiz.tiempo_limite || "Libre"}
+            </p>
+          </div>
+        </div>
+
+        {/* PREGUNTAS */}
+        <div className="space-y-8">
+          {quiz.preguntas.map((pregunta, index) => (
+            <div
+              key={pregunta.id || index}
+              className="bg-slate-900 border border-slate-800 rounded-3xl p-8"
+            >
+              <h2 className="text-2xl font-bold mb-8">
+                {index + 1}. {pregunta.pregunta}
+              </h2>
+
+              <div className="grid gap-4">
+                {pregunta.opciones?.map((opcion, opcionIndex) => {
+                  const seleccionada = respuestas.find(
+                    (r) =>
+                      r.pregunta_id === pregunta.id &&
+                      r.opcion_seleccionada === opcion,
+                  );
+
+                  return (
+                    <button
+                      key={opcionIndex}
+                      onClick={() =>
+                        handleSeleccionarRespuesta(pregunta.id, opcion)
+                      }
+                      className={`p-5 rounded-2xl border text-left transition-all ${
+                        seleccionada
+                          ? "bg-cyan-500 border-cyan-400 text-white"
+                          : "bg-slate-800 border-slate-700 hover:border-cyan-500"
+                      }`}
+                    >
+                      {opcion}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* SUBMIT */}
+        <div className="mt-10">
+          <button
+            onClick={handleSubmitQuiz}
+            disabled={loadingSubmit}
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 py-5 rounded-2xl font-black text-xl flex items-center justify-center gap-3 hover:scale-[1.01] transition-all disabled:opacity-50"
+          >
+            {loadingSubmit ? (
+              <>
+                <Loader2 className="w-6 h-6 animate-spin" />
+                Enviando respuestas...
+              </>
+            ) : (
+              <>
+                <Send className="w-6 h-6" />
+                Finalizar Quiz
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

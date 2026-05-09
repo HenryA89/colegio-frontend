@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
 
 import {
   Brain,
@@ -9,6 +8,8 @@ import {
   BookOpen,
   Users,
   CheckCircle,
+  Target,
+  Award,
 } from "lucide-react";
 
 import {
@@ -17,14 +18,7 @@ import {
   getResultados,
 } from "../../services/profesorServices/quizAiService";
 
-export default function QuizAi() {
-  const { id } = useParams();
-
-  const navigate = useNavigate();
-
-  console.log("🔍 QuizAi renderizado - id:", id);
-  console.log("🔍 location:", location);
-
+export default function QuizAi({ materialClaseId }) {
   // ==========================================
   // STATES
   // ==========================================
@@ -34,6 +28,10 @@ export default function QuizAi() {
 
   const [resultados, setResultados] = useState([]);
 
+  const [mostrarRanking, setMostrarRanking] = useState(false);
+
+  const [mostrarResultados, setMostrarResultados] = useState(false);
+
   const [loadingQuiz, setLoadingQuiz] = useState(false);
 
   const [loadingRanking, setLoadingRanking] = useState(false);
@@ -42,37 +40,26 @@ export default function QuizAi() {
 
   const [error, setError] = useState(null);
 
-  const [mostrarRanking, setMostrarRanking] = useState(false);
-
-  const [mostrarResultados, setMostrarResultados] = useState(false);
-
   // ==========================================
-  // VALIDACIÓN ID
+  // VALIDAR ID
   // ==========================================
-  const materialClaseId = Number(id);
-
   const idValido =
-    id &&
-    !isNaN(materialClaseId) &&
-    Number.isInteger(materialClaseId) &&
-    materialClaseId > 0;
+    materialClaseId && !isNaN(materialClaseId) && Number(materialClaseId) > 0;
 
   // ==========================================
   // OBTENER QUIZ
   // ==========================================
-  const handleGetQuiz = async () => {
+  const handleGetQuiz = useCallback(async () => {
     try {
       setLoadingQuiz(true);
 
       setError(null);
 
-      if (!idValido) {
-        throw new Error(
-          "Por favor, accede a una URL válida como: /materiales/123/quiz",
-        );
-      }
+      console.log("🎯 MATERIAL ID:", materialClaseId);
 
-      console.log("🎯 MaterialClase ID:", materialClaseId);
+      if (!idValido) {
+        throw new Error("ID del material inválido");
+      }
 
       const response = await getQuiz(materialClaseId, "profesor");
 
@@ -83,21 +70,19 @@ export default function QuizAi() {
       }
 
       setQuiz(response.data);
+
+      console.log("✅ QUIZ CARGADO:", response.data);
     } catch (err) {
       console.error("❌ ERROR QUIZ:", err);
 
-      setError(err.message || "No se pudo cargar el quiz");
-
-      if (err.message?.includes("Sesión expirada")) {
-        navigate("/login");
-      }
+      setError(err.message || "Error cargando quiz");
     } finally {
       setLoadingQuiz(false);
     }
-  };
+  }, [materialClaseId, idValido]);
 
   // ==========================================
-  // RANKING
+  // OBTENER RANKING
   // ==========================================
   const handleGetRanking = async () => {
     try {
@@ -111,6 +96,8 @@ export default function QuizAi() {
 
       const response = await getRanking(quiz.id);
 
+      console.log("🏆 RANKING:", response);
+
       if (!response?.success) {
         throw new Error(response?.message || "Error obteniendo ranking");
       }
@@ -121,14 +108,14 @@ export default function QuizAi() {
     } catch (err) {
       console.error("❌ ERROR RANKING:", err);
 
-      setError(err.message);
+      setError(err.message || "Error obteniendo ranking");
     } finally {
       setLoadingRanking(false);
     }
   };
 
   // ==========================================
-  // RESULTADOS
+  // OBTENER RESULTADOS
   // ==========================================
   const handleGetResultados = async () => {
     try {
@@ -142,6 +129,8 @@ export default function QuizAi() {
 
       const response = await getResultados(quiz.id);
 
+      console.log("📊 RESULTADOS:", response);
+
       if (!response?.success) {
         throw new Error(response?.message || "Error obteniendo resultados");
       }
@@ -152,7 +141,7 @@ export default function QuizAi() {
     } catch (err) {
       console.error("❌ ERROR RESULTADOS:", err);
 
-      setError(err.message);
+      setError(err.message || "Error obteniendo resultados");
     } finally {
       setLoadingResultados(false);
     }
@@ -165,7 +154,7 @@ export default function QuizAi() {
     if (idValido) {
       handleGetQuiz();
     }
-  }, [id]);
+  }, [handleGetQuiz, idValido]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-6">
@@ -198,9 +187,9 @@ export default function QuizAi() {
         <div className="grid md:grid-cols-3 gap-6 mb-10">
           {/* QUIZ */}
           <button
-            onClick={handleGetQuiz}
+            onClick={() => handleGetQuiz(quiz.material_id)}
             disabled={loadingQuiz}
-            className="bg-gradient-to-br from-cyan-600 to-blue-700 rounded-3xl p-8 text-left hover:scale-[1.02] transition-all"
+            className="bg-gradient-to-br from-cyan-600 to-blue-700 rounded-3xl p-8 text-left hover:scale-[1.02] transition-all disabled:opacity-50"
           >
             <div className="flex justify-between items-start mb-6">
               <Brain className="w-12 h-12" />
@@ -216,8 +205,8 @@ export default function QuizAi() {
           {/* RANKING */}
           <button
             onClick={handleGetRanking}
-            disabled={loadingRanking}
-            className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-3xl p-8 text-left hover:scale-[1.02] transition-all"
+            disabled={loadingRanking || !quiz}
+            className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-3xl p-8 text-left hover:scale-[1.02] transition-all disabled:opacity-50"
           >
             <div className="flex justify-between items-start mb-6">
               <Trophy className="w-12 h-12" />
@@ -233,8 +222,8 @@ export default function QuizAi() {
           {/* RESULTADOS */}
           <button
             onClick={handleGetResultados}
-            disabled={loadingResultados}
-            className="bg-gradient-to-br from-purple-600 to-fuchsia-700 rounded-3xl p-8 text-left hover:scale-[1.02] transition-all"
+            disabled={loadingResultados || !quiz}
+            className="bg-gradient-to-br from-purple-600 to-fuchsia-700 rounded-3xl p-8 text-left hover:scale-[1.02] transition-all disabled:opacity-50"
           >
             <div className="flex justify-between items-start mb-6">
               <BarChart3 className="w-12 h-12" />
@@ -252,7 +241,7 @@ export default function QuizAi() {
 
         {/* QUIZ */}
         {quiz && (
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 mb-10">
             <div className="flex items-center gap-4 mb-8">
               <CheckCircle className="w-8 h-8 text-green-400" />
 
@@ -272,13 +261,19 @@ export default function QuizAi() {
                   <p className="text-slate-400 text-sm">Materia</p>
                 </div>
 
-                <p className="font-black text-xl">{quiz.materia}</p>
+                <p className="font-black text-xl">{quiz.materia || "N/A"}</p>
               </div>
 
               <div className="bg-slate-800 rounded-2xl p-5">
-                <p className="text-slate-400 text-sm mb-3">Preguntas</p>
+                <div className="flex items-center gap-3 mb-3">
+                  <Target className="w-5 h-5 text-green-400" />
 
-                <p className="font-black text-xl">{quiz.total_preguntas}</p>
+                  <p className="text-slate-400 text-sm">Preguntas</p>
+                </div>
+
+                <p className="font-black text-xl">
+                  {quiz.total_preguntas || 0}
+                </p>
               </div>
 
               <div className="bg-slate-800 rounded-2xl p-5">
@@ -288,13 +283,19 @@ export default function QuizAi() {
                   <p className="text-slate-400 text-sm">Participantes</p>
                 </div>
 
-                <p className="font-black text-xl">{quiz.total_participantes}</p>
+                <p className="font-black text-xl">
+                  {quiz.total_participantes || 0}
+                </p>
               </div>
 
               <div className="bg-slate-800 rounded-2xl p-5">
-                <p className="text-slate-400 text-sm mb-3">Nivel</p>
+                <div className="flex items-center gap-3 mb-3">
+                  <Award className="w-5 h-5 text-purple-400" />
 
-                <p className="font-black text-xl">{quiz.nivel}</p>
+                  <p className="text-slate-400 text-sm">Nivel</p>
+                </div>
+
+                <p className="font-black text-xl">{quiz.nivel || "N/A"}</p>
               </div>
             </div>
 
@@ -306,7 +307,7 @@ export default function QuizAi() {
                 <div className="space-y-6">
                   {quiz.preguntas.map((pregunta, index) => (
                     <div
-                      key={index}
+                      key={pregunta.id || index}
                       className="bg-slate-800 border border-slate-700 rounded-2xl p-6"
                     >
                       <h3 className="text-xl font-bold mb-6">
@@ -332,6 +333,73 @@ export default function QuizAi() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* RANKING */}
+        {mostrarRanking && (
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 mb-10">
+            <h2 className="text-3xl font-black mb-8">Ranking de Estudiantes</h2>
+
+            <div className="space-y-4">
+              {ranking.length > 0 ? (
+                ranking.map((item, index) => (
+                  <div
+                    key={index}
+                    className="bg-slate-800 rounded-2xl p-5 flex justify-between items-center"
+                  >
+                    <div>
+                      <p className="font-bold text-lg">
+                        #{index + 1} {item.estudiante || item.nombre}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-2xl font-black text-yellow-400">
+                        {item.puntaje || item.score}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-slate-400">No hay ranking disponible</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* RESULTADOS */}
+        {mostrarResultados && (
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8">
+            <h2 className="text-3xl font-black mb-8">Resultados del Quiz</h2>
+
+            <div className="space-y-4">
+              {resultados.length > 0 ? (
+                resultados.map((resultado, index) => (
+                  <div key={index} className="bg-slate-800 rounded-2xl p-5">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-bold text-lg">
+                          {resultado.estudiante || resultado.nombre}
+                        </p>
+
+                        <p className="text-slate-400">
+                          Correctas: {resultado.correctas || 0}
+                        </p>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="text-3xl font-black text-cyan-400">
+                          {resultado.porcentaje || 0}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-slate-400">No hay resultados disponibles</p>
+              )}
+            </div>
           </div>
         )}
       </div>
