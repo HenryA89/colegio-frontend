@@ -75,6 +75,9 @@ export default function QuizAi() {
       // ✅ QUIZ PENDIENTE
       if (response.estado === "pendiente") {
         setMensaje("Generando quiz...");
+        setTimeout(() => {
+          handleGetQuiz();
+        }, 5000);
         return;
       }
 
