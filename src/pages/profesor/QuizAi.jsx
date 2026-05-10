@@ -71,14 +71,15 @@ export default function QuizAi() {
 
       console.log("✅ RESPONSE QUIZ:", response);
 
-      if (!response?.success) {
-        throw new Error(response?.message || "No se pudo cargar el quiz");
-      }
-
       // ✅ QUIZ PENDIENTE
       if (response.estado === "pendiente") {
         setMensaje("⏳ Generando quiz...");
         return;
+      }
+
+      // ✅ VALIDAR RESPUESTA
+      if (!response?.data) {
+        throw new Error("No se pudo cargar el quiz");
       }
 
       // ✅ QUIZ COMPLETADO

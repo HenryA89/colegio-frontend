@@ -95,10 +95,6 @@ const normalizarQuizProfesor = (backendData, materialId) => {
 
   const quiz = data.quiz;
 
-  if (!quiz) {
-    throw new Error("No se encontró la estructura del quiz");
-  }
-
   return {
     id: data.quiz_id,
 
@@ -106,15 +102,25 @@ const normalizarQuizProfesor = (backendData, materialId) => {
 
     titulo: data.titulo || "Quiz sin título",
 
-    materia: data.materia || quiz.materia || "General",
+    // ✅ usar estado real del backend
+    quiz_estado: data.quiz_estado || "pendiente",
 
-    nivel: quiz.nivel || "Básico",
+    // ✅ puede venir null mientras se genera
+    quiz: quiz || null,
 
-    descripcion: `Quiz de ${data.materia || quiz.materia || "General"}`,
+    materia: data.materia || quiz?.materia || "General",
 
-    total_preguntas: quiz.total_preguntas || quiz.preguntas?.length || 0,
+    nivel: data.nivel || quiz?.nivel || "Básico",
 
-    preguntas: Array.isArray(quiz.preguntas) ? quiz.preguntas : [],
+    descripcion: `Quiz de ${data.materia || quiz?.materia || "General"}`,
+
+    total_preguntas:
+      data.total_preguntas ||
+      quiz?.total_preguntas ||
+      quiz?.preguntas?.length ||
+      0,
+
+    preguntas: Array.isArray(quiz?.preguntas) ? quiz.preguntas : [],
 
     ya_respondido: data.ya_respondido || false,
 
