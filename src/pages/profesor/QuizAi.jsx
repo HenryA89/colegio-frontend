@@ -75,12 +75,18 @@ export default function QuizAi() {
         throw new Error(response?.message || "No se pudo cargar el quiz");
       }
 
-      setQuiz(response.data);
+      // ✅ QUIZ PENDIENTE
+      if (response.estado === "pendiente") {
+        setMensaje("⏳ Generando quiz...");
+        return;
+      }
 
-      console.log("✅ QUIZ CARGADO:", response.data);
+      // ✅ QUIZ COMPLETADO
+      setQuiz(response.data.quiz);
+
+      console.log("✅ QUIZ CARGADO:", response.data.quiz);
     } catch (err) {
       console.error("❌ ERROR QUIZ:", err);
-
       setError(err.message || "Error cargando quiz");
     } finally {
       setLoadingQuiz(false);

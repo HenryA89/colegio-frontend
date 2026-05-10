@@ -179,10 +179,28 @@ export const getQuiz = async (materialId, usuario) => {
 
     const normalizedQuiz = normalizarQuizProfesor(response.data, id);
 
+    // ✅ QUIZ AÚN GENERÁNDOSE
+    if (normalizedQuiz.quiz_estado === "pendiente") {
+      return {
+        estado: "pendiente",
+        mensaje: "El quiz aún se está generando",
+        data: normalizedQuiz,
+      };
+    }
+
+    // ✅ ERROR GENERANDO QUIZ
+    if (normalizedQuiz.quiz_estado === "error") {
+      throw new Error(normalizedQuiz.error || "Error generando quiz");
+    }
+
+    // ✅ VALIDAR QUIZ
+    if (!normalizedQuiz.quiz || !normalizedQuiz.quiz.preguntas) {
+      throw new Error("No se encontró la estructura del quiz");
+    }
+
     return {
-      success: true,
+      estado: "completado",
       data: normalizedQuiz,
-      message: "Quiz obtenido exitosamente",
     };
   } catch (error) {
     manejarError(error);
