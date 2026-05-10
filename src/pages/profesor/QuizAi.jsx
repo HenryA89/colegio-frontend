@@ -44,6 +44,7 @@ export default function QuizAi() {
   const [loadingResultados, setLoadingResultados] = useState(false);
 
   const [error, setError] = useState(null);
+  const [mensaje, setMensaje] = useState("");
 
   // ==========================================
   // VALIDAR ID
@@ -73,7 +74,7 @@ export default function QuizAi() {
 
       // ✅ QUIZ PENDIENTE
       if (response.estado === "pendiente") {
-        setMensaje("⏳ Generando quiz...");
+        setMensaje("Generando quiz...");
         return;
       }
 
@@ -190,6 +191,13 @@ export default function QuizAi() {
             </div>
           </div>
         </div>
+
+        {/* MENSAJE */}
+        {mensaje && (
+          <div className="mb-8 bg-blue-500/10 border border-blue-500/20 text-blue-300 p-5 rounded-2xl">
+            {mensaje}
+          </div>
+        )}
 
         {/* ERROR */}
         {error && (
