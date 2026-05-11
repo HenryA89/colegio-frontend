@@ -9,6 +9,7 @@ import {
   Clock3,
   Target,
   Send,
+  BookOpen,
 } from "lucide-react";
 
 import { useMaterial } from "../../context/MaterialContext";
@@ -16,6 +17,7 @@ import {
   getQuizEstudiante,
   submitQuiz,
   getRanking,
+  getMaterialesDisponibles,
 } from "../../services/estudianteServices/quizService";
 
 export default function QuizEstudiante() {
@@ -24,6 +26,7 @@ export default function QuizEstudiante() {
     hayMaterialSeleccionado,
     getMaterialTitulo,
     notificarMaterialSubido,
+    seleccionarMaterial,
   } = useMaterial();
 
   // ==========================================
@@ -46,6 +49,10 @@ export default function QuizEstudiante() {
   const [loadingRanking, setLoadingRanking] = useState(false);
 
   const [error, setError] = useState(null);
+
+  const [materialesDisponibles, setMaterialesDisponibles] = useState([]);
+
+  const [loadingMateriales, setLoadingMateriales] = useState(false);
 
   // ==========================================
   // VALIDAR MATERIAL
@@ -87,6 +94,36 @@ export default function QuizEstudiante() {
       setLoadingQuiz(false);
     }
   }, [materialId, idValido, hayMaterialSeleccionado]);
+
+  // ==========================================
+  // CARGAR MATERIALES DISPONIBLES
+  // ==========================================
+  const handleCargarMateriales = useCallback(async () => {
+    try {
+      setLoadingMateriales(true);
+      setError(null);
+
+      const response = await getMaterialesDisponibles();
+
+      if (response?.data && Array.isArray(response.data)) {
+        setMaterialesDisponibles(response.data);
+        console.log("🎓 MATERIALES CARGADOS:", response.data);
+      }
+    } catch (err) {
+      console.error("❌ ERROR CARGANDO MATERIALES:", err);
+      setError(err.message || "Error cargando materiales disponibles");
+    } finally {
+      setLoadingMateriales(false);
+    }
+  }, []);
+
+  // ==========================================
+  // SELECCIONAR MATERIAL
+  // ==========================================
+  const handleSeleccionarMaterial = (material) => {
+    seleccionarMaterial(material);
+    console.log("🎓 MATERIAL SELECCIONADO:", material);
+  };
 
   // ==========================================
   // SELECCIONAR RESPUESTA
@@ -227,6 +264,15 @@ export default function QuizEstudiante() {
   }, [materialId, idValido, hayMaterialSeleccionado, handleGetQuiz]);
 
   // ==========================================
+  // CARGAR MATERIALES SI NO HAY SELECCIÓN
+  // ==========================================
+  useEffect(() => {
+    if (!hayMaterialSeleccionado()) {
+      handleCargarMateriales();
+    }
+  }, [hayMaterialSeleccionado, handleCargarMateriales]);
+
+  // ==========================================
   // LOADING
   // ==========================================
   if (loadingQuiz) {
@@ -238,12 +284,130 @@ export default function QuizEstudiante() {
   }
 
   // ==========================================
-  // NO QUIZ
+  // SELECCIONAR MATERIAL
   // ==========================================
-  if (!quiz) {
+  if (!quiz && !hayMaterialSeleccionado()) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-        No hay quiz disponible
+      <div className="min-h-screen bg-slate-950 text-white p-6">
+        <div className="max-w-5xl mx-auto">
+          {/* HEADER */}
+          <div className="mb-10">
+            <div className="flex items-center gap-4">
+              <div className="bg-cyan-500/10 p-4 rounded-2xl border border-cyan-500/20">
+                <Brain className="w-10 h-10 text-cyan-400" />
+              </div>
+
+              <div>
+                <h1 className="text-5xl font-black">Seleccionar Material</h1>
+
+                <p className="text-slate-400 mt-2">
+                  Elige un material para acceder a su quiz
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ERROR */}
+          {error && (
+            <div className="mb-8 bg-red-500/10 border border-red-500/20 text-red-300 p-5 rounded-2xl">
+              {error}
+            </div>
+          )}
+
+          {/* LOADING MATERIALES */}
+          {loadingMateriales ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-14 h-14 text-cyan-400 animate-spin" />
+            </div>
+          ) : (
+            /* MATERIALES DISPONIBLES */
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {materialesDisponibles.length > 0 ? (
+                materialesDisponibles.map((material) => (
+                  <div
+                    key={material.id || material.material_id}
+                    className="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-cyan-500/50 hover:scale-[1.02] transition-all cursor-pointer"
+                    onClick={() => handleSeleccionarMaterial(material)}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <BookOpen className="w-8 h-8 text-cyan-400" />
+                      <h3 className="text-xl font-bold truncate">
+                        {material.titulo ||
+                          material.nombre ||
+                          "Material sin título"}
+                      </h3>
+                    </div>
+
+                    <div className="space-y-2 text-sm text-slate-400">
+                      <p>ID: {material.id || material.material_id}</p>
+                      {material.materia && <p>Materia: {material.materia}</p>}
+                      {material.archivo && <p>Archivo: {material.archivo}</p>}
+                    </div>
+
+                    <button className="w-full mt-4 bg-cyan-500 hover:bg-cyan-600 text-white py-2 rounded-xl transition-colors">
+                      Seleccionar Material
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-20 text-slate-400">
+                  <BookOpen className="w-16 h-16 mx-auto mb-4 text-slate-600" />
+                  <p className="text-xl mb-2">No hay materiales disponibles</p>
+                  <p>Espera que el profesor suba un material</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // NO QUIZ (CUANDO HAY MATERIAL SELECCIONADO)
+  // ==========================================
+  if (!quiz && hayMaterialSeleccionado()) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white p-6">
+        <div className="max-w-5xl mx-auto">
+          {/* HEADER */}
+          <div className="mb-10">
+            <div className="flex items-center gap-4">
+              <div className="bg-cyan-500/10 p-4 rounded-2xl border border-cyan-500/20">
+                <Brain className="w-10 h-10 text-cyan-400" />
+              </div>
+
+              <div>
+                <h1 className="text-5xl font-black">Quiz del Material</h1>
+
+                <p className="text-slate-400 mt-2">
+                  Material: {getMaterialTitulo()} (ID: {materialId})
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ERROR */}
+          {error && (
+            <div className="mb-8 bg-red-500/10 border border-red-500/20 text-red-300 p-5 rounded-2xl">
+              {error}
+            </div>
+          )}
+
+          {/* LOADING */}
+          {loadingQuiz ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-14 h-14 text-cyan-400 animate-spin" />
+            </div>
+          ) : (
+            <div className="text-center py-20 text-slate-400">
+              <p className="text-xl mb-2">Cargando quiz...</p>
+              <p>
+                Espera mientras se obtiene el quiz del material seleccionado
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }

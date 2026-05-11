@@ -185,6 +185,35 @@ const normalizarQuizEstudiante = (backendData) => {
 };
 
 // ==========================================
+// OBTENER MATERIALES DISPONIBLES
+// ==========================================
+// GET /materiales
+// ==========================================
+export const getMaterialesDisponibles = async () => {
+  try {
+    console.log("🎓 OBTENIENDO MATERIALES DISPONIBLES");
+
+    obtenerToken();
+
+    obtenerUsuario();
+
+    const response = await api.get(`/materiales`);
+
+    console.log("✅ RESPONSE MATERIALES:", response.data);
+
+    if (!response?.data?.success) {
+      throw new Error(
+        response.data?.error || "No se pudieron obtener los materiales",
+      );
+    }
+
+    return response.data;
+  } catch (error) {
+    manejarError(error);
+  }
+};
+
+// ==========================================
 // OBTENER QUIZ ESTUDIANTE POR MATERIAL
 // ==========================================
 // GET /materiales/:materialId/quiz
@@ -199,7 +228,7 @@ export const getQuizEstudiante = async (materialId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/materiales/${id}/quiz`);
+    const response = await api.get(`/quizzes/${id}/show`);
 
     console.log("✅ RESPONSE QUIZ ESTUDIANTE:", response.data);
 
