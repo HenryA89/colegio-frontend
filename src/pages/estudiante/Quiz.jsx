@@ -20,6 +20,7 @@ import {
   getMaterialesDisponibles,
   getMaterialesPorMateria,
   obtenerQuizPorMateria,
+  getMateriasEstudiante,
 } from "../../services/estudianteServices/quizService";
 
 export default function QuizEstudiante() {
@@ -59,6 +60,36 @@ export default function QuizEstudiante() {
   const [materias, setMaterias] = useState([]);
 
   const [loadingMaterias, setLoadingMaterias] = useState(false);
+
+  // ==========================================
+  // OBTENER MATERIAS DEL ESTUDIANTE
+  // ==========================================
+  const handleObtenerMaterias = useCallback(async () => {
+    try {
+      setLoadingMaterias(true);
+      setError(null);
+
+      console.log("🎓 OBTENIENDO MATERIAS DEL ESTUDIANTE");
+
+      const response = await getMateriasEstudiante();
+
+      console.log("✅ RESPONSE MATERIAS:", response);
+
+      if (!response?.success) {
+        throw new Error(
+          response?.message || "No se pudieron obtener las materias",
+        );
+      }
+
+      setMaterias(response.data || []);
+      console.log("✅ MATERIAS CARGADAS:", response.data?.length || 0);
+    } catch (err) {
+      console.error("❌ ERROR OBTENIENDO MATERIAS:", err);
+      setError(err.message || "Error obteniendo materias del estudiante");
+    } finally {
+      setLoadingMaterias(false);
+    }
+  }, []);
 
   // ==========================================
   // VALIDAR MATERIAL
@@ -128,7 +159,6 @@ export default function QuizEstudiante() {
   // ==========================================
   const handleSeleccionarMaterial = (material) => {
     seleccionarMaterial(material);
-    console.log("🎓 MATERIAL SELECCIONADO:", material);
   };
 
   // ==========================================
@@ -310,13 +340,13 @@ export default function QuizEstudiante() {
   }, [materialId, idValido, hayMaterialSeleccionado, handleGetQuiz]);
 
   // ==========================================
-  // CARGAR MATERIALES SI NO HAY SELECCIÓN
+  // CARGAR MATERIAS SI NO HAY SELECCIÓN
   // ==========================================
   useEffect(() => {
     if (!hayMaterialSeleccionado()) {
-      handleCargarMateriales();
+      handleObtenerMaterias();
     }
-  }, [hayMaterialSeleccionado, handleCargarMateriales]);
+  }, [hayMaterialSeleccionado, handleObtenerMaterias]);
 
   // ==========================================
   // LOADING
@@ -330,12 +360,12 @@ export default function QuizEstudiante() {
   }
 
   // ==========================================
-  // SELECCIONAR MATERIAL
+  // MOSTRAR MATERIAS DEL ESTUDIANTE
   // ==========================================
   if (!quiz && !hayMaterialSeleccionado()) {
     return (
       <div className="min-h-screen bg-slate-950 text-white p-6">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {/* HEADER */}
           <div className="mb-10">
             <div className="flex items-center gap-4">
@@ -344,10 +374,11 @@ export default function QuizEstudiante() {
               </div>
 
               <div>
-                <h1 className="text-5xl font-black">Seleccionar Material</h1>
+                <h1 className="text-5xl font-black">Mis Materias</h1>
 
                 <p className="text-slate-400 mt-2">
-                  Elige un material para acceder a su quiz
+                  Selecciona una materia para ver sus materiales y quizzes
+                  disponibles
                 </p>
               </div>
             </div>
@@ -360,48 +391,164 @@ export default function QuizEstudiante() {
             </div>
           )}
 
-          {/* LOADING MATERIALES */}
-          {loadingMateriales ? (
+          {/* LOADING MATERIAS */}
+          {loadingMaterias ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-14 h-14 text-cyan-400 animate-spin" />
             </div>
           ) : (
-            /* MATERIALES DISPONIBLES */
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {materialesDisponibles.length > 0 ? (
-                materialesDisponibles.map((material) => (
+            /* LISTADO DE MATERIAS */
+            <div className="space-y-8">
+              {materias.length > 0 ? (
+                materias.map((materia) => (
                   <div
-                    key={material.id || material.material_id}
-                    className="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-cyan-500/50 hover:scale-[1.02] transition-all cursor-pointer"
-                    onClick={() => handleSeleccionarMaterial(material)}
+                    key={materia.id || materia.materia_id}
+                    className="bg-slate-900 border border-slate-800 rounded-2xl p-8 hover:border-cyan-500/50 hover:scale-[1.02] transition-all cursor-pointer"
+                    onClick={async () => {
+                      try {
+                        console.log("🎯 MATERIA SELECCIONADA:", materia);
+
+                        // Paso 1: Obtener materiales de la materia seleccionada
+                        const materialesResponse =
+                          await getMaterialesPorMateria(
+                            materia.id || materia.materia_id,
+                          );
+
+                        if (
+                          !materialesResponse?.data ||
+                          !Array.isArray(materialesResponse.data)
+                        ) {
+                          setError(
+                            "No se encontraron materiales para esta materia",
+                          );
+                          return;
+                        }
+
+                        const materiales = materialesResponse.data;
+                        console.log(
+                          "📋 MATERIALES ENCONTRADOS:",
+                          materiales.length,
+                        );
+
+                        // Paso 2: Obtener material_id del primer material disponible
+                        const primerMaterial = materiales[0];
+                        if (!primerMaterial || !primerMaterial.id) {
+                          setError(
+                            "No hay materiales con ID válido en esta materia",
+                          );
+                          return;
+                        }
+
+                        const materialId =
+                          primerMaterial.id || primerMaterial.material_id;
+                        console.log("🎯 MATERIAL_ID EXTRAÍDO:", materialId);
+
+                        // Paso 3: Solicitar quiz directamente con el material_id
+                        const quizResponse =
+                          await getQuizEstudiante(materialId);
+
+                        if (!quizResponse?.success) {
+                          setError(
+                            quizResponse.message ||
+                              "No se pudo obtener el quiz",
+                          );
+                          return;
+                        }
+
+                        // Guardar el material seleccionado en el contexto
+                        seleccionarMaterial(primerMaterial);
+
+                        // Establecer el quiz para mostrarlo sin responder
+                        setQuiz(quizResponse.data);
+
+                        console.log("✅ QUIZ CARGADO EXITOSAMENTE:", {
+                          materia: materia.nombre || materia.titulo,
+                          material_id: materialId,
+                          preguntas: quizResponse.data?.preguntas?.length || 0,
+                        });
+                      } catch (error) {
+                        console.error(
+                          "❌ ERROR CARGANDO QUIZ DESDE MATERIA:",
+                          error,
+                        );
+                        setError(
+                          error.message ||
+                            "Error cargando quiz desde la materia",
+                        );
+                      }
+                    }}
                   >
-                    <div className="flex items-center gap-3 mb-4">
-                      <BookOpen className="w-8 h-8 text-cyan-400" />
-                      <h3 className="text-xl font-bold truncate">
-                        {material.titulo ||
-                          material.nombre ||
-                          "Material sin título"}
-                      </h3>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-purple-500/10 p-3 rounded-xl border border-purple-500/20">
+                          <BookOpen className="w-8 h-8 text-purple-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold">
+                            {materia.nombre ||
+                              materia.titulo ||
+                              "Materia sin nombre"}
+                          </h3>
+                          <p className="text-slate-400 text-sm">
+                            ID: {materia.id || materia.materia_id}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="bg-green-500/10 px-4 py-2 rounded-xl border border-green-500/20">
+                          <p className="text-green-400 text-sm font-semibold">
+                            Activa
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="space-y-2 text-sm text-slate-400">
-                      <p>ID: {material.id || material.material_id}</p>
-                      {material.materia && <p>Materia: {material.materia}</p>}
-                      {material.archivo && <p>Archivo: {material.archivo}</p>}
+                    <div className="grid md:grid-cols-3 gap-4 text-sm text-slate-400">
+                      {materia.descripcion && (
+                        <div>
+                          <p className="font-semibold text-slate-300 mb-1">
+                            Descripción
+                          </p>
+                          <p className="line-clamp-2">{materia.descripcion}</p>
+                        </div>
+                      )}
+
+                      {materia.profesor && (
+                        <div>
+                          <p className="font-semibold text-slate-300 mb-1">
+                            Profesor
+                          </p>
+                          <p>{materia.profesor}</p>
+                        </div>
+                      )}
+
+                      <div>
+                        <p className="font-semibold text-slate-300 mb-1">
+                          Estado
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                          <span>Disponible</span>
+                        </div>
+                      </div>
                     </div>
 
-                    <button className="w-full mt-4 bg-cyan-500 hover:bg-cyan-600 text-white py-2 rounded-xl transition-colors">
-                      Seleccionar Material
+                    <button className="w-full mt-6 bg-linear-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white py-3 rounded-xl transition-all font-semibold">
+                      Ver Materiales y Quizzes
                     </button>
                   </div>
                 ))
               ) : (
-                <div className="col-span-full text-center py-20 text-slate-400">
+                <div className="text-center py-20 text-slate-400">
                   <BookOpen className="w-16 h-16 mx-auto mb-4 text-slate-600" />
                   <p className="text-xl mb-2">
-                    Verifica tu conexion de Internet
+                    No estás inscrito en ninguna materia
                   </p>
-                  <p>Espera que el profesor suba un material</p>
+                  <p>
+                    Por favor, contacta al administrador para inscribirte en una
+                    materia
+                  </p>
                 </div>
               )}
             </div>
