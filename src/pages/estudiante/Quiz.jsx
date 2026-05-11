@@ -1,75 +1,41 @@
-import { useEffect, useState, useCallback } from "react";
-
-import {
-  Brain,
-  Loader2,
-  Trophy,
-  Medal,
-  CheckCircle2,
-  Clock3,
-  Target,
-  Send,
-  BookOpen,
-} from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { Brain, BookOpen, Loader2, Trophy, CheckCircle } from "lucide-react";
 
 import { useMaterial } from "../../context/MaterialContext";
 import {
+  getMateriasEstudiante,
+  getMaterialesPorMateria,
   getQuizEstudiante,
   submitQuiz,
   getRanking,
-  getMaterialesDisponibles,
-  getMaterialesPorMateria,
-  obtenerQuizPorMateria,
-  getMateriasEstudiante,
 } from "../../services/estudianteServices/quizService";
 
 export default function QuizEstudiante() {
-  const {
-    getMaterialId,
-    hayMaterialSeleccionado,
-    getMaterialTitulo,
-    notificarMaterialSubido,
-    seleccionarMaterial,
-  } = useMaterial();
+  const { seleccionarMaterial, hayMaterialSeleccionado } = useMaterial();
 
-  // ==========================================
+  const navigate = useNavigate();
+
+  // =========================
   // STATES
-  // ==========================================
-  const [quiz, setQuiz] = useState(null);
-
-  const [respuestas, setRespuestas] = useState([]);
-
-  const [ranking, setRanking] = useState([]);
-
-  const [resultado, setResultado] = useState(null);
-
-  const [quizFinalizado, setQuizFinalizado] = useState(false);
-
-  const [loadingQuiz, setLoadingQuiz] = useState(false);
-
-  const [loadingSubmit, setLoadingSubmit] = useState(false);
-
-  const [loadingRanking, setLoadingRanking] = useState(false);
-
-  const [error, setError] = useState(null);
-
-  const [materialesDisponibles, setMaterialesDisponibles] = useState([]);
-
-  const [loadingMateriales, setLoadingMateriales] = useState(false);
-
+  // =========================
   const [materias, setMaterias] = useState([]);
-
   const [loadingMaterias, setLoadingMaterias] = useState(false);
+  const [quiz, setQuiz] = useState(null);
+  const [loadingQuiz, setLoadingQuiz] = useState(false);
+  const [error, setError] = useState(null);
+  const [pasoActual, setPasoActual] = useState(1); // Para seguimiento del flujo
 
   // ==========================================
-  // OBTENER MATERIAS DEL ESTUDIANTE
+  // PASO 1: OBTENER MATERIAS DEL ESTUDIANTE
   // ==========================================
   const handleObtenerMaterias = useCallback(async () => {
     try {
       setLoadingMaterias(true);
       setError(null);
+      setPasoActual(1);
 
-      console.log("🎓 OBTENIENDO MATERIAS DEL ESTUDIANTE");
+      console.log("🎓 PASO 1: OBTENIENDO MATERIAS DEL ESTUDIANTE...");
 
       const response = await getMateriasEstudiante();
 
@@ -92,277 +58,151 @@ export default function QuizEstudiante() {
   }, []);
 
   // ==========================================
-  // VALIDAR MATERIAL
+  // PASO 2: SELECCIONAR MATERIA
   // ==========================================
-  const materialId = getMaterialId();
-  const idValido = materialId && !isNaN(materialId) && Number(materialId) > 0;
-
-  // ==========================================
-  // OBTENER QUIZ
-  // ==========================================
-  const handleGetQuiz = useCallback(async () => {
+  const handleSeleccionarMateria = useCallback(async (materia) => {
     try {
       setLoadingQuiz(true);
-
       setError(null);
+      setPasoActual(2);
 
-      if (!idValido || !hayMaterialSeleccionado()) {
-        throw new Error(
-          "No hay material seleccionado. Por favor, selecciona un material primero.",
+      console.log("📚 PASO 2: MATERIA SELECCIONADA:", materia);
+
+      // PASO 3: Obtener material_id más reciente de la materia seleccionada
+      console.log("🔍 PASO 3: OBTENIENDO MATERIAL_ID MÁS RECIENTE...");
+
+      const materialesResponse = await getMaterialesPorMateria(
+        materia.id || materia.materia_id,
+      );
+
+      if (
+        !materialesResponse?.data ||
+        !Array.isArray(materialesResponse.data)
+      ) {
+        throw new Error("No se encontraron materiales para esta materia");
+      }
+
+      const materiales = materialesResponse.data;
+      console.log("📋 MATERIALES ENCONTRADOS:", materiales.length);
+
+      // Encontrar el material más reciente
+      const materialMasReciente = materiales.reduce((masReciente, material) => {
+        if (!masReciente) return material;
+
+        const fechaActual = new Date(
+          material.created_at || material.fecha_creacion || 0,
         );
+        const fechaMasReciente = new Date(
+          masReciente.created_at || masReciente.fecha_creacion || 0,
+        );
+
+        return fechaActual > fechaMasReciente ? material : masReciente;
+      }, null);
+
+      if (!materialMasReciente || !materialMasReciente.id) {
+        throw new Error("No hay materiales con ID válido en esta materia");
       }
 
-      console.log("🎓 MATERIAL ID:", materialId);
+      const materialId =
+        materialMasReciente.id || materialMasReciente.material_id;
+      console.log("🎯 MATERIAL_ID MÁS RECIENTE:", materialId);
 
-      const response = await getQuizEstudiante(materialId);
+      // Guardar material_id en estado
+      setMaterialIdSeleccionado(materialId);
+      setMaterialSeleccionado(materialMasReciente);
+      setMateriaSeleccionada(materia);
 
-      console.log("✅ QUIZ ESTUDIANTE:", response);
+      // PASO 4: Obtener quiz con el material_id guardado
+      console.log("🎓 PASO 4: OBTENIENDO QUIZ...");
 
-      if (!response?.success) {
-        throw new Error(response?.message || "No se pudo cargar el quiz");
+      const quizResponse = await getQuizEstudiante(materialId);
+
+      if (!quizResponse?.success) {
+        throw new Error(quizResponse.message || "No se pudo obtener el quiz");
       }
 
-      setQuiz(response.data.data.quiz);
+      setQuiz(quizResponse.data);
+      setPasoActual(4);
+
+      console.log("✅ QUIZ CARGADO:", quizResponse.data);
     } catch (err) {
-      console.error("❌ ERROR CARGANDO QUIZ:", err);
-
-      setError(err.message || "Error cargando quiz");
+      console.error("❌ ERROR EN SELECCIÓN DE MATERIA:", err);
+      setError(err.message || "Error seleccionando materia y obteniendo quiz");
     } finally {
       setLoadingQuiz(false);
-    }
-  }, [materialId, idValido, hayMaterialSeleccionado]);
-
-  // ==========================================
-  // CARGAR MATERIALES DISPONIBLES
-  // ==========================================
-  const handleCargarMateriales = useCallback(async () => {
-    try {
-      setLoadingMateriales(true);
-      setError(null);
-
-      const response = await getMaterialesDisponibles();
-
-      if (response?.data && Array.isArray(response.data)) {
-        setMaterialesDisponibles(response.data);
-        console.log("🎓 MATERIALES CARGADOS:", response.data);
-      }
-    } catch (err) {
-      console.error("❌ ERROR CARGANDO MATERIALES:", err);
-      setError(err.message || "Error cargando materiales disponibles");
-    } finally {
-      setLoadingMateriales(false);
     }
   }, []);
 
   // ==========================================
-  // SELECCIONAR MATERIAL
+  // PASO 5: ENVIAR RESPUESTAS DEL QUIZ
   // ==========================================
-  const handleSeleccionarMaterial = (material) => {
-    seleccionarMaterial(material);
-  };
-
-  // ==========================================
-  // OBTENER QUIZ POR MATERIA (SERVICIO UNIFICADO)
-  // ==========================================
-  const handleObtenerQuizPorMateria = useCallback(
-    async (materiaId) => {
+  const handleEnviarRespuestas = useCallback(
+    async (respuestas) => {
       try {
         setLoadingQuiz(true);
         setError(null);
+        setPasoActual(5);
 
-        console.log("🎓 OBTENIENDO QUIZ POR MATERIA (UNIFICADO):", materiaId);
+        console.log("📤 PASO 5: ENVIANDO RESPUESTAS DEL QUIZ...");
 
-        const response = await obtenerQuizPorMateria(materiaId);
+        const response = await submitQuiz(materialIdSeleccionado, respuestas);
 
-        console.log("✅ RESPONSE QUIZ POR MATERIA:", response);
+        console.log("✅ RESPONSE ENVÍO:", response);
 
         if (!response?.success) {
           throw new Error(
-            response?.message || "No se pudo obtener el quiz de la materia",
+            response?.message || "No se pudieron enviar las respuestas",
           );
         }
 
-        // Guardar el material seleccionado en el contexto
-        if (response?.data?.materia?.materialSeleccionado) {
-          seleccionarMaterial(response.data.materia.materialSeleccionado);
+        setResultados(response.data);
+        setPasoActual(6);
+
+        // PASO 6: Obtener ranking top 3
+        console.log("🏆 PASO 6: OBTENIENDO RANKING TOP 3...");
+
+        const rankingResponse = await getRanking(materialIdSeleccionado);
+
+        if (rankingResponse?.success) {
+          setRanking(rankingResponse.data?.slice(0, 3) || []); // Top 3
+          console.log("✅ RANKING TOP 3:", rankingResponse.data?.slice(0, 3));
         }
-
-        // Establecer el quiz
-        setQuiz(response.data.quiz);
-
-        console.log("✅ QUIZ CARGADO DESDE MATERIA:", response.data.quiz);
       } catch (err) {
-        console.error("❌ ERROR OBTENIENDO QUIZ POR MATERIA:", err);
-        setError(err.message || "Error obteniendo quiz de la materia");
+        console.error("❌ ERROR ENVIANDO RESPUESTAS:", err);
+        setError(err.message || "Error enviando respuestas del quiz");
       } finally {
         setLoadingQuiz(false);
       }
     },
-    [seleccionarMaterial],
+    [materialIdSeleccionado],
+  );
+
+  // Estados adicionales para el flujo
+  const [materialIdSeleccionado, setMaterialIdSeleccionado] = useState(null);
+  const [materialSeleccionado, setMaterialSeleccionado] = useState(null);
+  const [materiaSeleccionada, setMateriaSeleccionada] = useState(null);
+  const [resultados, setResultados] = useState(null);
+  const [ranking, setRanking] = useState([]);
+  const [respuestasActuales, setRespuestasActuales] = useState({});
+
+  // ==========================================
+  // MANEJAR RESPUESTA DE PREGUNTA
+  // ==========================================
+  const handleSeleccionarRespuesta = useCallback(
+    (preguntaIndex, opcionIndex) => {
+      setRespuestasActuales((prev) => ({
+        ...prev,
+        [preguntaIndex]: opcionIndex,
+      }));
+    },
+    [],
   );
 
   // ==========================================
-  // SELECCIONAR RESPUESTA
+  // RENDERIZAR SEGÚN PASO ACTUAL
   // ==========================================
-  const handleSeleccionarRespuesta = (preguntaId, opcion) => {
-    setRespuestas((prev) => {
-      const existe = prev.find((r) => r.pregunta_id === preguntaId);
-
-      if (existe) {
-        return prev.map((r) =>
-          r.pregunta_id === preguntaId
-            ? {
-                ...r,
-                opcion_seleccionada: opcion,
-              }
-            : r,
-        );
-      }
-
-      return [
-        ...prev,
-        {
-          pregunta_id: preguntaId,
-          opcion_seleccionada: opcion,
-        },
-      ];
-    });
-  };
-
-  // ==========================================
-  // OBTENER TOP 3
-  // ==========================================
-  const handleGetRanking = async (currentQuizId) => {
-    try {
-      setLoadingRanking(true);
-
-      const response = await getRanking(currentQuizId);
-
-      console.log("🏆 RANKING:", response);
-
-      if (!response?.success) {
-        throw new Error("No se pudo obtener el ranking");
-      }
-
-      // TOP 3
-      const top3 = response.data?.slice(0, 3) || [];
-
-      setRanking(top3);
-    } catch (err) {
-      console.error("❌ ERROR RANKING:", err);
-    } finally {
-      setLoadingRanking(false);
-    }
-  };
-
-  // ==========================================
-  // ENVIAR QUIZ
-  // ==========================================
-  const handleSubmitQuiz = async () => {
-    try {
-      setLoadingSubmit(true);
-
-      setError(null);
-
-      if (!quiz?.id) {
-        throw new Error("No existe quiz disponible");
-      }
-
-      if (respuestas.length !== quiz.preguntas.length) {
-        throw new Error("Debes responder todas las preguntas");
-      }
-
-      const response = await submitQuiz(quiz.id, respuestas);
-
-      console.log("✅ QUIZ RESPONDIDO:", response);
-
-      if (!response?.success) {
-        throw new Error(response?.message || "No se pudo enviar el quiz");
-      }
-
-      // ==========================
-      // RESULTADO PERSONAL
-      // ==========================
-      setResultado({
-        puntaje: response.data?.puntaje || 0,
-
-        correctas: response.data?.correctas || 0,
-
-        porcentaje: response.data?.porcentaje || 0,
-      });
-
-      // ==========================
-      // FINALIZAR QUIZ
-      // ==========================
-      setQuizFinalizado(true);
-
-      // ==========================
-      // OBTENER TOP 3
-      // ==========================
-      await handleGetRanking(quiz.id);
-    } catch (err) {
-      console.error("❌ ERROR ENVIANDO QUIZ:", err);
-
-      setError(err.message || "No se pudo responder el quiz");
-    } finally {
-      setLoadingSubmit(false);
-    }
-  };
-
-  // ==========================================
-  // ESCUCHAR EVENTOS DE MATERIAL SUBIDO
-  // ==========================================
-  useEffect(() => {
-    const handleMaterialSubido = (event) => {
-      console.log("🎓 MATERIAL SUBIDO DETECTADO:", event.detail);
-      // Auto-cargar el quiz cuando se sube un nuevo material
-      if (event.detail && event.detail.material_id) {
-        handleGetQuiz();
-      }
-    };
-
-    // Escuchar eventos personalizados
-    window.addEventListener("materialSubido", handleMaterialSubido);
-
-    // Limpiar listener al desmontar
-    return () => {
-      window.removeEventListener("materialSubido", handleMaterialSubido);
-    };
-  }, [handleGetQuiz]);
-
-  // ==========================================
-  // AUTO LOAD
-  // ==========================================
-  useEffect(() => {
-    if (idValido && hayMaterialSeleccionado()) {
-      handleGetQuiz();
-    }
-  }, [materialId, idValido, hayMaterialSeleccionado, handleGetQuiz]);
-
-  // ==========================================
-  // CARGAR MATERIAS SI NO HAY SELECCIÓN
-  // ==========================================
-  useEffect(() => {
-    if (!hayMaterialSeleccionado()) {
-      handleObtenerMaterias();
-    }
-  }, [hayMaterialSeleccionado, handleObtenerMaterias]);
-
-  // ==========================================
-  // LOADING
-  // ==========================================
-  if (loadingQuiz) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Loader2 className="w-14 h-14 text-cyan-400 animate-spin" />
-      </div>
-    );
-  }
-
-  // ==========================================
-  // MOSTRAR MATERIAS DEL ESTUDIANTE
-  // ==========================================
-  if (!quiz && !hayMaterialSeleccionado()) {
+  if (pasoActual === 1 && materias.length === 0) {
+    // PASO 1: Mostrar botón para obtener materias
     return (
       <div className="min-h-screen bg-slate-950 text-white p-6">
         <div className="max-w-6xl mx-auto">
@@ -372,13 +212,10 @@ export default function QuizEstudiante() {
               <div className="bg-cyan-500/10 p-4 rounded-2xl border border-cyan-500/20">
                 <Brain className="w-10 h-10 text-cyan-400" />
               </div>
-
               <div>
-                <h1 className="text-5xl font-black">Mis Materias</h1>
-
+                <h1 className="text-5xl font-black">Quiz Estudiante</h1>
                 <p className="text-slate-400 mt-2">
-                  Selecciona una materia para ver sus materiales y quizzes
-                  disponibles
+                  Sistema de evaluación inteligente
                 </p>
               </div>
             </div>
@@ -391,177 +228,107 @@ export default function QuizEstudiante() {
             </div>
           )}
 
-          {/* LOADING MATERIAS */}
-          {loadingMaterias ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-14 h-14 text-cyan-400 animate-spin" />
+          {/* BOTÓN PRINCIPAL */}
+          <div className="text-center py-20">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 max-w-2xl mx-auto">
+              <Brain className="w-20 h-20 text-cyan-400 mx-auto mb-6" />
+              <h2 className="text-3xl font-black mb-4">Comenzar Quiz</h2>
+              <p className="text-slate-400 mb-8">
+                Accede a tus materias y responde los quizzes disponibles
+              </p>
+              <button
+                onClick={handleObtenerMaterias}
+                disabled={loadingMaterias}
+                className="bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-4 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 mx-auto font-semibold text-lg"
+              >
+                {loadingMaterias ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Cargando materias...
+                  </>
+                ) : (
+                  <>
+                    <BookOpen className="w-5 h-5" />
+                    Ver Mis Materias
+                  </>
+                )}
+              </button>
             </div>
-          ) : (
-            /* LISTADO DE MATERIAS */
-            <div className="space-y-8">
-              {materias.length > 0 ? (
-                materias.map((materia) => (
-                  <div
-                    key={materia.id || materia.materia_id}
-                    className="bg-slate-900 border border-slate-800 rounded-2xl p-8 hover:border-cyan-500/50 hover:scale-[1.02] transition-all cursor-pointer"
-                    onClick={async () => {
-                      try {
-                        console.log("🎯 MATERIA SELECCIONADA:", materia);
-
-                        // Paso 1: Obtener materiales de la materia seleccionada
-                        const materialesResponse =
-                          await getMaterialesPorMateria(
-                            materia.id || materia.materia_id,
-                          );
-
-                        if (
-                          !materialesResponse?.data ||
-                          !Array.isArray(materialesResponse.data)
-                        ) {
-                          setError(
-                            "No se encontraron materiales para esta materia",
-                          );
-                          return;
-                        }
-
-                        const materiales = materialesResponse.data;
-                        console.log(
-                          "📋 MATERIALES ENCONTRADOS:",
-                          materiales.length,
-                        );
-
-                        // Paso 2: Obtener material_id del primer material disponible
-                        const primerMaterial = materiales[0];
-                        if (!primerMaterial || !primerMaterial.id) {
-                          setError(
-                            "No hay materiales con ID válido en esta materia",
-                          );
-                          return;
-                        }
-
-                        const materialId =
-                          primerMaterial.id || primerMaterial.material_id;
-                        console.log("🎯 MATERIAL_ID EXTRAÍDO:", materialId);
-
-                        // Paso 3: Solicitar quiz directamente con el material_id
-                        const quizResponse =
-                          await getQuizEstudiante(materialId);
-
-                        if (!quizResponse?.success) {
-                          setError(
-                            quizResponse.message ||
-                              "No se pudo obtener el quiz",
-                          );
-                          return;
-                        }
-
-                        // Guardar el material seleccionado en el contexto
-                        seleccionarMaterial(primerMaterial);
-
-                        // Establecer el quiz para mostrarlo sin responder
-                        setQuiz(quizResponse.data);
-
-                        console.log("✅ QUIZ CARGADO EXITOSAMENTE:", {
-                          materia: materia.nombre || materia.titulo,
-                          material_id: materialId,
-                          preguntas: quizResponse.data?.preguntas?.length || 0,
-                        });
-                      } catch (error) {
-                        console.error(
-                          "❌ ERROR CARGANDO QUIZ DESDE MATERIA:",
-                          error,
-                        );
-                        setError(
-                          error.message ||
-                            "Error cargando quiz desde la materia",
-                        );
-                      }
-                    }}
-                  >
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-4">
-                        <div className="bg-purple-500/10 p-3 rounded-xl border border-purple-500/20">
-                          <BookOpen className="w-8 h-8 text-purple-400" />
-                        </div>
-                        <div>
-                          <h3 className="text-2xl font-bold">
-                            {materia.nombre ||
-                              materia.titulo ||
-                              "Materia sin nombre"}
-                          </h3>
-                          <p className="text-slate-400 text-sm">
-                            ID: {materia.id || materia.materia_id}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <div className="bg-green-500/10 px-4 py-2 rounded-xl border border-green-500/20">
-                          <p className="text-green-400 text-sm font-semibold">
-                            Activa
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-4 text-sm text-slate-400">
-                      {materia.descripcion && (
-                        <div>
-                          <p className="font-semibold text-slate-300 mb-1">
-                            Descripción
-                          </p>
-                          <p className="line-clamp-2">{materia.descripcion}</p>
-                        </div>
-                      )}
-
-                      {materia.profesor && (
-                        <div>
-                          <p className="font-semibold text-slate-300 mb-1">
-                            Profesor
-                          </p>
-                          <p>{materia.profesor}</p>
-                        </div>
-                      )}
-
-                      <div>
-                        <p className="font-semibold text-slate-300 mb-1">
-                          Estado
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                          <span>Disponible</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button className="w-full mt-6 bg-linear-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white py-3 rounded-xl transition-all font-semibold">
-                      Ver Materiales y Quizzes
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-20 text-slate-400">
-                  <BookOpen className="w-16 h-16 mx-auto mb-4 text-slate-600" />
-                  <p className="text-xl mb-2">
-                    No estás inscrito en ninguna materia
-                  </p>
-                  <p>
-                    Por favor, contacta al administrador para inscribirte en una
-                    materia
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+          </div>
         </div>
       </div>
     );
   }
 
-  // ==========================================
-  // NO QUIZ (CUANDO HAY MATERIAL SELECCIONADO)
-  // ==========================================
-  if (!quiz && hayMaterialSeleccionado()) {
+  if (pasoActual === 1 && materias.length > 0) {
+    // PASO 2: Mostrar listado de materias
+    return (
+      <div className="min-h-screen bg-slate-950 text-white p-6">
+        <div className="max-w-6xl mx-auto">
+          {/* HEADER */}
+          <div className="mb-10">
+            <div className="flex items-center gap-4">
+              <div className="bg-cyan-500/10 p-4 rounded-2xl border border-cyan-500/20">
+                <Brain className="w-10 h-10 text-cyan-400" />
+              </div>
+              <div>
+                <h1 className="text-5xl font-black">Mis Materias</h1>
+                <p className="text-slate-400 mt-2">
+                  Selecciona una materia para comenzar el quiz
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ERROR */}
+          {error && (
+            <div className="mb-8 bg-red-500/10 border border-red-500/20 text-red-300 p-5 rounded-2xl">
+              {error}
+            </div>
+          )}
+
+          {/* LISTADO DE MATERIAS */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {materias.map((materia) => (
+              <div
+                key={materia.id || materia.materia_id}
+                className="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-cyan-500/50 hover:scale-[1.02] transition-all cursor-pointer"
+                onClick={() => handleSeleccionarMateria(materia)}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-purple-500/10 p-3 rounded-xl border border-purple-500/20">
+                    <BookOpen className="w-8 h-8 text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">
+                      {materia.nombre || materia.titulo || "Materia sin nombre"}
+                    </h3>
+                    <p className="text-slate-400 text-sm">
+                      ID: {materia.id || materia.materia_id}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-sm text-slate-400">
+                  {materia.descripcion && (
+                    <p className="line-clamp-2">{materia.descripcion}</p>
+                  )}
+                  {materia.profesor && <p>Profesor: {materia.profesor}</p>}
+                </div>
+
+                <button className="w-full mt-4 bg-cyan-500 hover:bg-cyan-600 text-white py-2 rounded-xl transition-colors">
+                  Seleccionar Materia
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (pasoActual === 4 && quiz) {
+    // PASO 4-5: Mostrar quiz para responder
     return (
       <div className="min-h-screen bg-slate-950 text-white p-6">
         <div className="max-w-5xl mx-auto">
@@ -571,12 +338,10 @@ export default function QuizEstudiante() {
               <div className="bg-cyan-500/10 p-4 rounded-2xl border border-cyan-500/20">
                 <Brain className="w-10 h-10 text-cyan-400" />
               </div>
-
               <div>
-                <h1 className="text-5xl font-black">Quiz del Material</h1>
-
+                <h1 className="text-5xl font-black">Quiz</h1>
                 <p className="text-slate-400 mt-2">
-                  Material: {getMaterialTitulo()} (ID: {materialId})
+                  {materiaSeleccionada?.nombre || materiaSeleccionada?.titulo}
                 </p>
               </div>
             </div>
@@ -589,130 +354,91 @@ export default function QuizEstudiante() {
             </div>
           )}
 
-          {/* LOADING */}
-          {loadingQuiz ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-14 h-14 text-cyan-400 animate-spin" />
-            </div>
-          ) : (
-            <div className="text-center py-20 text-slate-400">
-              <p className="text-xl mb-2">Cargando quiz...</p>
-              <p>
-                Espera mientras se obtiene el quiz del material seleccionado
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // ==========================================
-  // RESULTADOS FINALES
-  // ==========================================
-  if (quizFinalizado) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-white p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* HEADER */}
-          <div className="mb-10">
-            <div className="flex items-center gap-4">
-              <div className="bg-green-500/10 p-4 rounded-2xl border border-green-500/20">
-                <CheckCircle2 className="w-10 h-10 text-green-400" />
-              </div>
-
-              <div>
-                <h1 className="text-5xl font-black">QUIZ FINALIZADO</h1>
-
-                <p className="text-slate-400 mt-2">
-                  Tus resultados han sido registrados
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* ERROR */}
-          {error && (
-            <div className="mb-8 bg-red-500/10 border border-red-500/20 text-red-300 p-5 rounded-2xl">
-              {error}
-            </div>
-          )}
-
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* RESULTADO PERSONAL */}
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8">
-              <div className="flex items-center gap-3 mb-8">
-                <Target className="w-8 h-8 text-cyan-400" />
-
-                <h2 className="text-3xl font-black">Tu Resultado</h2>
-              </div>
-
-              <div className="space-y-6">
-                <div className="bg-slate-800 rounded-2xl p-6">
-                  <p className="text-slate-400 mb-2">Puntaje</p>
-
-                  <p className="text-5xl font-black text-cyan-400">
-                    {resultado?.puntaje}
-                  </p>
+          {/* QUIZ CONTENT */}
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+            <div className="mb-8">
+              <h2 className="text-3xl font-black mb-4">{quiz.titulo}</h2>
+              <div className="flex items-center gap-6 text-sm text-slate-400">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  <span>{quiz.materia}</span>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-800 rounded-2xl p-5">
-                    <p className="text-slate-400 mb-2">Correctas</p>
-
-                    <p className="text-3xl font-black text-green-400">
-                      {resultado?.correctas}
-                    </p>
-                  </div>
-
-                  <div className="bg-slate-800 rounded-2xl p-5">
-                    <p className="text-slate-400 mb-2">Porcentaje</p>
-
-                    <p className="text-3xl font-black text-yellow-400">
-                      {resultado?.porcentaje}%
-                    </p>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <span>{quiz.preguntas?.length || 0} preguntas</span>
                 </div>
               </div>
             </div>
 
-            {/* TOP 3 */}
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8">
-              <div className="flex items-center gap-3 mb-8">
-                <Trophy className="w-8 h-8 text-yellow-400" />
+            {/* PREGUNTAS */}
+            <div className="space-y-8">
+              {quiz.preguntas?.map((pregunta, index) => (
+                <div
+                  key={index}
+                  className="bg-slate-800 border border-slate-700 rounded-2xl p-6"
+                >
+                  <h3 className="text-xl font-bold mb-6">
+                    {index + 1}. {pregunta.pregunta}
+                  </h3>
 
-                <h2 className="text-3xl font-black">Top 3 Ranking</h2>
-              </div>
-
-              {loadingRanking ? (
-                <div className="flex justify-center py-10">
-                  <Loader2 className="w-10 h-10 animate-spin text-yellow-400" />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {ranking.map((item, index) => (
-                    <div
-                      key={index}
-                      className="bg-slate-800 rounded-2xl p-5 flex justify-between items-center"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="bg-yellow-500/10 p-3 rounded-xl">
-                          <Medal className="w-6 h-6 text-yellow-400" />
-                        </div>
-
-                        <div>
-                          <p className="font-bold text-lg">
-                            #{index + 1} {item.estudiante || item.nombre}
-                          </p>
+                  <div className="grid gap-4">
+                    {pregunta.opciones?.map((opcion, opcionIndex) => (
+                      <div
+                        key={opcionIndex}
+                        className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                          respuestasActuales[index] === opcionIndex
+                            ? "bg-cyan-500/10 border-cyan-500 text-cyan-300"
+                            : "border-slate-600 hover:border-cyan-500/50 hover:bg-slate-700/50"
+                        }`}
+                        onClick={() =>
+                          handleSeleccionarRespuesta(index, opcionIndex)
+                        }
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                              respuestasActuales[index] === opcionIndex
+                                ? "bg-cyan-500 text-white"
+                                : "bg-slate-700 border-2 border-slate-600"
+                            }`}
+                          >
+                            {String.fromCharCode(65 + opcionIndex)}
+                          </div>
+                          <span>{opcion}</span>
                         </div>
                       </div>
-
-                      <p className="text-2xl font-black text-yellow-400">
-                        {item.puntaje || item.score}
-                      </p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
+              ))}
+            </div>
+
+            {/* BOTÓN ENVIAR */}
+            <div className="mt-8 text-center">
+              <button
+                onClick={() => handleEnviarRespuestas(respuestasActuales)}
+                disabled={
+                  Object.keys(respuestasActuales).length !==
+                    quiz.preguntas?.length || loadingQuiz
+                }
+                className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 mx-auto font-semibold text-lg"
+              >
+                {loadingQuiz ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Enviando respuestas...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-5 h-5" />
+                    Enviar Respuestas
+                  </>
+                )}
+              </button>
+              {Object.keys(respuestasActuales).length !==
+                quiz.preguntas?.length && (
+                <p className="text-slate-400 mt-2">
+                  Responde todas las preguntas para continuar
+                </p>
               )}
             </div>
           </div>
@@ -721,127 +447,148 @@ export default function QuizEstudiante() {
     );
   }
 
-  // ==========================================
-  // QUIZ
-  // ==========================================
-  return (
-    <div className="min-h-screen bg-slate-950 text-white p-6">
-      <div className="max-w-5xl mx-auto">
-        {/* HEADER */}
-        <div className="mb-10">
-          <div className="flex items-center gap-4">
-            <div className="bg-cyan-500/10 p-4 rounded-2xl border border-cyan-500/20">
-              <Brain className="w-10 h-10 text-cyan-400" />
-            </div>
-
-            <div>
-              <h1 className="text-5xl font-black">
-                {quiz?.titulo || "Quiz del Material"}
-              </h1>
-
-              <p className="text-slate-400 mt-2">
-                {hayMaterialSeleccionado()
-                  ? `Material: ${getMaterialTitulo()} (ID: ${materialId})`
-                  : quiz?.materia || "Selecciona un material"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* ERROR */}
-        {error && (
-          <div className="mb-8 bg-red-500/10 border border-red-500/20 text-red-300 p-5 rounded-2xl">
-            {error}
-          </div>
-        )}
-
-        {/* INFO */}
-        <div className="grid md:grid-cols-3 gap-5 mb-10">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-            <p className="text-slate-400 mb-2">Preguntas</p>
-
-            <p className="text-3xl font-black">{quiz.total_preguntas}</p>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-            <p className="text-slate-400 mb-2">Nivel</p>
-
-            <p className="text-3xl font-black">{quiz.nivel}</p>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Clock3 className="w-5 h-5 text-cyan-400" />
-
-              <p className="text-slate-400">Tiempo límite</p>
-            </div>
-
-            <p className="text-3xl font-black">
-              {quiz.tiempo_limite || "Libre"}
-            </p>
-          </div>
-        </div>
-
-        {/* PREGUNTAS */}
-        <div className="space-y-8">
-          {quiz.preguntas.map((pregunta, index) => (
-            <div
-              key={pregunta.id || index}
-              className="bg-slate-900 border border-slate-800 rounded-3xl p-8"
-            >
-              <h2 className="text-2xl font-bold mb-8">
-                {index + 1}. {pregunta.pregunta}
-              </h2>
-
-              <div className="grid gap-4">
-                {pregunta.opciones?.map((opcion, opcionIndex) => {
-                  const seleccionada = respuestas.find(
-                    (r) =>
-                      r.pregunta_id === pregunta.id &&
-                      r.opcion_seleccionada === opcion,
-                  );
-
-                  return (
-                    <button
-                      key={opcionIndex}
-                      onClick={() =>
-                        handleSeleccionarRespuesta(pregunta.id, opcion)
-                      }
-                      className={`p-5 rounded-2xl border text-left transition-all ${
-                        seleccionada
-                          ? "bg-cyan-500 border-cyan-400 text-white"
-                          : "bg-slate-800 border-slate-700 hover:border-cyan-500"
-                      }`}
-                    >
-                      {opcion}
-                    </button>
-                  );
-                })}
+  if (pasoActual === 6 && resultados) {
+    // PASO 6: Mostrar resultados y ranking
+    return (
+      <div className="min-h-screen bg-slate-950 text-white p-6">
+        <div className="max-w-6xl mx-auto">
+          {/* HEADER */}
+          <div className="mb-10">
+            <div className="flex items-center gap-4">
+              <div className="bg-green-500/10 p-4 rounded-2xl border border-green-500/20">
+                <CheckCircle className="w-10 h-10 text-green-400" />
+              </div>
+              <div>
+                <h1 className="text-5xl font-black">Resultados del Quiz</h1>
+                <p className="text-slate-400 mt-2">
+                  {materiaSeleccionada?.nombre || materiaSeleccionada?.titulo}
+                </p>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
 
-        {/* SUBMIT */}
-        <div className="mt-10">
-          <button
-            onClick={handleSubmitQuiz}
-            disabled={loadingSubmit}
-            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 py-5 rounded-2xl font-black text-xl flex items-center justify-center gap-3 hover:scale-[1.01] transition-all disabled:opacity-50"
-          >
-            {loadingSubmit ? (
-              <>
-                <Loader2 className="w-6 h-6 animate-spin" />
-                Enviando respuestas...
-              </>
-            ) : (
-              <>
-                <Send className="w-6 h-6" />
-                Finalizar Quiz
-              </>
-            )}
-          </button>
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* TUS RESULTADOS */}
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8">
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                <CheckCircle className="w-6 h-6 text-green-400" />
+                Tu Resultado
+              </h2>
+
+              <div className="text-center py-8">
+                <div className="text-6xl font-black text-green-400 mb-4">
+                  {resultados.puntaje || 0}
+                </div>
+                <p className="text-xl text-slate-300 mb-6">Puntos obtenidos</p>
+
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                    <p className="text-green-300">
+                      Correctas: {resultados.correctas || 0}
+                    </p>
+                  </div>
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                    <p className="text-red-300">
+                      Incorrectas: {resultados.incorrectas || 0}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* RANKING TOP 3 */}
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8">
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                <Trophy className="w-6 h-6 text-yellow-400" />
+                Top 3 Estudiantes
+              </h2>
+
+              <div className="space-y-4">
+                {ranking.length > 0 ? (
+                  ranking.map((item, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-center justify-between p-4 rounded-xl ${
+                        index === 0
+                          ? "bg-yellow-500/10 border border-yellow-500/20"
+                          : index === 1
+                            ? "bg-gray-500/10 border border-gray-500/20"
+                            : "bg-orange-500/10 border border-orange-500/20"
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
+                            index === 0
+                              ? "bg-yellow-500 text-black"
+                              : index === 1
+                                ? "bg-gray-400 text-black"
+                                : "bg-orange-500 text-white"
+                          }`}
+                        >
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="font-bold">{item.estudiante_nombre}</p>
+                          <p className="text-sm text-slate-400">
+                            Puntaje: {item.puntaje}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-2xl font-bold">{item.puntaje}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-slate-400">
+                    <Trophy className="w-16 h-16 mx-auto mb-4 text-slate-600" />
+                    <p>No hay datos de ranking disponibles</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* BOTÓN VOLVER */}
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => {
+                setPasoActual(1);
+                setMaterias([]);
+                setQuiz(null);
+                setResultados(null);
+                setRanking([]);
+                setRespuestasActuales({});
+                setMaterialIdSeleccionado(null);
+                setMaterialSeleccionado(null);
+                setMateriaSeleccionada(null);
+              }}
+              className="bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-4 rounded-xl transition-colors flex items-center gap-3 mx-auto font-semibold text-lg"
+            >
+              <BookOpen className="w-5 h-5" />
+              Volver a Materias
+            </button>
+          </div>
         </div>
+      </div>
+    );
+  }
+
+  // LOADING STATE
+  if (loadingMaterias || loadingQuiz) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <Loader2 className="w-14 h-14 text-cyan-400 animate-spin" />
+      </div>
+    );
+  }
+
+  // DEFAULT STATE
+  return (
+    <div className="min-h-screen bg-slate-950 text-white p-6">
+      <div className="max-w-6xl mx-auto text-center py-20">
+        <Brain className="w-20 h-20 text-cyan-400 mx-auto mb-6" />
+        <h1 className="text-4xl font-black mb-4">Quiz Estudiante</h1>
+        <p className="text-slate-400">Sistema de evaluación inteligente</p>
       </div>
     </div>
   );
