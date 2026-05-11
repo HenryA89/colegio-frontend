@@ -18,6 +18,8 @@ import {
   submitQuiz,
   getRanking,
   getMaterialesDisponibles,
+  getMaterialesPorMateria,
+  obtenerQuizPorMateria,
 } from "../../services/estudianteServices/quizService";
 
 export default function QuizEstudiante() {
@@ -54,6 +56,10 @@ export default function QuizEstudiante() {
 
   const [loadingMateriales, setLoadingMateriales] = useState(false);
 
+  const [materias, setMaterias] = useState([]);
+
+  const [loadingMaterias, setLoadingMaterias] = useState(false);
+
   // ==========================================
   // VALIDAR MATERIAL
   // ==========================================
@@ -85,7 +91,7 @@ export default function QuizEstudiante() {
         throw new Error(response?.message || "No se pudo cargar el quiz");
       }
 
-      setQuiz(response.data);
+      setQuiz(response.data.data.quiz);
     } catch (err) {
       console.error("❌ ERROR CARGANDO QUIZ:", err);
 
@@ -124,6 +130,46 @@ export default function QuizEstudiante() {
     seleccionarMaterial(material);
     console.log("🎓 MATERIAL SELECCIONADO:", material);
   };
+
+  // ==========================================
+  // OBTENER QUIZ POR MATERIA (SERVICIO UNIFICADO)
+  // ==========================================
+  const handleObtenerQuizPorMateria = useCallback(
+    async (materiaId) => {
+      try {
+        setLoadingQuiz(true);
+        setError(null);
+
+        console.log("🎓 OBTENIENDO QUIZ POR MATERIA (UNIFICADO):", materiaId);
+
+        const response = await obtenerQuizPorMateria(materiaId);
+
+        console.log("✅ RESPONSE QUIZ POR MATERIA:", response);
+
+        if (!response?.success) {
+          throw new Error(
+            response?.message || "No se pudo obtener el quiz de la materia",
+          );
+        }
+
+        // Guardar el material seleccionado en el contexto
+        if (response?.data?.materia?.materialSeleccionado) {
+          seleccionarMaterial(response.data.materia.materialSeleccionado);
+        }
+
+        // Establecer el quiz
+        setQuiz(response.data.quiz);
+
+        console.log("✅ QUIZ CARGADO DESDE MATERIA:", response.data.quiz);
+      } catch (err) {
+        console.error("❌ ERROR OBTENIENDO QUIZ POR MATERIA:", err);
+        setError(err.message || "Error obteniendo quiz de la materia");
+      } finally {
+        setLoadingQuiz(false);
+      }
+    },
+    [seleccionarMaterial],
+  );
 
   // ==========================================
   // SELECCIONAR RESPUESTA

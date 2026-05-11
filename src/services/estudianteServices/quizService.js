@@ -185,30 +185,102 @@ const normalizarQuizEstudiante = (backendData) => {
 };
 
 // ==========================================
-// OBTENER MATERIALES DISPONIBLES
+// OBTENER MATERIALES POR MATERIA
 // ==========================================
-// GET /materiales
+// GET /api/v1/materias/:materia_id/materiales
 // ==========================================
-export const getMaterialesDisponibles = async () => {
+export const getMaterialesPorMateria = async (materiaId) => {
   try {
-    console.log("🎓 OBTENIENDO MATERIALES DISPONIBLES");
+    console.log("🎓 OBTENIENDO MATERIALES POR MATERIA:", materiaId);
+
+    const id = validarId(materiaId, "Materia ID");
 
     obtenerToken();
 
     obtenerUsuario();
 
-    const response = await api.get(`/materiales`);
+    const response = await api.get(`/materias/${id}/materiales`);
 
-    console.log("✅ RESPONSE MATERIALES:", response.data);
+    console.log("✅ RESPONSE MATERIALES POR MATERIA:", response.data);
 
     if (!response?.data?.success) {
       throw new Error(
-        response.data?.error || "No se pudieron obtener los materiales",
+        response.data?.error ||
+          "No se pudieron obtener los materiales de la materia",
       );
     }
 
     return response.data;
   } catch (error) {
+    manejarError(error);
+  }
+};
+
+// ==========================================
+// OBTENER QUIZ POR MATERIA (SERVICIO UNIFICADO)
+// ==========================================
+// Lógica compuesta: Obtener materiales → Seleccionar más reciente → Obtener quiz
+// ==========================================
+export const obtenerQuizPorMateria = async (materiaId) => {
+  try {
+    console.log(
+      "🎓 OBTENIENDO QUIZ POR MATERIA (SERVICIO UNIFICADO):",
+      materiaId,
+    );
+
+    // Paso 1: Obtener materiales de la materia
+    const materialesResponse = await getMaterialesPorMateria(materiaId);
+
+    if (!materialesResponse?.data || !Array.isArray(materialesResponse.data)) {
+      throw new Error("No se encontraron materiales para esta materia");
+    }
+
+    const materiales = materialesResponse.data;
+    console.log("📋 MATERIALES ENCONTRADOS:", materiales.length);
+
+    // Paso 2: Seleccionar el material más reciente (o el primero si no hay fecha)
+    const materialSeleccionado = materiales.reduce((masReciente, material) => {
+      if (!masReciente) return material;
+
+      // Priorizar materiales con fecha más reciente
+      const fechaMaterial = new Date(
+        material.created_at || material.fecha_creacion || 0,
+      );
+      const fechaMasReciente = new Date(
+        masReciente.created_at || masReciente.fecha_creacion || 0,
+      );
+
+      return fechaMaterial > fechaMasReciente ? material : masReciente;
+    }, null);
+
+    if (!materialSeleccionado) {
+      throw new Error("No hay materiales disponibles en esta materia");
+    }
+
+    console.log("🎯 MATERIAL SELECCIONADO:", materialSeleccionado);
+
+    // Paso 3: Obtener el quiz del material seleccionado
+    const quizResponse = await getQuizEstudiante(
+      materialSeleccionado.id || materialSeleccionado.material_id,
+    );
+
+    console.log("✅ QUIZ OBTENIDO POR MATERIA:", quizResponse);
+
+    // Retornar resultado completo
+    return {
+      success: true,
+      data: {
+        materia: {
+          id: materiaId,
+          materiales: materiales,
+          materialSeleccionado: materialSeleccionado,
+        },
+        quiz: quizResponse.data,
+      },
+      message: `Quiz obtenido del material: ${materialSeleccionado.titulo || materialSeleccionado.nombre || "Material sin título"}`,
+    };
+  } catch (error) {
+    console.error("❌ ERROR EN SERVICIO UNIFICADO:", error);
     manejarError(error);
   }
 };
@@ -228,7 +300,7 @@ export const getQuizEstudiante = async (materialId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/quizzes/${id}/show`);
+    const response = await api.get(`/quizzes/ultimo_quiz`);
 
     console.log("✅ RESPONSE QUIZ ESTUDIANTE:", response.data);
 
@@ -330,6 +402,35 @@ export const getResultados = async (quizId) => {
     if (!response?.data?.success) {
       throw new Error(
         response.data?.error || "No se pudieron obtener los resultados",
+      );
+    }
+
+    return response.data;
+  } catch (error) {
+    manejarError(error);
+  }
+};
+
+// ==========================================
+// OBTENER MATERIALES DISPONIBLES (LEGACY)
+// ==========================================
+// GET /estudiantes/materiales
+// ==========================================
+export const getMaterialesDisponibles = async () => {
+  try {
+    console.log("🎓 OBTENIENDO MATERIALES DISPONIBLES");
+
+    obtenerToken();
+
+    obtenerUsuario();
+
+    const response = await api.get(`/estudiantes/materiales`);
+
+    console.log("✅ RESPONSE MATERIALES:", response.data);
+
+    if (!response?.data?.success) {
+      throw new Error(
+        response.data?.error || "No se pudieron obtener los materiales",
       );
     }
 
