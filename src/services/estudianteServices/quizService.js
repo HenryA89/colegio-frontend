@@ -193,9 +193,9 @@ export const getMateriasEstudiante = async () => {
   try {
     console.log("🎓 OBTENIENDO MATERIAS DEL ESTUDIANTE");
 
-    obtenerToken();
+    const token = obtenerToken();
 
-    obtenerUsuario();
+    const usuario = obtenerUsuario();
 
     const response = await api.get(`/materias`);
 
