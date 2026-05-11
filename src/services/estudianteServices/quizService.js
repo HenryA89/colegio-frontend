@@ -89,12 +89,6 @@ const normalizarQuizEstudiante = (backendData) => {
     throw new Error("No se recibieron datos del quiz");
   }
 
-  const quiz = data.quiz;
-
-  if (!quiz) {
-    throw new Error("No se encontró la estructura del quiz");
-  }
-
   return {
     id: data.id,
 
@@ -102,13 +96,24 @@ const normalizarQuizEstudiante = (backendData) => {
 
     materia: data.materia || "General",
 
-    nivel: quiz.nivel || "básico",
+    nivel: data.nivel || "Básico",
 
-    descripcion: `Quiz de ${data.materia || "General"}`,
+    descripcion: data.descripcion || `Quiz de ${data.materia || "General"}`,
 
-    total_preguntas: quiz.total_preguntas || quiz.preguntas?.length || 0,
+    total_preguntas: data.total_preguntas || data.preguntas?.length || 0,
 
-    preguntas: Array.isArray(quiz.preguntas) ? quiz.preguntas : [],
+    preguntas: (Array.isArray(data.preguntas) ? data.preguntas : []).map(
+      (p) => ({
+        ...p,
+
+        opciones: p.opciones
+          ? Object.entries(p.opciones).map(([letra, opcion]) => ({
+              letra,
+              ...opcion,
+            }))
+          : [],
+      }),
+    ),
 
     ya_respondido: data.ya_respondido || false,
 
@@ -119,21 +124,21 @@ const normalizarQuizEstudiante = (backendData) => {
 };
 
 // ==========================================
-// OBTENER QUIZ ESTUDIANTE
+// OBTENER QUIZ ESTUDIANTE POR MATERIAL
 // ==========================================
-// GET /api/v1/quizzes/:id
+// GET /materiales/:materialId/quiz
 // ==========================================
-export const getQuizEstudiante = async (quizId) => {
+export const getQuizEstudiante = async (materialId) => {
   try {
-    console.log("🎓 OBTENIENDO QUIZ ESTUDIANTE:", quizId);
+    console.log("🎓 OBTENIENDO QUIZ ESTUDIANTE POR MATERIAL:", materialId);
 
-    const id = validarId(quizId, "Quiz ID");
+    const id = validarId(materialId, "Material ID");
 
     obtenerToken();
 
     obtenerUsuario();
 
-    const response = await api.get(`/quizzes/${id}`);
+    const response = await api.get(`/materiales/${id}/quiz`);
 
     console.log("✅ RESPONSE QUIZ ESTUDIANTE:", response.data);
 
@@ -147,14 +152,7 @@ export const getQuizEstudiante = async (quizId) => {
       throw new Error("Este quiz no tiene preguntas disponibles");
     }
 
-    if (normalizedQuiz.ya_respondido) {
-      throw new Error("Ya has respondido este quiz.");
-    }
-
-    console.log("✅ Quiz normalizado:", normalizedQuiz);
-
     return {
-      success: true,
       data: normalizedQuiz,
       message: "Quiz obtenido exitosamente",
     };

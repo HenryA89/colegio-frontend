@@ -11,13 +11,17 @@ import {
   Send,
 } from "lucide-react";
 
+import { useMaterial } from "../../context/MaterialContext";
 import {
   getQuizEstudiante,
   submitQuiz,
   getRanking,
 } from "../../services/estudianteServices/quizService";
 
-export default function QuizEstudiante({ quizId }) {
+export default function QuizEstudiante() {
+  const { getMaterialId, hayMaterialSeleccionado, getMaterialTitulo } =
+    useMaterial();
+
   // ==========================================
   // STATES
   // ==========================================
@@ -40,9 +44,10 @@ export default function QuizEstudiante({ quizId }) {
   const [error, setError] = useState(null);
 
   // ==========================================
-  // VALIDAR ID
+  // VALIDAR MATERIAL
   // ==========================================
-  const idValido = quizId && !isNaN(quizId) && Number(quizId) > 0;
+  const materialId = getMaterialId();
+  const idValido = materialId && !isNaN(materialId) && Number(materialId) > 0;
 
   // ==========================================
   // OBTENER QUIZ
@@ -53,9 +58,15 @@ export default function QuizEstudiante({ quizId }) {
 
       setError(null);
 
-      console.log("🎓 QUIZ ID:", quizId);
+      if (!idValido || !hayMaterialSeleccionado()) {
+        throw new Error(
+          "No hay material seleccionado. Por favor, selecciona un material primero.",
+        );
+      }
 
-      const response = await getQuizEstudiante(quizId);
+      console.log("🎓 MATERIAL ID:", materialId);
+
+      const response = await getQuizEstudiante(materialId);
 
       console.log("✅ QUIZ ESTUDIANTE:", response);
 
@@ -71,7 +82,7 @@ export default function QuizEstudiante({ quizId }) {
     } finally {
       setLoadingQuiz(false);
     }
-  }, [quizId]);
+  }, [materialId, idValido, hayMaterialSeleccionado]);
 
   // ==========================================
   // SELECCIONAR RESPUESTA
@@ -185,10 +196,10 @@ export default function QuizEstudiante({ quizId }) {
   // AUTO LOAD
   // ==========================================
   useEffect(() => {
-    if (idValido) {
+    if (idValido && hayMaterialSeleccionado()) {
       handleGetQuiz();
     }
-  }, [idValido, handleGetQuiz]);
+  }, [materialId, idValido, hayMaterialSeleccionado, handleGetQuiz]);
 
   // ==========================================
   // LOADING
@@ -340,9 +351,15 @@ export default function QuizEstudiante({ quizId }) {
             </div>
 
             <div>
-              <h1 className="text-5xl font-black">{quiz.titulo}</h1>
+              <h1 className="text-5xl font-black">
+                {quiz?.titulo || "Quiz del Material"}
+              </h1>
 
-              <p className="text-slate-400 mt-2">{quiz.materia}</p>
+              <p className="text-slate-400 mt-2">
+                {hayMaterialSeleccionado()
+                  ? `Material: ${getMaterialTitulo()} (ID: ${materialId})`
+                  : quiz?.materia || "Selecciona un material"}
+              </p>
             </div>
           </div>
         </div>

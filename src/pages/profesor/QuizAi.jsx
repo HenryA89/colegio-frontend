@@ -89,7 +89,7 @@ export default function QuizAi() {
       // ✅ QUIZ COMPLETADO
       setQuiz(response.data);
 
-      console.log("✅ QUIZ CARGADO:", response.data.preguntas);
+      console.log("✅ QUIZ CARGADO:", response.data);
     } catch (err) {
       console.error("❌ ERROR QUIZ:", err);
       setError(err.message || "Error cargando quiz");
