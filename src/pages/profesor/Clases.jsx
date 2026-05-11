@@ -135,6 +135,13 @@ export default function Clases() {
 
         seleccionarMaterial(materialData);
         console.log("🎯 Material seleccionado en contexto:", materialData);
+
+        // Notificar a todos los estudiantes que se subió un nuevo material
+        window.dispatchEvent(
+          new CustomEvent("materialSubido", {
+            detail: materialData,
+          }),
+        );
       }
 
       setMensaje("¡Material subido correctamente!");

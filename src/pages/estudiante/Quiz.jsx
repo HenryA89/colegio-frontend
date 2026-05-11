@@ -19,8 +19,12 @@ import {
 } from "../../services/estudianteServices/quizService";
 
 export default function QuizEstudiante() {
-  const { getMaterialId, hayMaterialSeleccionado, getMaterialTitulo } =
-    useMaterial();
+  const {
+    getMaterialId,
+    hayMaterialSeleccionado,
+    getMaterialTitulo,
+    notificarMaterialSubido,
+  } = useMaterial();
 
   // ==========================================
   // STATES
@@ -191,6 +195,27 @@ export default function QuizEstudiante() {
       setLoadingSubmit(false);
     }
   };
+
+  // ==========================================
+  // ESCUCHAR EVENTOS DE MATERIAL SUBIDO
+  // ==========================================
+  useEffect(() => {
+    const handleMaterialSubido = (event) => {
+      console.log("🎓 MATERIAL SUBIDO DETECTADO:", event.detail);
+      // Auto-cargar el quiz cuando se sube un nuevo material
+      if (event.detail && event.detail.material_id) {
+        handleGetQuiz();
+      }
+    };
+
+    // Escuchar eventos personalizados
+    window.addEventListener("materialSubido", handleMaterialSubido);
+
+    // Limpiar listener al desmontar
+    return () => {
+      window.removeEventListener("materialSubido", handleMaterialSubido);
+    };
+  }, [handleGetQuiz]);
 
   // ==========================================
   // AUTO LOAD

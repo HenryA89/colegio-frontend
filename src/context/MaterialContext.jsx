@@ -48,6 +48,15 @@ export const MaterialProvider = ({ children }) => {
     getMaterialId,
     getMaterialTitulo,
     hayMaterialSeleccionado,
+    // Función para notificar cuando se sube un material
+    notificarMaterialSubido: () => {
+      // Disparar evento personalizado para que los componentes escuchen
+      window.dispatchEvent(
+        new CustomEvent("materialSubido", {
+          detail: materialSeleccionado,
+        }),
+      );
+    },
   };
 
   return (
