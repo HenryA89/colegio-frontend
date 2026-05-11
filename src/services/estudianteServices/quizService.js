@@ -1,10 +1,12 @@
-import api from "../../services/api.js";
+import api from "../../services/api";
 
 // ==========================================
 // VALIDAR ID
 // ==========================================
-const validarId = (id, nombre) => {
+const validarId = (id, nombre = "ID") => {
   const parsedId = Number(id);
+
+  console.log(`🆔 ${nombre}:`, parsedId);
 
   if (!Number.isInteger(parsedId) || parsedId <= 0) {
     throw new Error(`${nombre} inválido`);
@@ -48,7 +50,8 @@ const manejarError = (error) => {
   if (error.response) {
     const status = error.response.status;
 
-    const backendError = error.response.data?.error;
+    const backendError =
+      error.response.data?.error || error.response.data?.message;
 
     switch (status) {
       case 400:
@@ -57,6 +60,7 @@ const manejarError = (error) => {
       case 401:
         localStorage.removeItem("token");
         localStorage.removeItem("usuario");
+
         throw new Error("Sesión expirada. Inicia sesión nuevamente.");
 
       case 403:
@@ -186,171 +190,9 @@ export const getMaterialesPorMateria = async (materiaId) => {
 };
 
 // ==========================================
-// OBTENER QUIZ POR MATERIA (FLUJO SECUENCIAL COMPLETO)
+// OBTENER QUIZ ESTUDIANTE
 // ==========================================
-// 1. Obtener materias del estudiante
-// 2. Obtener materiales por materia
-// 3. Obtener material_id de cada material
-// 4. Solicitar el quiz con el material_id obtenido
-// ==========================================
-export const obtenerQuizPorMateria = async (materiaId = null) => {
-  try {
-    console.log("🎓 OBTENIENDO QUIZ POR MATERIA (FLUJO SECUENCIAL COMPLETO)");
-
-    // Paso 1: Obtener materias del estudiante
-    console.log("📚 PASO 1: Obteniendo materias del estudiante...");
-    const materiasResponse = await getMateriasEstudiante();
-
-    if (!materiasResponse?.data || !Array.isArray(materiasResponse.data)) {
-      throw new Error("No se encontraron materias para este estudiante");
-    }
-
-    const materias = materiasResponse.data;
-    console.log("✅ MATERIAS ENCONTRADAS:", materias.length);
-
-    // Si no se proporciona materiaId, usar la primera materia disponible
-    let materiaIdFinal = materiaId;
-    if (!materiaIdFinal) {
-      if (materias.length === 0) {
-        throw new Error("El estudiante no está inscrito en ninguna materia");
-      }
-      materiaIdFinal = materias[0].id || materias[0].materia_id;
-      console.log("🎯 MATERIA SELECCIONADA AUTOMÁTICAMENTE:", materiaIdFinal);
-    }
-
-    // Validar que la materia exista en las materias del estudiante
-    const materiaEncontrada = materias.find(
-      (m) => m.id === materiaIdFinal || m.materia_id === materiaIdFinal,
-    );
-
-    if (!materiaEncontrada) {
-      throw new Error(
-        `El estudiante no está inscrito en la materia con ID: ${materiaIdFinal}`,
-      );
-    }
-
-    console.log("✅ MATERIA VALIDADA:", {
-      id: materiaEncontrada.id || materiaEncontrada.materia_id,
-      nombre: materiaEncontrada.nombre || materiaEncontrada.titulo,
-    });
-
-    // Paso 2: Obtener materiales por materia
-    console.log("📋 PASO 2: Obteniendo materiales de la materia:", materiaId);
-    const materialesResponse = await getMaterialesPorMateria(materiaId);
-
-    if (!materialesResponse?.data || !Array.isArray(materialesResponse.data)) {
-      throw new Error("No se encontraron materiales para esta materia");
-    }
-
-    const materiales = materialesResponse.data;
-    console.log("✅ MATERIALES ENCONTRADOS:", materiales.length);
-
-    // Paso 3: Obtener material_id de cada material
-    console.log("🔍 PASO 3: Extrayendo material_id de cada material...");
-    const materialesConId = materiales.map((material) => {
-      const materialId = material.id || material.material_id;
-      console.log(
-        `📄 Material: ${material.titulo || material.nombre || "Sin título"} - ID: ${materialId}`,
-      );
-      return {
-        ...material,
-        material_id: materialId,
-        material_id_valido:
-          materialId && !isNaN(materialId) && Number(materialId) > 0,
-      };
-    });
-
-    // Filtrar solo materiales con ID válido
-    const materialesValidos = materialesConId.filter(
-      (m) => m.material_id_valido,
-    );
-
-    if (materialesValidos.length === 0) {
-      throw new Error("No se encontraron materiales con ID válido");
-    }
-
-    console.log("✅ MATERIALES VÁLIDOS:", materialesValidos.length);
-
-    // Seleccionar el material más reciente
-    const materialSeleccionado = materialesValidos.reduce(
-      (masReciente, material) => {
-        if (!masReciente) return material;
-
-        const fechaMaterial = new Date(
-          material.created_at || material.fecha_creacion || 0,
-        );
-        const fechaMasReciente = new Date(
-          masReciente.created_at || masReciente.fecha_creacion || 0,
-        );
-
-        return fechaMaterial > fechaMasReciente ? material : masReciente;
-      },
-      null,
-    );
-
-    if (!materialSeleccionado) {
-      throw new Error("No hay materiales válidos disponibles en esta materia");
-    }
-
-    console.log("🎯 MATERIAL SELECCIONADO:", {
-      titulo: materialSeleccionado.titulo || materialSeleccionado.nombre,
-      material_id: materialSeleccionado.material_id,
-    });
-
-    // Paso 4: Solicitar el quiz con el material_id obtenido
-    console.log(
-      "🎓 PASO 4: Solicitando quiz con material_id:",
-      materialSeleccionado.material_id,
-    );
-    const quizResponse = await getQuizEstudiante(
-      materialSeleccionado.material_id,
-    );
-
-    console.log("✅ QUIZ OBTENIDO:", {
-      material_id: materialSeleccionado.material_id,
-      quiz_preguntas: quizResponse.data?.preguntas?.length || 0,
-    });
-
-    // Retornar resultado completo con todo el flujo
-    return {
-      success: true,
-      data: {
-        flujo_completo: {
-          paso1_materias_estudiante: "Validado (materiaId recibido)",
-          paso2_materiales_por_materia: {
-            materia_id: materiaId,
-            total_materiales: materiales.length,
-            materiales_validos: materialesValidos.length,
-          },
-          paso3_materiales_extraidos: materialesValidos.map((m) => ({
-            titulo: m.titulo || m.nombre,
-            material_id: m.material_id,
-          })),
-          paso4_material_seleccionado: {
-            titulo: materialSeleccionado.titulo || materialSeleccionado.nombre,
-            material_id: materialSeleccionado.material_id,
-          },
-        },
-        materia: {
-          id: materiaId,
-          materiales: materiales,
-          materiales_validos: materialesValidos,
-          material_seleccionado: materialSeleccionado,
-        },
-        quiz: quizResponse.data,
-      },
-      message: `Quiz obtenido exitosamente del material: ${materialSeleccionado.titulo || materialSeleccionado.nombre || "Material sin título"} (ID: ${materialSeleccionado.material_id})`,
-    };
-  } catch (error) {
-    console.error("❌ ERROR EN FLUJO SECUENCIAL:", error);
-    manejarError(error);
-  }
-};
-
-// ==========================================
-// OBTENER QUIZ ESTUDIANTE POR MATERIAL
-// ==========================================
-// GET /materiales/:materialId/quiz
+// GET /api/v1/estudiantes/materiales/:materialId/quiz
 // ==========================================
 export const getQuizEstudiante = async (materialId) => {
   try {
@@ -394,32 +236,27 @@ export const submitQuiz = async (quizId, respuestas) => {
   try {
     const id = validarId(quizId, "Quiz ID");
 
-    if (
-      (!Array.isArray(respuestas) && typeof respuestas !== "object") ||
-      (Array.isArray(respuestas) && respuestas.length === 0) ||
-      (typeof respuestas === "object" && Object.keys(respuestas).length === 0)
-    ) {
+    if ((!Array.isArray(respuestas) && typeof respuestas !== 'object') || 
+        (Array.isArray(respuestas) && respuestas.length === 0) ||
+        (typeof respuestas === 'object' && Object.keys(respuestas).length === 0)) {
       throw new Error("Debes responder al menos una pregunta");
     }
 
     // Manejar diferentes formatos de entrada
     let respuestasFormateadas = [];
-
+    
     if (Array.isArray(respuestas)) {
       // Formato array: [{pregunta_id: 1, opcion_seleccionada: 2}, ...]
       respuestasFormateadas = respuestas.map((respuesta) => ({
         pregunta_id: respuesta.pregunta_id,
-        opcion_seleccionada:
-          respuesta.opcion_seleccionada || respuesta.respuesta,
+        opcion_seleccionada: respuesta.opcion_seleccionada || respuesta.respuesta,
       }));
-    } else if (typeof respuestas === "object" && respuestas !== null) {
+    } else if (typeof respuestas === 'object' && respuestas !== null) {
       // Formato objeto: {0: 1, 1: 2, 2: 0} (índice: opción)
-      respuestasFormateadas = Object.entries(respuestas).map(
-        ([preguntaIndex, opcionIndex]) => ({
-          pregunta_id: parseInt(preguntaIndex) + 1, // Convertir a 1-based
-          opcion_seleccionada: parseInt(opcionIndex),
-        }),
-      );
+      respuestasFormateadas = Object.entries(respuestas).map(([preguntaIndex, opcionIndex]) => ({
+        pregunta_id: parseInt(preguntaIndex) + 1, // Convertir a 1-based
+        opcion_seleccionada: parseInt(opcionIndex),
+      }));
     }
 
     const response = await api.post(`/quizzes/${id}/responder`, {
@@ -455,35 +292,6 @@ export const getRanking = async (quizId) => {
 
     if (!response?.data?.success) {
       throw new Error(response.data?.error || "No se pudo obtener el ranking");
-    }
-
-    return response.data;
-  } catch (error) {
-    manejarError(error);
-  }
-};
-
-// ==========================================
-// OBTENER RESULTADOS
-// ==========================================
-// GET /api/v1/quizzes/:id/resultados
-// ==========================================
-export const getResultados = async (quizId) => {
-  try {
-    const id = validarId(quizId, "Quiz ID");
-
-    obtenerToken();
-
-    obtenerUsuario();
-
-    const response = await api.get(`/quizzes/${id}/resultado`);
-
-    console.log("📊 RESPONSE RESULTADOS:", response.data);
-
-    if (!response?.data?.success) {
-      throw new Error(
-        response.data?.error || "No se pudieron obtener los resultados",
-      );
     }
 
     return response.data;
