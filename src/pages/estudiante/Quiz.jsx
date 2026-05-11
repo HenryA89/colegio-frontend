@@ -352,7 +352,7 @@ export default function QuizEstudiante() {
               ) : (
                 <div className="col-span-full text-center py-20 text-slate-400">
                   <BookOpen className="w-16 h-16 mx-auto mb-4 text-slate-600" />
-                  <p className="text-xl mb-2">No hay materiales disponibles</p>
+                  <p className="text-xl mb-2">revisa tu conexion de Internet</p>
                   <p>Espera que el profesor suba un material</p>
                 </div>
               )}
