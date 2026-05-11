@@ -83,44 +83,105 @@ const manejarError = (error) => {
 // NORMALIZAR QUIZ ESTUDIANTE
 // ==========================================
 const normalizarQuizEstudiante = (backendData) => {
-  const data = backendData?.data;
+  console.log("🔍 NORMALIZANDO QUIZ ESTUDIANTE:", backendData);
+
+  const data = backendData?.data || backendData;
 
   if (!data) {
     throw new Error("No se recibieron datos del quiz");
   }
 
-  return {
-    id: data.id,
+  // Manejar diferentes estructuras posibles del backend
+  const quizData = data.quiz || data;
+  const materialData = data.material || data;
 
-    titulo: data.titulo || "Quiz sin título",
+  console.log("📋 DATOS DEL QUIZ:", quizData);
+  console.log("📋 DATOS DEL MATERIAL:", materialData);
 
-    materia: data.materia || "General",
+  // Extraer preguntas de diferentes lugares posibles
+  let preguntas = [];
+  if (quizData?.preguntas && Array.isArray(quizData.preguntas)) {
+    preguntas = quizData.preguntas;
+  } else if (data.preguntas && Array.isArray(data.preguntas)) {
+    preguntas = data.preguntas;
+  } else if (quizData && Array.isArray(quizData)) {
+    preguntas = quizData;
+  }
 
-    nivel: data.nivel || "Básico",
+  console.log("❓ PREGUNTAS ENCONTRADAS:", preguntas.length);
 
-    descripcion: data.descripcion || `Quiz de ${data.materia || "General"}`,
+  // Normalizar opciones de cada pregunta
+  const preguntasNormalizadas = preguntas.map((p) => {
+    let opciones = [];
 
-    total_preguntas: data.total_preguntas || data.preguntas?.length || 0,
+    if (p.opciones) {
+      if (Array.isArray(p.opciones)) {
+        opciones = p.opciones;
+      } else if (typeof p.opciones === "object") {
+        opciones = Object.entries(p.opciones).map(([letra, opcion]) => ({
+          letra,
+          ...(typeof opcion === "string" ? { texto: opcion } : opcion),
+        }));
+      }
+    }
 
-    preguntas: (Array.isArray(data.preguntas) ? data.preguntas : []).map(
-      (p) => ({
-        ...p,
+    return {
+      ...p,
+      opciones,
+    };
+  });
 
-        opciones: p.opciones
-          ? Object.entries(p.opciones).map(([letra, opcion]) => ({
-              letra,
-              ...opcion,
-            }))
-          : [],
-      }),
-    ),
+  const resultado = {
+    id: quizData?.id || materialData?.id || data.id,
 
-    ya_respondido: data.ya_respondido || false,
+    titulo:
+      quizData?.titulo ||
+      materialData?.titulo ||
+      data.titulo ||
+      "Quiz sin título",
 
-    tiempo_limite: data.tiempo_limite || null,
+    materia:
+      quizData?.materia || materialData?.materia || data.materia || "General",
 
-    puntaje_maximo: data.puntaje_maximo || 100,
+    nivel: quizData?.nivel || materialData?.nivel || data.nivel || "Básico",
+
+    descripcion:
+      quizData?.descripcion ||
+      materialData?.descripcion ||
+      data.descripcion ||
+      `Quiz de ${quizData?.materia || materialData?.materia || data.materia || "General"}`,
+
+    total_preguntas:
+      quizData?.total_preguntas ||
+      materialData?.total_preguntas ||
+      data.total_preguntas ||
+      preguntas.length ||
+      0,
+
+    preguntas: preguntasNormalizadas,
+
+    ya_respondido:
+      quizData?.ya_respondido ||
+      materialData?.ya_respondido ||
+      data.ya_respondido ||
+      false,
+
+    tiempo_limite:
+      quizData?.tiempo_limite ||
+      materialData?.tiempo_limite ||
+      data.tiempo_limite ||
+      null,
+
+    puntaje_maximo:
+      quizData?.puntaje_maximo ||
+      materialData?.puntaje_maximo ||
+      data.puntaje_maximo ||
+      100,
   };
+
+  console.log("✅ QUIZ NORMALIZADO:", resultado);
+
+  return resultado;
 };
 
 // ==========================================
@@ -138,7 +199,7 @@ export const getQuizEstudiante = async (materialId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/materiales/${id}/show`);
+    const response = await api.get(`/materiales/${id}/quiz`);
 
     console.log("✅ RESPONSE QUIZ ESTUDIANTE:", response.data);
 
