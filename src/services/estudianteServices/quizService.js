@@ -138,7 +138,7 @@ export const getQuizEstudiante = async (materialId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/materiales/${id}/quiz`);
+    const response = await api.get(`/materiales/${id}/show`);
 
     console.log("✅ RESPONSE QUIZ ESTUDIANTE:", response.data);
 
@@ -233,7 +233,7 @@ export const getResultados = async (quizId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/quizzes/${id}/resultados`);
+    const response = await api.get(`/quizzes/${id}/resultado`);
 
     console.log("📊 RESPONSE RESULTADOS:", response.data);
 
