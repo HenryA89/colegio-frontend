@@ -197,7 +197,7 @@ export const getMateriasEstudiante = async () => {
 
     const usuario = obtenerUsuario();
 
-    const response = await api.get(`/estudiante/materias`);
+    const response = await api.get(`/materias`);
 
     console.log("✅ RESPONSE MATERIAS DEL ESTUDIANTE:", response.data);
 
@@ -423,7 +423,7 @@ export const getQuizEstudiante = async (materialId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/quizzes/ultimo_quiz`);
+    const response = await api.get(`/quizzes/${id}`);
 
     console.log("✅ RESPONSE QUIZ ESTUDIANTE:", response.data);
 
@@ -566,7 +566,7 @@ export const getMaterialesDisponibles = async () => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/estudiantes/materiales`);
+    const response = await api.get(`/materias`);
 
     console.log("✅ RESPONSE MATERIALES:", response.data);
 
