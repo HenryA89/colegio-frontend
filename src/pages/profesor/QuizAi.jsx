@@ -331,27 +331,17 @@ export default function QuizAi() {
                 <h2 className="text-2xl font-black mb-6">Preguntas del Quiz</h2>
 
                 <div className="space-y-6">
-                  {quiz.preguntas.map((pregunta, index) => (
-                    <div
-                      key={pregunta.id || index}
-                      className="bg-slate-800 border border-slate-700 rounded-2xl p-6"
-                    >
-                      <h3 className="text-xl font-bold mb-6">
-                        {index + 1}. {pregunta.pregunta}
+                  {quiz?.preguntas?.map((pregunta, index) => (
+                    <div key={pregunta.id} className="pregunta-container">
+                      <h3>
+                        {index + 1}. {pregunta.enunciado}
                       </h3>
 
-                      <div className="grid gap-4">
-                        {pregunta.opciones?.map((opcion, opcionIndex) => (
-                          <div
-                            key={opcionIndex}
-                            className={`p-4 rounded-xl border ${
-                              opcion === pregunta.respuesta_correcta
-                                ? "bg-green-500/10 border-green-500 text-green-300"
-                                : "bg-slate-900 border-slate-700"
-                            }`}
-                          >
-                            {opcion}
-                          </div>
+                      <div className="opciones-container">
+                        {pregunta.opciones.map((opcion) => (
+                          <button key={opcion.letra} className="opcion-btn">
+                            <strong>{opcion.letra}.</strong> {opcion.texto}
+                          </button>
                         ))}
                       </div>
                     </div>
