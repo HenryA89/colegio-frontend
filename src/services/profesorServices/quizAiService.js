@@ -88,75 +88,68 @@ const manejarError = (error) => {
 // ==========================================
 const normalizarQuizProfesor = (backendData, materialId) => {
   const data = backendData?.data;
-
-  if (!data) {
-    throw new Error("No se recibieron datos del quiz");
-  }
+  if (!data) throw new Error("No se recibieron datos del quiz");
 
   const quiz = data.quiz;
 
   return {
     id: data.quiz_id,
-
     material_clase_id: materialId,
-
     titulo: data.titulo || "Quiz sin título",
-
-    // ✅ usar estado real del backend
     quiz_estado: data.quiz_estado || "pendiente",
-
-    // ✅ puede venir null mientras se genera
     quiz: quiz || null,
-
     materia: data.materia || quiz?.materia || "General",
-
     nivel: data.nivel || quiz?.nivel || "Básico",
-
     descripcion: `Quiz de ${data.materia || quiz?.materia || "General"}`,
-
     total_preguntas:
       data.total_preguntas ||
       quiz?.total_preguntas ||
       quiz?.preguntas?.length ||
       0,
 
-    preguntas: Array.isArray(quiz?.preguntas) ? quiz.preguntas : [],
+    // ✅ Corregimos cada pregunta y sus opciones
+    preguntas: (Array.isArray(quiz?.preguntas) ? quiz.preguntas : []).map(
+      (p) => ({
+        ...p,
+        opciones: Array.isArray(p.opciones)
+          ? p.opciones
+          : p.opciones
+            ? Object.values(p.opciones)
+            : [],
+      }),
+    ),
 
     ya_respondido: data.ya_respondido || false,
-
     total_participantes: data.total_participantes || 0,
   };
 };
 
-// ==========================================
-// NORMALIZAR QUIZ ESTUDIANTE
-// ==========================================
 const normalizarQuizEstudiante = (backendData) => {
   const data = backendData?.data;
-
-  if (!data) {
-    throw new Error("No se recibieron datos del quiz");
-  }
+  if (!data) throw new Error("No se recibieron datos del quiz");
 
   return {
     id: data.id,
-
     titulo: data.titulo || "Quiz sin título",
-
     materia: data.materia || "General",
-
     nivel: data.nivel || "Básico",
-
     descripcion: data.descripcion || `Quiz de ${data.materia || "General"}`,
-
     total_preguntas: data.total_preguntas || data.preguntas?.length || 0,
 
-    preguntas: Array.isArray(data.preguntas) ? data.preguntas : [],
+    // ✅ Corregimos cada pregunta y sus opciones aquí también
+    preguntas: (Array.isArray(data.preguntas) ? data.preguntas : []).map(
+      (p) => ({
+        ...p,
+        opciones: Array.isArray(p.opciones)
+          ? p.opciones
+          : p.opciones
+            ? Object.values(p.opciones)
+            : [],
+      }),
+    ),
 
     ya_respondido: data.ya_respondido || false,
-
     tiempo_limite: data.tiempo_limite || null,
-
     puntaje_maximo: data.puntaje_maximo || 100,
   };
 };
