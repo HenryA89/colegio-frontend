@@ -119,10 +119,11 @@ export default function Clases() {
         materiaSeleccionada?.nombre || "Sin materia",
       );
 
-      // Enviar archivo sin requerir clase específica
+      // Enviar archivo con materia_id requerido
       const resultado = await subirMaterial({
         file: pdf,
         titulo: `Material - ${materiaSeleccionada?.nombre || "General"} - ${new Date().toLocaleDateString("es-ES")}`,
+        materiaId: materiaSeleccionada?.id,
       });
 
       // Capturar y almacenar el material_clase_id usando el contexto
