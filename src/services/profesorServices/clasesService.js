@@ -213,13 +213,11 @@ export const fetchClases = async (token) => {
         );
       }
     }
-
-    return [];
   }
 };
 
-// Subir material PDF a una clase
-export const subirMaterial = async ({ file, titulo, claseId }) => {
+// Subir material PDF a una materia
+export const subirMaterial = async ({ file, titulo, materiaId }) => {
   try {
     // Validar archivo PDF
     if (!file || file.type !== "application/pdf") {
@@ -236,19 +234,19 @@ export const subirMaterial = async ({ file, titulo, claseId }) => {
     formData.append("archivo_pdf", file);
     formData.append("titulo", titulo || file.name);
 
-    // claseId es completamente opcional - no se requiere para subir material
-    if (claseId) {
-      const idValidado = validarYParsearId(claseId, "clase_id");
-      formData.append("clase_id", idValidado);
-      console.log("📋 ClaseId incluido (opcional):", idValidado);
+    // materiaId es requerido para subir material
+    if (materiaId) {
+      const idValidado = validarYParsearId(materiaId, "materia_id");
+      formData.append("materia_id", idValidado);
+      console.log("📋 MateriaId incluido (requerido):", idValidado);
     } else {
-      console.log("📋 Subiendo material sin clase específica (general)");
+      throw new Error("El materia_id es requerido para subir material");
     }
 
     console.log("📤 Subiendo material:", {
       fileName: file.name,
       fileSize: file.size,
-      claseId: claseId || "sin clase",
+      materiaId: materiaId,
     });
 
     const response = await api.post("/profesores/subir_material", formData, {
