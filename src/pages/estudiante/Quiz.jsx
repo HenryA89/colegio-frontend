@@ -25,6 +25,12 @@ export default function QuizEstudiante() {
   const [loadingQuiz, setLoadingQuiz] = useState(false);
   const [error, setError] = useState(null);
   const [pasoActual, setPasoActual] = useState(1); // Para seguimiento del flujo
+  const [materialIdSeleccionado, setMaterialIdSeleccionado] = useState(null);
+  const [materialSeleccionado, setMaterialSeleccionado] = useState(null);
+  const [materiaSeleccionada, setMateriaSeleccionada] = useState(null);
+  const [resultados, setResultados] = useState(null);
+  const [ranking, setRanking] = useState([]);
+  const [respuestasActuales, setRespuestasActuales] = useState({});
 
   // ==========================================
   // PASO 1: OBTENER MATERIAS DEL ESTUDIANTE
@@ -176,14 +182,6 @@ export default function QuizEstudiante() {
     },
     [materialIdSeleccionado],
   );
-
-  // Estados adicionales para el flujo
-  const [materialIdSeleccionado, setMaterialIdSeleccionado] = useState(null);
-  const [materialSeleccionado, setMaterialSeleccionado] = useState(null);
-  const [materiaSeleccionada, setMateriaSeleccionada] = useState(null);
-  const [resultados, setResultados] = useState(null);
-  const [ranking, setRanking] = useState([]);
-  const [respuestasActuales, setRespuestasActuales] = useState({});
 
   // ==========================================
   // MANEJAR RESPUESTA DE PREGUNTA
