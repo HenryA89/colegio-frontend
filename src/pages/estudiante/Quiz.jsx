@@ -1,8 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useCallback } from "react";
 import { Brain, BookOpen, Loader2, Trophy, CheckCircle } from "lucide-react";
 
-import { useMaterial } from "../../context/MaterialContext";
 import {
   getMateriasEstudiante,
   getMaterialesPorMateria,
@@ -12,10 +10,6 @@ import {
 } from "../../services/estudianteServices/quizService";
 
 export default function QuizEstudiante() {
-  const { seleccionarMaterial, hayMaterialSeleccionado } = useMaterial();
-
-  const navigate = useNavigate();
-
   // =========================
   // STATES
   // =========================
@@ -26,7 +20,6 @@ export default function QuizEstudiante() {
   const [error, setError] = useState(null);
   const [pasoActual, setPasoActual] = useState(1); // Para seguimiento del flujo
   const [materialIdSeleccionado, setMaterialIdSeleccionado] = useState(null);
-  const [materialSeleccionado, setMaterialSeleccionado] = useState(null);
   const [materiaSeleccionada, setMateriaSeleccionada] = useState(null);
   const [resultados, setResultados] = useState(null);
   const [ranking, setRanking] = useState([]);
@@ -81,10 +74,7 @@ export default function QuizEstudiante() {
         materia.id || materia.materia_id,
       );
 
-      if (
-        !materialesResponse?.data ||
-        !Array.isArray(materialesResponse.data)
-      ) {
+      if (!Array.isArray(materialesResponse?.data)) {
         throw new Error("No se encontraron materiales para esta materia");
       }
 
@@ -115,13 +105,16 @@ export default function QuizEstudiante() {
 
       // Guardar material_id en estado
       setMaterialIdSeleccionado(materialId);
-      setMaterialSeleccionado(materialMasReciente);
       setMateriaSeleccionada(materia);
 
       // PASO 4: Obtener quiz con el material_id guardado
       console.log("🎓 PASO 4: OBTENIENDO QUIZ...");
 
       const quizResponse = await getQuizEstudiante(materialId);
+
+      if (quizResponse?.estado === "pendiente") {
+        throw new Error(quizResponse.message || "El quiz aún se está generando");
+      }
 
       if (!quizResponse?.success) {
         throw new Error(quizResponse.message || "No se pudo obtener el quiz");
@@ -151,7 +144,13 @@ export default function QuizEstudiante() {
 
         console.log("📤 PASO 5: ENVIANDO RESPUESTAS DEL QUIZ...");
 
-        const response = await submitQuiz(materialIdSeleccionado, respuestas);
+        const quizId = quiz?.id || materialIdSeleccionado;
+
+        if (!quizId) {
+          throw new Error("No se encontró el ID del quiz para enviar respuestas");
+        }
+
+        const response = await submitQuiz(quizId, respuestas);
 
         console.log("✅ RESPONSE ENVÍO:", response);
 
@@ -167,7 +166,7 @@ export default function QuizEstudiante() {
         // PASO 6: Obtener ranking top 3
         console.log("🏆 PASO 6: OBTENIENDO RANKING TOP 3...");
 
-        const rankingResponse = await getRanking(materialIdSeleccionado);
+        const rankingResponse = await getRanking(quizId);
 
         if (rankingResponse?.success) {
           setRanking(rankingResponse.data?.slice(0, 3) || []); // Top 3
@@ -180,7 +179,7 @@ export default function QuizEstudiante() {
         setLoadingQuiz(false);
       }
     },
-    [materialIdSeleccionado],
+    [materialIdSeleccionado, quiz],
   );
 
   // ==========================================
@@ -369,45 +368,50 @@ export default function QuizEstudiante() {
 
             {/* PREGUNTAS */}
             <div className="space-y-8">
-              {quiz.preguntas?.map((pregunta, index) => (
-                <div
-                  key={index}
-                  className="bg-slate-800 border border-slate-700 rounded-2xl p-6"
-                >
-                  <h3 className="text-xl font-bold mb-6">
-                    {index + 1}. {pregunta.pregunta}
-                  </h3>
+              {quiz.preguntas?.map((pregunta, index) => {
+                const preguntaKey =
+                  pregunta.id || pregunta.pregunta_id || index + 1;
 
-                  <div className="grid gap-4">
-                    {pregunta.opciones?.map((opcion, opcionIndex) => (
-                      <div
-                        key={opcionIndex}
-                        className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                          respuestasActuales[index] === opcionIndex
-                            ? "bg-cyan-500/10 border-cyan-500 text-cyan-300"
-                            : "border-slate-600 hover:border-cyan-500/50 hover:bg-slate-700/50"
-                        }`}
-                        onClick={() =>
-                          handleSeleccionarRespuesta(index, opcionIndex)
-                        }
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                              respuestasActuales[index] === opcionIndex
-                                ? "bg-cyan-500 text-white"
-                                : "bg-slate-700 border-2 border-slate-600"
-                            }`}
-                          >
-                            {String.fromCharCode(65 + opcionIndex)}
+                return (
+                  <div
+                    key={preguntaKey}
+                    className="bg-slate-800 border border-slate-700 rounded-2xl p-6"
+                  >
+                    <h3 className="text-xl font-bold mb-6">
+                      {index + 1}. {pregunta.pregunta}
+                    </h3>
+
+                    <div className="grid gap-4">
+                      {pregunta.opciones?.map((opcion, opcionIndex) => (
+                        <div
+                          key={opcionIndex}
+                          className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                            respuestasActuales[preguntaKey] === opcionIndex
+                              ? "bg-cyan-500/10 border-cyan-500 text-cyan-300"
+                              : "border-slate-600 hover:border-cyan-500/50 hover:bg-slate-700/50"
+                          }`}
+                          onClick={() =>
+                            handleSeleccionarRespuesta(preguntaKey, opcionIndex)
+                          }
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                                respuestasActuales[preguntaKey] === opcionIndex
+                                  ? "bg-cyan-500 text-white"
+                                  : "bg-slate-700 border-2 border-slate-600"
+                              }`}
+                            >
+                              {String.fromCharCode(65 + opcionIndex)}
+                            </div>
+                            <span>{opcion}</span>
                           </div>
-                          <span>{opcion}</span>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* BOTÓN ENVIAR */}
@@ -557,7 +561,6 @@ export default function QuizEstudiante() {
                 setRanking([]);
                 setRespuestasActuales({});
                 setMaterialIdSeleccionado(null);
-                setMaterialSeleccionado(null);
                 setMateriaSeleccionada(null);
               }}
               className="bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-4 rounded-xl transition-colors flex items-center gap-3 mx-auto font-semibold text-lg"

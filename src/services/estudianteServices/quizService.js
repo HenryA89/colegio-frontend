@@ -84,6 +84,47 @@ const manejarError = (error) => {
 };
 
 // ==========================================
+// NORMALIZAR OPCIONES DEL QUIZ PARA ESTUDIANTE
+// ==========================================
+const normalizarOpcionesEstudiante = (opciones) => {
+  if (!opciones) {
+    return [];
+  }
+
+  if (Array.isArray(opciones)) {
+    return opciones.map((opcion) => {
+      if (typeof opcion === "string") {
+        return opcion;
+      }
+
+      return (
+        opcion?.texto ||
+        opcion?.enunciado ||
+        opcion?.valor ||
+        String(opcion ?? "")
+      );
+    });
+  }
+
+  if (typeof opciones === "object") {
+    return Object.values(opciones).map((opcion) => {
+      if (typeof opcion === "string") {
+        return opcion;
+      }
+
+      return (
+        opcion?.texto ||
+        opcion?.enunciado ||
+        opcion?.valor ||
+        String(opcion ?? "")
+      );
+    });
+  }
+
+  return [];
+};
+
+// ==========================================
 // NORMALIZAR QUIZ ESTUDIANTE (Basado en estructura del profesor)
 // ==========================================
 const normalizarQuizEstudiante = (backendData) => {
@@ -93,37 +134,47 @@ const normalizarQuizEstudiante = (backendData) => {
     throw new Error("No se recibieron datos del quiz");
   }
 
+  const quiz = data.quiz || data;
+
   return {
-    id: data.id,
+    id: data.quiz_id || quiz?.id || data.id,
 
-    titulo: data.titulo || "Quiz sin título",
+    material_id: data.material_id || data.material_clase_id || null,
 
-    materia: data.materia || "General",
+    titulo: data.titulo || quiz?.titulo || "Quiz sin título",
 
-    nivel: data.nivel || "Básico",
+    materia: data.materia || quiz?.materia || "General",
 
-    descripcion: data.descripcion || `Quiz de ${data.materia || "General"}`,
+    nivel: data.nivel || quiz?.nivel || "Básico",
 
-    total_preguntas: data.total_preguntas || data.preguntas?.length || 0,
+    descripcion:
+      data.descripcion ||
+      quiz?.descripcion ||
+      `Quiz de ${data.materia || quiz?.materia || "General"}`,
 
-    preguntas: (Array.isArray(data.preguntas) ? data.preguntas : []).map(
-      (p) => ({
-        ...p,
+    quiz_estado: data.quiz_estado || quiz?.quiz_estado || "completado",
 
-        opciones: p.opciones
-          ? Object.entries(p.opciones).map(([letra, opcion]) => ({
-              letra,
-              ...opcion,
-            }))
-          : [],
-      }),
-    ),
+    total_preguntas:
+      data.total_preguntas ||
+      quiz?.total_preguntas ||
+      quiz?.preguntas?.length ||
+      data.preguntas?.length ||
+      0,
 
-    ya_respondido: data.ya_respondido || false,
+    preguntas: (
+      Array.isArray(quiz?.preguntas) ? quiz.preguntas : data.preguntas || []
+    ).map((p) => ({
+      ...p,
+      id: p.id || p.pregunta_id || p.question_id || null,
+      pregunta: p.pregunta || p.enunciado || p.texto || p.titulo || "",
+      opciones: normalizarOpcionesEstudiante(p.opciones),
+    })),
 
-    tiempo_limite: data.tiempo_limite || null,
+    ya_respondido: data.ya_respondido || quiz?.ya_respondido || false,
 
-    puntaje_maximo: data.puntaje_maximo || 100,
+    tiempo_limite: data.tiempo_limite || quiz?.tiempo_limite || null,
+
+    puntaje_maximo: data.puntaje_maximo || quiz?.puntaje_maximo || 100,
   };
 };
 
@@ -136,9 +187,8 @@ export const getMateriasEstudiante = async () => {
   try {
     console.log("🎓 OBTENIENDO MATERIAS DEL ESTUDIANTE");
 
-    const token = obtenerToken();
-
-    const usuario = obtenerUsuario();
+    obtenerToken();
+    obtenerUsuario();
 
     const response = await api.get(`/materias`);
 
@@ -172,7 +222,7 @@ export const getMaterialesPorMateria = async (materiaId) => {
 
     obtenerUsuario();
 
-    const response = await api.get("materiales");
+    const response = await api.get(`/materias/${id}/materiales`);
 
     console.log("✅ RESPONSE MATERIALES POR MATERIA:", response.data);
 
@@ -182,19 +232,27 @@ export const getMaterialesPorMateria = async (materiaId) => {
       );
     }
 
-    // ✅ EXTRAER ARRAY REAL
-    const materiales = response.data?.data?.materiales || [];
+    const materiales =
+      response.data?.data?.materiales ||
+      response.data?.data ||
+      response.data?.materiales ||
+      [];
 
-    // ✅ FILTRAR POR MATERIA
-    const materialesFiltrados = materiales.filter(
-      (material) => material.materia_id === id,
-    );
+    const materialesFiltrados = Array.isArray(materiales)
+      ? materiales.filter(
+          (material) => Number(material.materia_id) === id,
+        )
+      : [];
 
     if (!materialesFiltrados.length) {
       throw new Error("No se encontraron materiales para esta materia");
     }
 
-    return materialesFiltrados;
+    return {
+      success: true,
+      data: materialesFiltrados,
+      message: "Materiales obtenidos exitosamente",
+    };
   } catch (error) {
     manejarError(error);
   }
@@ -215,7 +273,7 @@ export const getQuizEstudiante = async (materialId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/quizzes/${id}`);
+    const response = await api.get(`/materiales/${id}/quiz`);
 
     console.log("✅ RESPONSE QUIZ ESTUDIANTE:", response.data);
 
@@ -225,11 +283,25 @@ export const getQuizEstudiante = async (materialId) => {
 
     const normalizedQuiz = normalizarQuizEstudiante(response.data);
 
+    if (normalizedQuiz.quiz_estado === "pendiente") {
+      return {
+        success: false,
+        estado: "pendiente",
+        message: "El quiz aún se está generando",
+        data: normalizedQuiz,
+      };
+    }
+
+    if (normalizedQuiz.quiz_estado === "error") {
+      throw new Error(response.data?.error || "Error generando quiz");
+    }
+
     if (normalizedQuiz.preguntas.length === 0) {
       throw new Error("Este quiz no tiene preguntas disponibles");
     }
 
     return {
+      success: true,
       data: normalizedQuiz,
       message: "Quiz obtenido exitosamente",
     };
@@ -268,8 +340,8 @@ export const submitQuiz = async (quizId, respuestas) => {
     } else if (typeof respuestas === "object" && respuestas !== null) {
       // Formato objeto: {0: 1, 1: 2, 2: 0} (índice: opción)
       respuestasFormateadas = Object.entries(respuestas).map(
-        ([preguntaIndex, opcionIndex]) => ({
-          pregunta_id: parseInt(preguntaIndex) + 1, // Convertir a 1-based
+        ([preguntaId, opcionIndex]) => ({
+          pregunta_id: parseInt(preguntaId),
           opcion_seleccionada: parseInt(opcionIndex),
         }),
       );
