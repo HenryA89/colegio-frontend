@@ -161,8 +161,9 @@ const normalizarQuizEstudiante = (backendData) => {
       data.preguntas?.length ||
       0,
 
-    preguntas: (
-      Array.isArray(quiz?.preguntas) ? quiz.preguntas : data.preguntas || []
+    preguntas: (Array.isArray(quiz?.preguntas)
+      ? quiz.preguntas
+      : data.preguntas || []
     ).map((p) => ({
       ...p,
       id: p.id || p.pregunta_id || p.question_id || null,
@@ -222,7 +223,7 @@ export const getMaterialesPorMateria = async (materiaId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/materias/${id}/materiales`);
+    const response = await api.get(`/materias`);
 
     console.log("✅ RESPONSE MATERIALES POR MATERIA:", response.data);
 
@@ -239,9 +240,7 @@ export const getMaterialesPorMateria = async (materiaId) => {
       [];
 
     const materialesFiltrados = Array.isArray(materiales)
-      ? materiales.filter(
-          (material) => Number(material.materia_id) === id,
-        )
+      ? materiales.filter((material) => Number(material.materia_id) === id)
       : [];
 
     if (!materialesFiltrados.length) {
