@@ -172,18 +172,29 @@ export const getMaterialesPorMateria = async (materiaId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`materiales`);
+    const response = await api.get("materiales");
 
     console.log("✅ RESPONSE MATERIALES POR MATERIA:", response.data);
 
     if (!response?.data?.success) {
       throw new Error(
-        response.data?.error ||
-          "No se pudieron obtener los materiales de la materia",
+        response.data?.error || "No se pudieron obtener los materiales",
       );
     }
 
-    return response.data;
+    // ✅ EXTRAER ARRAY REAL
+    const materiales = response.data?.data?.materiales || [];
+
+    // ✅ FILTRAR POR MATERIA
+    const materialesFiltrados = materiales.filter(
+      (material) => material.materia_id === id,
+    );
+
+    if (!materialesFiltrados.length) {
+      throw new Error("No se encontraron materiales para esta materia");
+    }
+
+    return materialesFiltrados;
   } catch (error) {
     manejarError(error);
   }
