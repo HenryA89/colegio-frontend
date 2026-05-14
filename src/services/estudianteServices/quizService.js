@@ -172,7 +172,7 @@ export const getMaterialesPorMateria = async (materiaId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/materias/${id}/materiales`);
+    const response = await api.get(`materiales`);
 
     console.log("✅ RESPONSE MATERIALES POR MATERIA:", response.data);
 
@@ -236,27 +236,32 @@ export const submitQuiz = async (quizId, respuestas) => {
   try {
     const id = validarId(quizId, "Quiz ID");
 
-    if ((!Array.isArray(respuestas) && typeof respuestas !== 'object') || 
-        (Array.isArray(respuestas) && respuestas.length === 0) ||
-        (typeof respuestas === 'object' && Object.keys(respuestas).length === 0)) {
+    if (
+      (!Array.isArray(respuestas) && typeof respuestas !== "object") ||
+      (Array.isArray(respuestas) && respuestas.length === 0) ||
+      (typeof respuestas === "object" && Object.keys(respuestas).length === 0)
+    ) {
       throw new Error("Debes responder al menos una pregunta");
     }
 
     // Manejar diferentes formatos de entrada
     let respuestasFormateadas = [];
-    
+
     if (Array.isArray(respuestas)) {
       // Formato array: [{pregunta_id: 1, opcion_seleccionada: 2}, ...]
       respuestasFormateadas = respuestas.map((respuesta) => ({
         pregunta_id: respuesta.pregunta_id,
-        opcion_seleccionada: respuesta.opcion_seleccionada || respuesta.respuesta,
+        opcion_seleccionada:
+          respuesta.opcion_seleccionada || respuesta.respuesta,
       }));
-    } else if (typeof respuestas === 'object' && respuestas !== null) {
+    } else if (typeof respuestas === "object" && respuestas !== null) {
       // Formato objeto: {0: 1, 1: 2, 2: 0} (índice: opción)
-      respuestasFormateadas = Object.entries(respuestas).map(([preguntaIndex, opcionIndex]) => ({
-        pregunta_id: parseInt(preguntaIndex) + 1, // Convertir a 1-based
-        opcion_seleccionada: parseInt(opcionIndex),
-      }));
+      respuestasFormateadas = Object.entries(respuestas).map(
+        ([preguntaIndex, opcionIndex]) => ({
+          pregunta_id: parseInt(preguntaIndex) + 1, // Convertir a 1-based
+          opcion_seleccionada: parseInt(opcionIndex),
+        }),
+      );
     }
 
     const response = await api.post(`/quizzes/${id}/responder`, {
