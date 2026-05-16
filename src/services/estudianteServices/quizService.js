@@ -223,7 +223,9 @@ export const getMaterialesPorMateria = async (materiaId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/materiales`);
+    const response = await api.get(`/materiales`, {
+      params: { materia_id: materiaId },
+    });
 
     console.log("✅ RESPONSE MATERIALES POR MATERIA:", response.data);
 
