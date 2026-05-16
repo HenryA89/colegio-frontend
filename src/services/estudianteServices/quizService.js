@@ -223,7 +223,7 @@ export const getMaterialesPorMateria = async (materiaId) => {
 
     obtenerUsuario();
 
-    const response = await api.get(`/materias`);
+    const response = await api.get(`/materiales`);
 
     console.log("✅ RESPONSE MATERIALES POR MATERIA:", response.data);
 
@@ -379,35 +379,6 @@ export const getRanking = async (quizId) => {
 
     if (!response?.data?.success) {
       throw new Error(response.data?.error || "No se pudo obtener el ranking");
-    }
-
-    return response.data;
-  } catch (error) {
-    manejarError(error);
-  }
-};
-
-// ==========================================
-// OBTENER MATERIALES DISPONIBLES (LEGACY)
-// ==========================================
-// GET /estudiantes/materiales
-// ==========================================
-export const getMaterialesDisponibles = async () => {
-  try {
-    console.log("🎓 OBTENIENDO MATERIALES DISPONIBLES");
-
-    obtenerToken();
-
-    obtenerUsuario();
-
-    const response = await api.get(`/materias`);
-
-    console.log("✅ RESPONSE MATERIALES:", response.data);
-
-    if (!response?.data?.success) {
-      throw new Error(
-        response.data?.error || "No se pudieron obtener los materiales",
-      );
     }
 
     return response.data;
