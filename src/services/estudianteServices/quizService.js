@@ -143,15 +143,22 @@ const normalizarQuizEstudiante = (backendData) => {
 
     titulo: data.titulo || quiz?.titulo || "Quiz sin título",
 
-    materia: data.materia || quiz?.materia || "General",
-
+    materia:
+      data.materia?.nombre ||
+      quiz?.materia?.nombre ||
+      data.materia_nombre ||
+      "General",
     nivel: data.nivel || quiz?.nivel || "Básico",
 
     descripcion:
       data.descripcion ||
       quiz?.descripcion ||
-      `Quiz de ${data.materia || quiz?.materia || "General"}`,
-
+      `Quiz de ${
+        data.materia?.nombre ||
+        quiz?.materia?.nombre ||
+        data.materia_nombre ||
+        "General"
+      }`,
     quiz_estado: data.quiz_estado || quiz?.quiz_estado || "completado",
 
     total_preguntas:

@@ -113,7 +113,9 @@ export default function QuizEstudiante() {
       const quizResponse = await getQuizEstudiante(materialId);
 
       if (quizResponse?.estado === "pendiente") {
-        throw new Error(quizResponse.message || "El quiz aún se está generando");
+        throw new Error(
+          quizResponse.message || "El quiz aún se está generando",
+        );
       }
 
       if (!quizResponse?.success) {
@@ -147,7 +149,9 @@ export default function QuizEstudiante() {
         const quizId = quiz?.id || materialIdSeleccionado;
 
         if (!quizId) {
-          throw new Error("No se encontró el ID del quiz para enviar respuestas");
+          throw new Error(
+            "No se encontró el ID del quiz para enviar respuestas",
+          );
         }
 
         const response = await submitQuiz(quizId, respuestas);
@@ -358,7 +362,7 @@ export default function QuizEstudiante() {
               <div className="flex items-center gap-6 text-sm text-slate-400">
                 <div className="flex items-center gap-2">
                   <BookOpen className="w-4 h-4" />
-                  <span>{quiz.materia}</span>
+                  <span>{quiz.materia.nombre}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span>{quiz.preguntas?.length || 0} preguntas</span>
