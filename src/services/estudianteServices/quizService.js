@@ -340,17 +340,23 @@ export const submitQuiz = async (quizId, respuestas) => {
 
     if (Array.isArray(respuestas)) {
       // Formato array: [{pregunta_id: 1, opcion_seleccionada: 2}, ...]
-      respuestasFormateadas = respuestas.map((respuesta) => ({
-        pregunta_id: respuesta.pregunta_id,
-        opcion_seleccionada:
-          respuesta.opcion_seleccionada || respuesta.respuesta,
-      }));
+      respuestasFormateadas = respuestas.map((respuesta) => {
+        const opcion = respuesta.opcion_seleccionada ?? respuesta.respuesta; // Si es número, convertir a letra (A, B, C, D)
+        const opcionLetra =
+          typeof opcion === "number"
+            ? String.fromCharCode(65 + opcion)
+            : opcion;
+        return {
+          pregunta_id: respuesta.pregunta_id,
+          opcion_seleccionada: opcionLetra,
+        };
+      });
     } else if (typeof respuestas === "object" && respuestas !== null) {
       // Formato objeto: {0: 1, 1: 2, 2: 0} (índice: opción)
       respuestasFormateadas = Object.entries(respuestas).map(
         ([preguntaId, opcionIndex]) => ({
           pregunta_id: parseInt(preguntaId),
-          opcion_seleccionada: parseInt(opcionIndex),
+          opcion_seleccionada: String.fromCharCode(65 + parseInt(opcionIndex)),
         }),
       );
     }
