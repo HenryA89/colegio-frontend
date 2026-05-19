@@ -200,16 +200,18 @@ export const getQuiz = async (materialId, usuario) => {
     }
 
     const normalizedQuiz = normalizarQuizProfesor(response.data, id);
-
+    console.log("🧠 NORMALIZED QUIZ:", normalizedQuiz);
     // ✅ QUIZ AÚN GENERÁNDOSE
-    if (normalizedQuiz.quiz_estado === "pendiente") {
+    if (
+      normalizedQuiz.quiz_estado === "pendiente" ||
+      normalizedQuiz.quiz_estado === "procesando"
+    ) {
       return {
-        estado: "pendiente",
+        estado: "procesando",
         mensaje: "El quiz aún se está generando",
         data: normalizedQuiz,
       };
     }
-
     // ✅ ERROR GENERANDO QUIZ
     if (normalizedQuiz.quiz_estado === "error") {
       throw new Error(normalizedQuiz.error || "Error generando quiz");
